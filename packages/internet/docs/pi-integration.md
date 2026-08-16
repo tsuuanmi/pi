@@ -17,8 +17,8 @@ Account-derived provider names are stable and are also the allowlist for council
 - `before_provider_request` recognizes only ChatGPT Web provider names, ensures the matching daemon
   is authenticated/healthy, and adds daemon request identity/environment metadata. API providers
   bypass daemon hooks.
-- `tool_call` recognizes only `mcp__codexwebgpt__*` tools and applies account bridge validation plus
-  Pi approval.
+- `tool_call` recognizes the brokered `codex_*` tools and applies account bridge validation plus Pi
+  approval.
 - `turn_end` refreshes HUD status without mutating lifecycle state.
 
 ## Tools

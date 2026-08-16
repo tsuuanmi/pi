@@ -10,7 +10,7 @@ async function account(): Promise<OpenAiInternetAccount> {
 	await writeFile(
 		join(configDir, "config.json"),
 		JSON.stringify({
-			version: 3,
+			version: 4,
 			mode: "browser-only",
 			host: "127.0.0.1",
 			port: 18001,
@@ -28,7 +28,6 @@ async function account(): Promise<OpenAiInternetAccount> {
 		host: "127.0.0.1",
 		port: 18001,
 		enabled: true,
-		conversationMode: "temporary",
 	};
 }
 

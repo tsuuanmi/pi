@@ -1,7 +1,5 @@
 export type InternetProviderId = "openai" | "anthropic" | "google";
 export type InternetApiProviderId = Exclude<InternetProviderId, "openai">;
-export type InternetConversationMode = "temporary" | "durable";
-
 interface InternetAccountBase {
 	id: string;
 	provider: InternetProviderId;
@@ -14,7 +12,6 @@ export interface OpenAiInternetAccount extends InternetAccountBase {
 	configDir: string;
 	host: string;
 	port: number;
-	conversationMode: InternetConversationMode;
 }
 
 interface ApiInternetAccountBase extends InternetAccountBase {
@@ -44,7 +41,6 @@ export interface OpenAiInternetAccountInput extends InternetAccountInputBase {
 	configDir?: string;
 	host?: string;
 	port?: number;
-	conversationMode?: InternetConversationMode;
 }
 
 export interface AnthropicInternetAccountInput extends InternetAccountInputBase {

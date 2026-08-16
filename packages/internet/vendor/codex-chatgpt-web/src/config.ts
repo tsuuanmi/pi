@@ -52,7 +52,7 @@ export interface TunnelConfig {
 }
 
 export interface AppConfig {
-  version: 3;
+  version: 4;
   releaseVersion: string;
   mode: RuntimeMode;
   host: "127.0.0.1";
@@ -70,7 +70,6 @@ export interface AppConfig {
   browserWindowPositionX: number;
   browserWindowPositionY: number;
   idleShutdownMs: number;
-  conversationMode: "temporary" | "durable";
   conversationStateDir: string;
   solAvailable: boolean;
   proAvailable: boolean;
@@ -151,7 +150,7 @@ export function atomicWriteFile(path: string, data: string | Uint8Array): void {
 export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
   const home = getConfigDir();
   return {
-    version: 3,
+    version: 4,
     releaseVersion: VERSION,
     mode,
     host: "127.0.0.1",
@@ -168,7 +167,6 @@ export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
     browserWindowPositionX: 0,
     browserWindowPositionY: 0,
     idleShutdownMs: 60 * 1_000,
-    conversationMode: "temporary",
     conversationStateDir: join(home, "conversations"),
     solAvailable: true,
     proAvailable: false,
@@ -342,14 +340,8 @@ function parseConfig(value: unknown, path: string): AppConfig {
   if (!Number.isInteger(parsed.idleShutdownMs) || parsed.idleShutdownMs < 0 || parsed.idleShutdownMs > 24 * 60 * 60 * 1_000) {
     throw new Error(`Invalid idleShutdownMs in ${path}`);
   }
-  if (parsed.conversationMode !== "temporary" && parsed.conversationMode !== "durable") {
-    throw new Error(`Invalid conversationMode in ${path}`);
-  }
   if (typeof parsed.conversationStateDir !== "string" || !isAbsolute(expandUserPath(parsed.conversationStateDir))) {
     throw new Error(`conversationStateDir must be absolute in ${path}`);
-  }
-  if (parsed.mode === "full" && parsed.conversationMode !== "temporary") {
-    throw new Error(`Full mode requires Temporary Chat in ${path}`);
   }
   if (typeof parsed.autoApproveToolCalls !== "boolean") {
     throw new Error(`Invalid autoApproveToolCalls in ${path}`);
@@ -449,7 +441,6 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
       brokerSocketPath: config.brokerSocketPath,
       threadEnvironmentStatePath: join(getConfigDir(), "runtime", "thread-environments.json"),
       lunaCheckpointStatePath: join(getConfigDir(), "runtime", "luna-checkpoints.json"),
-      conversationMode: config.conversationMode,
       conversationStateDir: config.conversationStateDir,
       conversationRuntimeDigest: conversationRuntimeDigest({
         releaseVersion: config.releaseVersion,

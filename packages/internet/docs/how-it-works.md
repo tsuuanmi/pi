@@ -9,7 +9,7 @@ macOS.
 
 ## Extension startup
 
-1. `AccountRegistry` reads schema-2 routing metadata or synthesizes the default ChatGPT account.
+1. `AccountRegistry` reads schema-4 routing metadata or synthesizes the default ChatGPT account.
 2. The provider registry registers enabled ChatGPT Web, Anthropic, and Google providers.
 3. `OwnedDaemonManager` receives only ChatGPT Web accounts.
 4. Tools, provider-scoped hooks, and HUD status are registered.
@@ -36,7 +36,8 @@ SSE, which Pi decodes through its built-in transport.
 
 `internet_harness` writes account-scoped Full configuration and restarts the daemon. The daemon
 broker/MCP tunnel exposes registered `codex_*` tools, while Pi's `tool_call` hook validates the
-account bridge and requests approval. Browser-only and API providers do not gain local tools.
+account bridge and requests approval. Browser-only providers do not gain local tools; API providers
+remain browser-less.
 
 ## Council
 

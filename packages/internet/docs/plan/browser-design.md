@@ -4,13 +4,12 @@ This document details the **browser** the `internet` package uses, and how it st
 production-ready**. It is grounded in how codex-chatgpt-web already manages Chrome (the daemon the
 package wraps), and it defines the browser contract the package should own.
 
-Status: **proposal.** No code changes.
+Status: **current implementation.**
 
-> **Source:** the browser behavior below is implemented in the daemon repo
-> `/home/superman/workspaces/codex-chatgpt-web`:
-> `src/adapters/chatgpt-web/browser-worker.ts`, `src/browser-login.ts`, `src/chatgpt-session.ts`,
-> `src/launcher-browser-host.ts`, `src/adapters/chatgpt-web/concurrency.ts`.
-> See [source-repositories.md](source-repositories.md) for the full map.
+> **Source:** the browser behavior is implemented under
+> `vendor/codex-chatgpt-web/src/` in this package:
+> `adapters/chatgpt-web/browser-worker.ts`, `browser-login.ts`, `chatgpt-session.ts`,
+> `launcher-browser-host.ts`, and `adapters/chatgpt-web/concurrency.ts`.
 
 ---
 
@@ -24,10 +23,9 @@ exactly as codex-chatgpt-web does. It does **not** download a browser.
 | Engine | System Chrome/Chromium | No bundled download; uses the user's installed browser |
 | Driver | `playwright-core` | Lightweight; no browser download; CDP-based |
 | Login | Dedicated Chrome profile → `storageState` | Reuses the user's signed-in ChatGPT session |
-| Headless | Configurable (`headed`, default **headed**) | Headed for login/verification; headless for turns |
+| Browser visibility | Headed (`headed: true`) | Required for login, verification, and browser turns |
 
-The browser is **only required for the ChatGPT Web model-routing path**. `internet_search` /
-`internet_fetch` and the future Claude/Gemini API providers are browser-less.
+The browser is **only required for the ChatGPT Web model-routing path**. `internet_search` / `internet_fetch` and the Anthropic/Gemini API providers are browser-less.
 
 ---
 
@@ -61,15 +59,15 @@ internet_turn (same Pi session ID)
 
 internet_turn (new Pi session ID)
   → ensure managed browser (reuse)
-  → open a fresh ChatGPT conversation tab
+  → create and bind one ChatGPT conversation
   → run the turn
   → keep the tab open (idle ~1 min then close)
 ```
 
 - **One ChatGPT conversation tab per Pi session ID** — the same session reuses the same page so
-  ChatGPT retains context in the chat; a new Pi session starts a fresh conversation.
-- **Full-history replay as fallback** — if a fresh conversation cannot be guaranteed, the compiled
-  prompt replays the complete accumulated context.
+  ChatGPT retains context in the chat; a new Pi session starts a separate conversation.
+- **Durable journal** — the private journal stores the canonical conversation URL and checkpoint;
+  normal continuation sends only the new suffix after the last acknowledged response.
 - **Bounded concurrency** — at most `MAX_CHATGPT_BROWSER_TABS = 5` simultaneous turns (the daemon's
   constant). Unbounded fan-out would look like spam to the account.
 - **Idle cleanup** — a conversation tab stays open while the session is active; after ~1 minute
@@ -81,7 +79,7 @@ internet_turn (new Pi session ID)
 
 | Concern | Guarantee |
 |---------|-----------|
-| Page leak | Conversation tabs are closed on idle (~1 min) or session teardown, and always in a `finally` block on turn completion |
+| Page leak | Conversation tabs remain bound to their durable session and close on idle (~1 min) or session teardown |
 | Browser leak | `close()` awaits all active runs + maintenance, then closes the browser |
 | CDP connection | `connectOverCDP` close releases the transport (does not kill the launcher process) |
 | Temp files | Login profile dir is removed after capture |
@@ -118,16 +116,16 @@ validated strictly (ownership, permissions, shape) before connecting.
 
 ## 5. Production-readiness checklist
 
-- [ ] **No browser download** — use system Chrome/Chromium via `playwright-core`.
-- [ ] **Explicit login** — one-time, visible, verified marker; never silent.
-- [ ] **Per-session conversation** — one ChatGPT conversation tab per Pi session; fresh page per new session.
-- [ ] **Bounded concurrency** — cap simultaneous turns (5).
-- [ ] **Graceful shutdown** — drain + close all workers on Pi shutdown.
-- [ ] **Atomic state** — `storageState` written atomically, 0600.
-- [ ] **Cleanup in `finally`** — no page/browser/connection leaks.
-- [ ] **Headed only** — `headed` config retained for Cloudflare/browser-check reliability; no headless turn mode.
-- [ ] **Diagnostics** — on failure, capture a redacted DOM/screenshot snapshot (no credentials).
-- [ ] **Error mapping** — browser failures map to structured adapter errors (status/type/code/retryable).
+- [x] **No browser download** — use system Chrome/Chromium via `playwright-core`.
+- [x] **Explicit login** — one-time, visible, verified marker; never silent.
+- [x] **Per-session conversation** — one durable ChatGPT conversation per Pi session.
+- [x] **Bounded concurrency** — cap simultaneous turns (5).
+- [x] **Graceful shutdown** — drain + close all workers on Pi shutdown.
+- [x] **Atomic state** — `storageState` written atomically, 0600.
+- [x] **Durable cleanup** — conversation tabs close on idle or session teardown.
+- [x] **Headed browser** — headed operation is retained for Cloudflare/browser-check reliability.
+- [x] **Diagnostics** — on failure, capture a redacted DOM/screenshot snapshot (no credentials).
+- [x] **Error mapping** — browser failures map to structured adapter errors (status/type/code/retryable).
 
 ---
 
@@ -156,8 +154,8 @@ the browser. This keeps the browser logic in one place (the daemon) and the pack
 - The browser is **system Chrome/Chromium via Playwright**, owned by the daemon, not the package.
 - It is **only required for ChatGPT Web model routing**; search/fetch and future API providers are
   browser-less.
-- Production-readiness comes from: explicit login + verified marker, per-turn isolation, bounded
-  concurrency (5), graceful shutdown, atomic state, `finally` cleanup, headless toggle, redacted
-  diagnostics, and structured error mapping.
+- Production-readiness comes from: explicit login + verified marker, durable per-session binding,
+  bounded concurrency (5), graceful shutdown, atomic state, redacted diagnostics, and structured
+  error mapping.
 - The package stays **clean** by being a thin client over the daemon — it never re-implements
   browser automation.

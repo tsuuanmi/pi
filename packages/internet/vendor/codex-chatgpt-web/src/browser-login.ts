@@ -5,9 +5,8 @@ import { chromium, type BrowserContext, type BrowserContextOptions, type Page } 
 import type { AppConfig } from "./config";
 import { atomicWriteFile } from "./config";
 import {
-  assertAuthenticatedChatGptPage,
-  assertTemporaryChatPage,
-  CHATGPT_TEMPORARY_CHAT_URL,
+  isAuthenticatedChatGptHome,
+  CHATGPT_HOME_URL,
   detectChatGptAccountCapabilities,
 } from "./chatgpt-session";
 import type { ChatGptWebAccountCapabilities } from "./chatgpt-web-models";
@@ -49,28 +48,18 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function isAuthenticatedTemporaryChatPage(page: Page): Promise<boolean> {
-  try {
-    await assertAuthenticatedChatGptPage(page);
-    await assertTemporaryChatPage(page);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function waitForAuthenticatedTemporaryChat(
+async function waitForAuthenticatedChatGptHome(
   context: BrowserContext,
   timeoutMs: number,
 ): Promise<Page> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     for (const page of context.pages()) {
-      if (!page.isClosed() && await isAuthenticatedTemporaryChatPage(page)) return page;
+      if (!page.isClosed() && await isAuthenticatedChatGptHome(page)) return page;
     }
     await delay(Math.min(250, Math.max(1, deadline - Date.now())));
   }
-  throw new Error("Timed out waiting for an authenticated ChatGPT Temporary Chat");
+  throw new Error("Timed out waiting for an authenticated ChatGPT page");
 }
 
 async function inspectStoredState(
@@ -87,8 +76,8 @@ async function inspectStoredState(
     const verifierContext = await verifierBrowser.newContext({ storageState });
     try {
       const verifierPage = await verifierContext.newPage();
-      await verifierPage.goto(CHATGPT_TEMPORARY_CHAT_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
-      const authenticatedPage = await waitForAuthenticatedTemporaryChat(verifierContext, 60_000);
+      await verifierPage.goto(CHATGPT_HOME_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      const authenticatedPage = await waitForAuthenticatedChatGptHome(verifierContext, 60_000);
       return { ...await detectChatGptAccountCapabilities(authenticatedPage), url: authenticatedPage.url() };
     } finally {
       await verifierContext.close();
@@ -157,7 +146,7 @@ export async function loginToChatGpt(
     "--disable-background-mode",
     "--no-first-run",
     "--no-default-browser-check",
-    CHATGPT_TEMPORARY_CHAT_URL,
+    CHATGPT_HOME_URL,
   ], { env: process.env, stdio: "ignore" });
   const loginExit = await new Promise<number>((resolveExit, rejectExit) => {
     loginBrowser.once("error", rejectExit);
@@ -176,11 +165,11 @@ export async function loginToChatGpt(
   });
   try {
     const initialPage = context.pages()[0] ?? await context.newPage();
-    await initialPage.goto(CHATGPT_TEMPORARY_CHAT_URL, {
+    await initialPage.goto(CHATGPT_HOME_URL, {
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    const page = await waitForAuthenticatedTemporaryChat(context, options.timeoutMs ?? 60_000);
+    const page = await waitForAuthenticatedChatGptHome(context, options.timeoutMs ?? 60_000);
     const state = await context.storageState();
 
     const inspected = await inspectStoredState(config, state);

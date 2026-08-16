@@ -6,13 +6,12 @@ import { InternetError } from "#internet/core/errors";
 import {
 	type InternetAccount,
 	type InternetAccountInput,
-	type InternetConversationMode,
 	type InternetProviderId,
 	isOpenAiAccount,
 	type OpenAiInternetAccount,
 } from "#internet/core/types";
 
-const registryVersion = 3;
+const registryVersion = 4;
 const defaultPort = 17841;
 const accountIdPattern = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const environmentNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -40,7 +39,6 @@ function defaultAccount(registryPath: string): OpenAiInternetAccount {
 		host: "127.0.0.1",
 		port: defaultPort,
 		enabled: true,
-		conversationMode: "durable",
 	};
 }
 
@@ -79,14 +77,6 @@ function normalizeCommon(value: Record<string, unknown>): Pick<InternetAccount, 
 	};
 }
 
-function normalizeConversationMode(value: unknown): InternetConversationMode {
-	if (value === undefined) return "durable";
-	if (value !== "temporary" && value !== "durable") {
-		throw configError("Account conversationMode must be temporary or durable.");
-	}
-	return value;
-}
-
 function normalizeAccount(value: unknown, registryPath: string): InternetAccount {
 	const input = record(value, "Account");
 	const provider = requiredString(input.provider, "Account provider");
@@ -94,7 +84,7 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 	if (provider === "openai") {
 		assertKnownKeys(
 			input,
-			["id", "provider", "displayName", "enabled", "configDir", "host", "port", "conversationMode"],
+			["id", "provider", "displayName", "enabled", "configDir", "host", "port"],
 			`Account ${common.id}`,
 		);
 		const host = input.host === undefined ? "127.0.0.1" : requiredString(input.host, "Account host");
@@ -112,7 +102,6 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 					: resolve(requiredString(input.configDir, "Account configDir")),
 			host,
 			port: Number(port),
-			conversationMode: normalizeConversationMode(input.conversationMode),
 		};
 	}
 	if (provider === "anthropic" || provider === "google") {
@@ -220,18 +209,6 @@ export class AccountRegistry {
 		const current = accounts[index];
 		if (!current) throw configError(`Unknown internet account: ${id}`);
 		const updated = { ...current, enabled };
-		accounts[index] = updated;
-		await this.write(accounts);
-		return updated;
-	}
-
-	async setConversationMode(id: string, conversationMode: InternetConversationMode): Promise<OpenAiInternetAccount> {
-		const accounts = await this.list();
-		const index = accounts.findIndex((account) => account.id === id);
-		const current = accounts[index];
-		if (!current) throw configError(`Unknown internet account: ${id}`);
-		if (!isOpenAiAccount(current)) throw configError(`Account ${id} does not support browser conversations.`);
-		const updated = { ...current, conversationMode };
 		accounts[index] = updated;
 		await this.write(accounts);
 		return updated;

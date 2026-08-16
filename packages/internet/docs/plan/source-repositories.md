@@ -1,19 +1,18 @@
 # Source Repositories — Reference
 
-The `internet` package is a **thin client** over two existing repositories. When implementing or
-debugging, read the source there. This page maps every concept in this package's design to the exact
-files that implement it.
+The `internet` package owns its extension boundary and vendors the browser runtime. When implementing
+or debugging, treat the package source and vendored snapshot as authoritative. This page maps each
+concept to the relevant files.
 
 ## Repository 1 — the daemon (the engine `internet` wraps)
 
-**Path:** `/home/superman/workspaces/codex-chatgpt-web`
+**Path:** `vendor/codex-chatgpt-web`
 
-This is the standalone bridge that `internet` talks to over loopback HTTP. It owns the browser, the
-ChatGPT session, the Responses→prompt compilation, the turn broker, and the SSE framing.
+This is the vendored bridge that `internet` talks to over loopback HTTP. It owns the browser, the
+ChatGPT session, Responses→prompt compilation, the turn broker, and SSE framing. The pinned snapshot
+and deliberate patch set are documented in `vendor/codex-chatgpt-web/SNAPSHOT.md`.
 
-The vendored snapshot is pinned at `bda266b` (see `vendor/codex-chatgpt-web/SNAPSHOT.md`). Upstream
-has since advanced to `9f74486` (a dead-code/test cleanup); it was reviewed and deliberately not
-synced because the package depends on none of the removed code.
+All daemon table paths below are relative to `vendor/codex-chatgpt-web/`.
 
 | Concept | Source file |
 |---------|-------------|
@@ -52,7 +51,7 @@ synced because the package depends on none of the removed code.
 
 ## Repository 2 — Prometheus (a sibling to learn from)
 
-**Path:** `/home/superman/workspaces/prometheus`
+**Path:** external Prometheus reference repository
 
 Prometheus is a **standalone Electron MCP/REST service** with the same core idea (browser-based AI
 providers). Read it to borrow multi-provider breadth, model aliases, and the network-interception
@@ -73,7 +72,7 @@ capture pattern.
 
 ## Repository 3 — Pi (the host the package plugs into)
 
-**Path:** `/home/superman/workspaces/pi`
+**Path:** repository root
 
 The `internet` package is a Pi extension. The relevant Pi APIs:
 

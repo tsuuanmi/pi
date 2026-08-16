@@ -1,18 +1,18 @@
-# Internet — Review: Durable Conversation Authority and Continuity
+# Internet — Durable Conversation Lifecycle and Recovery
 
-This review records the resolved causes of
-`invalid_request_error: Durable ChatGPT conversation authority is invalid or stale` and the related
-multi-turn continuity failure found during live verification on 2026-08-14.
+This is the canonical review for durable ChatGPT conversation identity, browser restart behavior,
+history synchronization, known failures, and recovery requirements. It records issues first found
+during live verification on 2026-08-14 and 2026-08-15.
 
-Status: **resolved and live-verified**. Companion to
-`docs/plan/implementation-plan-conversation-continuity.md` and
-`docs/review/implementation-review.md`.
+Status: **partially resolved and live-verified**. The original authority-canary and multi-phase
+response failures are resolved. Response delivery acknowledgement remains proposed work. The
+implementation plan is `docs/plan/implementation-plan-conversation-continuity.md`.
 
 ---
 
 ## 1. Reported failures
 
-The durable-conversation path exhibited three user-visible failures:
+The durable-conversation path exhibited four user-visible failures:
 
 1. The authority canary remained `in_progress`, so durable requests failed with:
 
@@ -24,6 +24,10 @@ The durable-conversation path exhibited three user-visible failures:
    reply was not exactly `PI_DURABLE_CONVERSATION_CANARY_OK`.
 3. A resumed Pi session failed with `Pi conversation history diverged from the bound ChatGPT
    conversation`, leaving only the first turn in the ChatGPT conversation.
+4. A later session exposed a different divergence case: ChatGPT completed a browser turn and the
+   durable journal advanced, but Pi was interrupted before it persisted the assistant response. On
+   resume, Pi correctly lacked that response while the bound ChatGPT conversation already contained
+   it.
 
 Model selection also rendered redundant identifiers such as
 `chatgpt-web/chatgpt-web/high` because provider model ids repeated the provider namespace.
@@ -117,9 +121,92 @@ as `chatgpt-web/chatgpt-web/high`.
 `chatgpt-web/<id>` route. The display is now `chatgpt-web/high`; no legacy provider-model aliases are
 published.
 
+### 2.7 Browser completion can outrun Pi response persistence
+
+The 2026-08-15 session established this sequence:
+
+```text
+Pi sends user turn -> ChatGPT completes the turn -> journal records the assistant digest
+                                             X-> Pi does not persist the assistant response
+```
+
+The next request still matches every event before the missing assistant, but
+`acknowledgedAssistantEnd()` cannot find the assistant phase recorded by the checkpoint and returns
+`diverged`. The error is local synchronization protection wrapped as `upstream_server_error`; it is
+not a ChatGPT upstream outage.
+
+This race is independent of browser lifetime. Idle shutdown already waits for active turns, closes
+the browser and daemon after approximately one inactive minute, and leaves the private conversation
+journal on disk. A later request can start a new browser and navigate to the saved canonical
+conversation URL.
+
+**Status:** unresolved. Returning more browser events improves capture but cannot prove that Pi
+persisted them. The durable protocol needs a client-acknowledgement/replay state described below.
+
 ---
 
-## 3. Automated verification
+## 3. Durable lifecycle and recovery model
+
+### 3.1 Stable identity; ephemeral browser
+
+```text
+                          private durable journal
+                 +--------------------------------------+
+                 | Pi session/thread S <-> ChatGPT C    |
+                 | conversation id + URL + checkpoint   |
+                 +--------------------------------------+
+                           ^                    ^
+                           |                    |
+                    Pi history file       ChatGPT website
+                           ^                    ^
+                           +---- ephemeral browser ------+
+```
+
+The intended rules are:
+
+1. The first ChatGPT turn in Pi session S creates ChatGPT conversation C and persists the mapping.
+2. Later ChatGPT turns in S append to C rather than creating another conversation.
+3. Switching to another model does not remove the mapping. Other model turns remain in Pi history
+   and are synchronized when ChatGPT is selected again.
+4. Browser/daemon idle shutdown removes only the ephemeral process and tab. It does not remove C or
+   the S-to-C mapping.
+5. Selecting ChatGPT later restarts the daemon/browser, opens C by its canonical URL, validates the
+   checkpoint, and appends the new suffix.
+6. A new Pi session receives a separate ChatGPT conversation.
+
+In short: the browser is an access mechanism, not the durable identity.
+
+### 3.2 Required acknowledgement recovery
+
+A completed browser response should first enter an `awaiting_client_ack` state rather than being
+assumed present in Pi history:
+
+```text
+ChatGPT completes response
+          |
+          v
+Persist response events/text + digest + originating turn identity
+          |
+          v
+awaiting_client_ack
+          |
+          +-- next history contains response ------> acknowledge; continue normally
+          |
+          +-- exact request is retried ------------> replay stored response; do not resubmit
+          |
+          +-- unchanged prefix + new user turn ----> accept a delivery gap; continue in C
+          |
+          +-- earlier prefix/authority/ID changed -> genuine conflict; fail closed
+```
+
+Replay data must use the journal's existing private, atomic storage boundary and be removed after
+acknowledgement. This preserves one ChatGPT conversation per Pi session while retaining strict
+protection against rewinds, edited history, changed authority, and conversation-ID replacement.
+This recovery is a reviewed recommendation, not current runtime behavior.
+
+---
+
+## 4. Automated verification
 
 Focused coverage now proves:
 
@@ -135,11 +222,11 @@ Focused coverage now proves:
   replacement id;
 - provider-local model ids map to exactly one canonical daemon route.
 
-The full package test suite passes: **35 files, 117 tests**.
+The full package test suite passes: **42 files, 129 tests**.
 
 ---
 
-## 4. Live verification
+## 5. Live verification
 
 After rebuilding and restarting the package-owned daemon:
 
@@ -158,9 +245,10 @@ across turns**, including multi-phase assistant output.
 
 ---
 
-## 5. Result
+## 6. Result
 
 The durable authority gate now reaches `passed`, the reported stale-authority error is resolved, and
-multi-turn continuation reaches the same ChatGPT chat. The implementation keeps strict validation
-where it represents durable identity or history integrity and removes strictness only where it was
-incorrectly coupled to nondeterministic model wording or request-only environment metadata.
+ordinary multi-turn continuation reaches the same ChatGPT chat. Browser shutdown does not invalidate
+the durable session-to-conversation mapping. Strict validation remains correct for identity changes,
+rewinds, and edited prefixes, but completed responses that Pi did not persist still require the
+proposed acknowledgement/replay recovery before this review can return to fully resolved status.

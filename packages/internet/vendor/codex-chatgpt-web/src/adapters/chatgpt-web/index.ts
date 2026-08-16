@@ -160,9 +160,7 @@ function durableConversationPlan(
   parsed: CodexParsedRequest,
   provider: CodexProviderConfig,
   threadId: string,
-): DurableConversationPlan | undefined {
-  if (provider.chatgptWeb?.conversationMode !== "durable") return undefined;
-  if (provider.mode !== "browser-only") throw new Error("Durable ChatGPT conversations are browser-only");
+): DurableConversationPlan {
   if (parsed.context.messages.some(message => Array.isArray(message.content) && message.content.some(part => part.type === "image"))) {
     throw new Error("Durable ChatGPT conversations do not support image attachments yet");
   }
@@ -292,9 +290,8 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
     const checkpointInput = captureLunaCheckpoint
       ? lunaCheckpointStore.apply(parsed)
       : { parsed, applied: false };
-    const durable = identity.threadId
-      ? durableConversationPlan(checkpointInput.parsed, provider, identity.threadId)
-      : undefined;
+    if (!identity.threadId) throw new Error("ChatGPT Web durable conversations require a thread identity");
+    const durable = durableConversationPlan(checkpointInput.parsed, provider, identity.threadId);
     if (captureLunaCheckpoint) {
       console.info(
         `[chatgpt-web] Luna rolling checkpoint applied=${checkpointInput.applied}${checkpointInput.reason ? ` reason=${checkpointInput.reason}` : ""}`,
@@ -325,7 +322,7 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
         modelId: parsed.modelId,
         reasoning: parsed.options.reasoning,
         capabilities: turnCapabilities,
-        ...(durable ? { conversation: durable.conversation } : {}),
+        conversation: durable.conversation,
         prepare: async () => ({
           ...compileChatGptWebPrompt(
             checkpointInput.parsed,
@@ -333,7 +330,8 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
             undefined,
             {
               captureLunaCheckpoint,
-              ...(durable ? { messages: durable.messages, includeAuthority: durable.conversation.kind === "create" } : {}),
+              messages: durable.messages,
+              includeAuthority: durable.conversation.kind === "create",
             },
           ),
           release: () => {},
@@ -364,6 +362,7 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
       modelId: parsed.modelId,
       reasoning: parsed.options.reasoning,
       capabilities: turnCapabilities,
+      conversation: durable.conversation,
       prepare: async () => {
         const turnToken = await broker.register(
           environment,
@@ -378,7 +377,11 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
             checkpointInput.parsed,
             turnCapabilities,
             turnToken,
-            { captureLunaCheckpoint },
+            {
+              captureLunaCheckpoint,
+              messages: durable.messages,
+              includeAuthority: durable.conversation.kind === "create",
+            },
           );
           return { ...compiled, release: () => {} };
         } catch (error) {

@@ -290,7 +290,7 @@ export interface CodexUsage {
 /** The only provider configuration supported by this focused runtime. */
 export interface CodexProviderConfig {
   adapter: "chatgpt-web";
-  /** Runtime surface the provider is served from. Durable conversations require browser-only. */
+  /** Runtime surface the provider is served from. */
   mode?: "browser-only" | "full";
   baseUrl: string;
   defaultModel?: string;
@@ -303,7 +303,7 @@ export interface CodexProviderConfig {
   modelDefaultReasoningEfforts?: Record<string, string>;
   noReasoningModels?: string[];
   chatgptWeb?: {
-    /** ChatGPT custom connector attached to tool-capable temporary chats. */
+    /** ChatGPT custom connector attached to tool-capable conversations. */
     appName?: string;
     /** Explicit browser owner. Launcher mode attaches to the embedded Electron ChatGPT surface. */
     browserHost?: "managed-chrome" | "launcher";
@@ -319,8 +319,6 @@ export interface CodexProviderConfig {
     threadEnvironmentStatePath?: string;
     /** Persisted exact-parent rolling checkpoints used only by Free/Luna turns. */
     lunaCheckpointStatePath?: string;
-    /** Browser-only conversation continuity policy. */
-    conversationMode?: "temporary" | "durable";
     /** Owner-private durable conversation journal directory. */
     conversationStateDir?: string;
     /** Exact runtime/config authority digest required for durable admission. */

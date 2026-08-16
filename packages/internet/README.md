@@ -34,8 +34,8 @@ account at `127.0.0.1:17841`. Account metadata includes a schema version for per
 
 Use `internet_account_add` with:
 
-- `provider: "openai"` for ChatGPT Web. `configDir`, `port`, and temporary/durable conversation mode
-  are optional; omitted ports are allocated from `17841`.
+- `provider: "openai"` for ChatGPT Web. `configDir` and `port` are optional; omitted ports are
+  allocated from `17841`. Each Pi session uses one durable ChatGPT conversation.
 - `provider: "anthropic"` and `apiKeyEnv: "ANTHROPIC_API_KEY"` for Anthropic.
 - `provider: "google"` and `apiKeyEnv: "GEMINI_API_KEY"` for Gemini.
 
@@ -95,7 +95,7 @@ run once, and are capped at 4,096 output tokens; synthesis runs only after all m
 ## Tools
 
 - Accounts: `internet_accounts`, `internet_account_add`, `internet_account_remove`,
-  `internet_account_set_enabled`, `internet_account_conversation_mode`
+  `internet_account_set_enabled`
 - Daemon: `internet_daemon`, `internet_status`, `internet_doctor`, `internet_control`,
   `internet_compact`, `internet_conversation`
 - Orchestration: `internet_council`

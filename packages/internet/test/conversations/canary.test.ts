@@ -12,7 +12,7 @@ describe("durable conversation canary", () => {
 
 	it("requires a completed reply and canonical ChatGPT conversation URL", () => {
 		expect(() => validateConversationCanary("  ", "https://chatgpt.com/c/canary_123")).toThrow("empty response");
-		expect(() => validateConversationCanary("ready", "https://chatgpt.com/c/WEB:temporary")).toThrow(
+		expect(() => validateConversationCanary("ready", "https://chatgpt.com/c/WEB:sample")).toThrow(
 			"Invalid ChatGPT conversation URL",
 		);
 	});

@@ -4,9 +4,8 @@ This document explains the **MCP**, **Tunnel**, and **turn broker** machinery th
 `codex-chatgpt-web` daemon ships, and how the `internet` package uses it for **Full mode** (local
 file/tool access). It is grounded in the actual vendored source.
 
-> Status: **reference + direction.** This is a detail/explanation doc that also records the agreed
-> direction: **Full harness is a desired option** (not just a reference). The package will support
-> Full mode (local file/tool access) as a first-class, opt-in capability alongside browser-only mode.
+> Status: **current implementation reference.** Full harness is a first-class, opt-in capability
+> alongside browser-only mode and uses the same durable ChatGPT conversation binding.
 
 ---
 
@@ -105,20 +104,19 @@ The `internet` package exposes this through `internet_harness` (see `src/daemon/
 The package does **not** re-implement the tunnel or MCP server — it configures and drives the
 daemon's own machinery. The daemon owns the tunnel client, the MCP server, and the turn broker.
 
-### Full harness is a desired option
+### Full harness is implemented
 
-Full harness is a **first-class, opt-in capability** the package wants, not a reference-only
-concept. It is the path to **local file/tool access** (`codex_tool_call`, `codex_exec`,
-`codex_write_stdin`, `codex_apply_patch`) through the daemon's broker/MCP/tunnel machinery.
+Full harness is a **first-class, opt-in capability**. It provides **local file/tool access**
+(`codex_tool_call`, `codex_exec`, `codex_write_stdin`, `codex_apply_patch`) through the daemon's
+broker/MCP/tunnel machinery.
 
 - **Browser-only** stays the default and needs none of the tunnel/MCP/broker machinery.
 - **Full mode** is enabled explicitly per account via `internet_harness` and is approval-gated
   (local tool calls require the `tool_call` approval hook).
 - The package drives the daemon's own tunnel/MCP/broker; it never re-implements them.
 
-This is the agreed direction: Full harness is a **wanted feature** (see
-`plan/features-brainstorm.md` §2.5 and `review/architecture-review.md` R7), sequenced after the
-core model path is solid.
+This is implemented through the account-scoped `internet_harness` tool and shares the durable
+ChatGPT conversation path with browser-only mode.
 
 ---
 

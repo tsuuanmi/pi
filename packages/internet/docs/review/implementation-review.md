@@ -23,6 +23,10 @@ Interactive owned-profile login remains authoritative. Optional Playwright stora
 bounded, rejects symlinks/non-files, filters unrelated domains, verifies in daemon-owned Chrome, and
 persists only after verification. No password/2FA collection path exists.
 
+Durable conversation identity, browser restart behavior, synchronization invariants, and the open
+response-acknowledgement recovery are specified in the canonical
+[Durable Conversation Lifecycle and Recovery](durable-conversations.md) review.
+
 ## Provider-neutral accounts
 
 Versioned account metadata is a discriminated union:
@@ -48,7 +52,8 @@ Concurrency, task starts, retries, wall-clock duration, provider scope, and canc
 ## Removed or superseded surfaces
 
 - Optional/default provider creation semantics; account registry loading no longer gates on schema version.
-- Direct package-root `registerOpenAiProviders` export; generic provider registration is authoritative.
+- Generic `registerInternetProviders` is the package-root provider registration surface; provider-specific
+  registration helpers remain internal to the registry.
 - Daemon operations on the undifferentiated account union.
 - Linux-only runtime rejection.
 - Add/enable-only account lifecycle; removal is now explicit.

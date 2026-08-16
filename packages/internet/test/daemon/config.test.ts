@@ -20,7 +20,6 @@ function account(configDir: string): OpenAiInternetAccount {
 		host: "127.0.0.1",
 		port: 17841,
 		enabled: true,
-		conversationMode: "durable",
 	};
 }
 
@@ -55,7 +54,6 @@ describe("owned daemon config", () => {
 			browserWindowPositionX: 0,
 			browserWindowPositionY: 0,
 			idleShutdownMs: 60_000,
-			conversationMode: "durable",
 			conversationStateDir: join(configDir, "conversations"),
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
@@ -70,7 +68,7 @@ describe("owned daemon config", () => {
 		const runtimeKeyFile = join(configDir, "source-key");
 		await writeFile(tunnelClientPath, "#!/bin/sh\n", { mode: 0o700 });
 		await writeFile(runtimeKeyFile, "private-key\n");
-		const target = { ...account(configDir), conversationMode: "temporary" as const };
+		const target = account(configDir);
 		await enableFullHarness(target, {
 			tunnelClientPath,
 			tunnelId: `tunnel_${"a".repeat(32)}`,
@@ -82,7 +80,6 @@ describe("owned daemon config", () => {
 		});
 		expect(created).toMatchObject({
 			mode: "full",
-			conversationMode: "temporary",
 			tunnel: {
 				binaryPath: tunnelClientPath,
 				tunnelId: `tunnel_${"a".repeat(32)}`,
@@ -90,17 +87,6 @@ describe("owned daemon config", () => {
 				alias: "pi-internet-default",
 			},
 		});
-	});
-
-	it("configures durable conversations only for browser-only accounts", async () => {
-		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-config-durable-"));
-		const target = { ...account(configDir), conversationMode: "durable" as const };
-		const config = await ensureOwnedDaemonConfig(target, {
-			releaseVersion: "2.1.8",
-			runtimeCommand: ["/runtime/bin/daemon"],
-		});
-		expect(config.conversationMode).toBe("durable");
-		expect(config.conversationStateDir).toBe(join(configDir, "conversations"));
 	});
 
 	it("reads model capabilities from the owned daemon config", async () => {

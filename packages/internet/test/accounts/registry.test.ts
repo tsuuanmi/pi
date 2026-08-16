@@ -10,22 +10,20 @@ async function registry(): Promise<AccountRegistry> {
 describe("AccountRegistry", () => {
 	it("provides one isolated default ChatGPT Web account", async () => {
 		const accounts = await (await registry()).list();
-		expect(accounts).toMatchObject([
-			{ id: "default", provider: "openai", host: "127.0.0.1", port: 17841, conversationMode: "durable" },
-		]);
+		expect(accounts).toMatchObject([{ id: "default", provider: "openai", host: "127.0.0.1", port: 17841 }]);
 	});
 
 	it("stores browser and API accounts in the authoritative schema", async () => {
 		const target = await registry();
-		await target.add({ id: "work", provider: "openai", port: 18001, conversationMode: "durable" });
+		await target.add({ id: "work", provider: "openai", port: 18001 });
 		await target.add({ id: "research", provider: "anthropic", apiKeyEnv: "ANTHROPIC_RESEARCH_KEY" });
 		const accounts = await target.list();
 		expect(accounts).toMatchObject([
 			{ id: "default", provider: "openai" },
-			{ id: "work", provider: "openai", port: 18001, conversationMode: "durable" },
+			{ id: "work", provider: "openai", port: 18001 },
 			{ id: "research", provider: "anthropic", apiKeyEnv: "ANTHROPIC_RESEARCH_KEY" },
 		]);
-		expect(JSON.parse(await readFile(target.path, "utf8"))).toMatchObject({ schemaVersion: 3 });
+		expect(JSON.parse(await readFile(target.path, "utf8"))).toMatchObject({ schemaVersion: 4 });
 		expect((await stat(target.path)).mode & 0o777).toBe(0o600);
 	});
 

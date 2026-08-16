@@ -56,11 +56,8 @@ const DROPPED_IMAGE_NOTE =
   `[older image not attached: ChatGPT accepts at most ${CHATGPT_MAX_INPUT_IMAGES} per message]`;
 
 /**
- * Every turn opens a fresh Temporary Chat, so ChatGPT keeps nothing from the previous one: an image
- * the task still reasons about has to be re-attached on each turn or it stops existing for the
- * model. Carrying the conversation's images forward is therefore the contract, not a leak - the
- * only bound is ChatGPT's per-message limit, and the overflow is dropped from the oldest end so the
- * images the task is working on survive.
+ * Durable ChatGPT conversations retain their transcript between turns. Images are therefore
+ * attached only for the new messages in the current suffix, subject to ChatGPT's per-message limit.
  */
 interface ImageBudget {
   seen: number;

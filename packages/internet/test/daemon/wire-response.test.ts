@@ -1,9 +1,9 @@
 import { parseChatGptWireResponse } from "#internet-vendor/adapters/chatgpt-web/wire-response";
 
 describe("ChatGPT wire response capture", () => {
-	it("selects the final assistant message from conversation SSE", () => {
+	it("selects the latest assistant message after an intermediate event", () => {
 		const body = [
-			'data: {"message":{"author":{"role":"assistant"},"content":{"parts":["partial"]}}}',
+			'data: {"message":{"author":{"role":"assistant"},"content":{"parts":["{\\"system1_search_query\\":[{\\"q\\":\\"Google products\\"}],\\"response_length\\":\\"short\\"}"]}}}',
 			'data: {"message":{"author":{"role":"assistant"},"content":{"parts":["final answer"]}}}',
 			"data: [DONE]",
 		].join("\n\n");

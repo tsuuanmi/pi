@@ -10,7 +10,7 @@ metadata; loading validates the registry and account shapes without gating on it
 
 `getAccountRegistryPath()` resolves to `$PI_AGENT_DIR/internet/accounts.json`, or
 `~/.pi/agent/internet/accounts.json`. When the file is absent, `list()` returns one enabled
-`openai` account named `default` at `127.0.0.1:17841` with durable conversation mode.
+`openai` account named `default` at `127.0.0.1:17841`. ChatGPT Web conversations are durable per Pi session.
 
 ## `AccountRegistry`
 
@@ -21,7 +21,6 @@ metadata; loading validates the registry and account shapes without gating on it
   loopback port from `17841` when no port is supplied.
 - `remove(id)` removes routing metadata without deleting private account data.
 - `setEnabled(id, enabled)` changes account availability.
-- `setConversationMode(id, mode)` changes temporary/durable mode for ChatGPT Web accounts only.
 
 IDs match `^[a-z0-9][a-z0-9-]{0,31}$`. Browser config directories are absolute, must bind to
 `127.0.0.1`, and use a unique port. Anthropic and Google accounts store only the name of an API-key environment variable; secret

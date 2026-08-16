@@ -8,13 +8,12 @@ multi-provider) with the strengths of `internet` (Pi-native, browser-optional, D
 2. **Fusion "ask all"** — fan a query across all enabled providers and synthesize one coherent
    answer (not just a side-by-side comparison).
 
-Status: **proposal / brainstorm.** No code changes.
+Status: **historical design record.** Hybrid capture is implemented in the vendored browser
+runtime; Fusion remains a proposal.
 
-> **Source:** the capture and multi-provider ideas below are grounded in the Prometheus repo
-> `/home/superman/workspaces/prometheus` (`src/provider-catalog.cjs`, `src/automation/*.cjs`,
-> `src/mcp-server.js`) and the daemon repo `/home/superman/workspaces/codex-chatgpt-web`
-> (`src/adapters/chatgpt-web/browser-worker.ts`).
-> See [source-repositories.md](source-repositories.md).
+> **Source:** current capture implementation is under
+> `vendor/codex-chatgpt-web/src/adapters/chatgpt-web/`; current provider orchestration is under
+> `src/council/`. See [source-repositories.md](source-repositories.md).
 
 ---
 

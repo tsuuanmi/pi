@@ -1,19 +1,17 @@
 # Internet — Architecture Review & Direction
 
 This review consolidates the current state of `@tsuuanmi/pi-internet` against the five product
-principles that define what this package should be. It is grounded in the actual source of the three
-repos on disk and the implemented package code, and it records the decisions and the remaining work
+principles that define what this package should be. It is grounded in the implemented package source and the vendored runtime, and it records the decisions and the remaining work
 for each principle.
 
 > Status: **review.** This is a living direction document, not a proposal. It supersedes the older
 > `review-and-brainstorm.md` framing where the two disagree, and it records the new features that
 > have landed since the original MVP review.
 
-Sources on disk:
-- Pi monorepo: `/home/superman/workspaces/pi` (this package lives at `packages/internet`).
-- codexweb (upstream, Council 3.x): `/home/superman/workspaces/codexweb` — `Nolane-x/codexweb`, HEAD `1ddeba4` (v3.3.1).
-- codex-chatgpt-web (daemon, vendored): `/home/superman/workspaces/codex-chatgpt-web` — `miuuyy/codex-chatgpt-web`, HEAD `9f74486` (v2.1.9).
-- Prometheus (browser multi-provider): `/home/superman/workspaces/prometheus` — `tsuuanmi/prometheus`, HEAD `1d0a166`.
+Authoritative sources:
+- Package implementation: `packages/internet/src/`.
+- Vendored browser runtime: `packages/internet/vendor/codex-chatgpt-web/src/`.
+- Current package plan and review documents under `packages/internet/docs/`.
 
 ---
 
@@ -60,13 +58,13 @@ what makes it unique.
 | Concern | codexweb (Council 3.x) | codex-chatgpt-web (daemon) | Prometheus | internet takes |
 |---|---|---|---|---|
 | Browser runtime / Responses surface | Electron + Playwright Council | Bun daemon, `/v1/responses`, isolated login, replay, compaction, broker, MCP | Electron + Playwright, 11 providers | **codex-chatgpt-web daemon** (vendored) |
-| Model-output capture | DOM (Council turns) | DOM parsing | Network interception (SSE/JSON) | **Hybrid** (interception primary, DOM fallback) — future |
-| Multi-agent Council | ✅ core feature | ❌ | ❌ | **Future** (see §4) |
+| Model-output capture | DOM (Council turns) | DOM parsing | Network interception (SSE/JSON) | **Hybrid** (interception primary, DOM fallback) |
+| Multi-agent Council | ✅ core feature | ❌ | ❌ | **`internet_council` bounded workflow** (see §4) |
 | Multi-provider breadth | ❌ | single ChatGPT path | 11-provider catalog | **Provider seam** — future API providers |
 | Web search / fetch | ❌ | removed in `9f74486` | browser-based | **Keyless RSS + bounded SSRF-safe fetch** (unique) |
 | `@file` / local tools | Council MCP | Full-mode broker/MCP | inline `@file` expansion | **Bounded workspace-local `@file`** (from Prometheus) |
 | Integration surface | Electron app | HTTP daemon | MCP + REST | **Pi provider + tools** (unique) |
-| Platform | 4-platform Electron | Bun runtime (platform-agnostic build) | Linux | **Linux now, macOS next** (see §5) |
+| Platform | 4-platform Electron | Bun runtime (platform-agnostic build) | Linux | **Linux and macOS** (see §5) |
 
 ### What makes internet unique
 1. **Pi-native provider registration** — neither codexweb nor Prometheus registers as a Pi provider.
@@ -79,8 +77,8 @@ what makes it unique.
 
 ### Direction
 The "best of both" table in `architecture.md` and `plan/best-of-both.md` is the source of truth for
-what to take. The two highest-value future ports are **hybrid capture** (from Prometheus) and the
-**provider seam** (multi-provider). Do not duplicate Prometheus's generic MCP runtime or its
+what to take. Hybrid capture is implemented in the vendored ChatGPT adapter; the provider seam
+remains the next expansion point. Do not duplicate Prometheus's generic MCP runtime or its
 browser-driven Claude/Gemini path; prefer API-based providers.
 
 ---
@@ -142,26 +140,27 @@ Bundled child runtime (embedded Bun)
   accounts without verified login.
 - **Lazy login** on first real use, gated by the `autoLogin` opt-out flag.
 - **Serialized per-account operations**; a healthy daemon already bound to the endpoint is reused.
-- **Daemon-owned idle shutdown** (~1 minute without a new request/message) so short CLI runs reuse
-  the headed browser and keep one ChatGPT conversation per Pi session.
+- **Daemon-owned idle shutdown** (~1 minute without a new request/message); durable identity and
+  restart semantics are defined in
+  [Durable Conversation Lifecycle and Recovery](durable-conversations.md).
 - **Graceful shutdown** and tunnel connect/disconnect for Full mode.
 
 ### Direction / open design questions
-- **Runtime portability** is the main open item (see §5). The build script is already
-  platform-agnostic (`process.platform`); only `src/daemon/runtime.ts` hard-gates Linux.
-- **Hybrid capture** (interception primary, DOM fallback) is the top robustness investment for the
-  core path. Prefer implementing it in the vendored daemon so DOM/SSE stay one owned path.
+- **Provider expansion** is the main feature seam; keep API providers behind the existing provider
+  registration boundary.
 - **Footprint**: 184MB is heavy. If a smaller runtime matters later, revisit whether the embedded
   Bun can be trimmed, but do not port to Node.
+- **Response acknowledgement** remains open; its recovery boundary is defined only in the canonical
+  [durable conversation review](durable-conversations.md).
 
 ---
 
-## 4. Principle 4 — Multi-agent Council is a future idea
+## 4. Principle 4 — Multi-agent Council is implemented
 
-**Agreed — future, not now.** The Council is codexweb 3.x's headline feature and is deliberately out
-of scope for the current package.
+The package provides `internet_council` as a bounded, tool-free multi-provider synthesis workflow.
+The larger Electron-first codexweb Council remains out of scope; it is a different architecture.
 
-### What Council is (from `codexweb/docs/council.md`)
+### External codexweb Council (not included)
 - An Electron-first multi-agent system: a ChatGPT Project Lead spawns managed child agents
   (Alice/Bob/Carol) that run in persistent ChatGPT conversations.
 - Managed state (id/name/role/mandate/permissions/conversation URL/checkpoint) is private; the
@@ -171,60 +170,24 @@ of scope for the current package.
 - Atomic action application, a decision gate, durable wake delivery, and a resurrection packet.
 - ~2,843 lines of `src/council/` in codexweb HEAD.
 
-### Why it is future
-- The current package is a **single-session provider path** — one ChatGPT conversation per Pi
-  session, no multi-agent orchestration.
-- Council is Electron-first and depends on the launcher app, which the package deliberately does not
-  ship (it embeds only the headless Bun daemon).
-- The vendored snapshot (v2.1.8) predates Council entirely; Council exists only in codexweb 3.x.
+### Package council boundary
+- `internet_council` orchestrates 2–6 tool-free provider members and runs final synthesis only after
+  all members complete.
+- Council members do not create durable ChatGPT bindings or receive local tools.
+- The external Electron-first codexweb Council and its launcher remain outside this package.
 
 ### Direction
-Keep Council as a **future idea** and do not build Council-specific machinery now. If it is pursued
-later, the natural path is to re-vendor a newer codexweb snapshot that includes `src/council/` and
-the launcher, then expose Council as a Pi-facing capability. Do not hand-roll a parallel multi-agent
-system in the package. The current durable-conversation and canary work is the correct foundation to
-build on, but it is not Council.
+Keep the current `CouncilService` boundary and avoid importing Electron-specific council machinery.
+The durable conversation and provider boundaries remain independent of council orchestration.
 
 ---
 
 ## 5. Principle 5 — Support both macOS and Linux
 
-**Both Linux and macOS are required targets.** Linux is implemented; **macOS is a requirement, not
-an optional next step**. This is the largest concrete gap between the current package and the stated
-goal.
-
-### Current state
-- `src/daemon/runtime.ts` hard-gates: `if (platform !== "linux") throw ... "supports Linux only"`.
-- The built artifact is `linux-x64` (`dist/daemon/runtime/manifest.json` pins `platform: "linux"`,
-  `arch: "x64"`).
-- Docs describe the package as "Linux-first".
-
-### What already works for macOS (in the vendored daemon)
-- `scripts/build-runtime-bundle.ts` is **platform-agnostic** — it uses `process.platform`/`process.arch`
-  and produces a darwin bundle when run on macOS. `scripts/build-daemon.mjs` just invokes it.
-- `src/config.ts` `defaultChromeExecutable()` already returns the macOS path
-  (`/Applications/Google Chrome.app/.../Google Chrome`) for `darwin`.
-- The macOS-only gate in `src/setup.ts` (lines 269–272) blocks only the **terminal-only managed
-  Chrome setup** convenience flow on non-macOS; `login` and `serve` are not macOS-gated. The package
-  uses `login`/`serve`, not `setup`, so this gate does not block the package path.
-
-### What macOS support requires
-1. **Relax `src/daemon/runtime.ts`** to accept `darwin` (and validate the manifest's platform/arch
-   against the running platform instead of hard-coding `linux`).
-2. **Build the runtime on macOS** (or cross-build) so `dist/daemon/runtime/` contains a darwin
-   artifact. The build script already supports this; the package build must produce the right
-   platform artifact per host.
-3. **Verify the isolated Chrome login and headed inference** on macOS (Keychain-aware profile
-   reopening, the v2.1.9 login capture flow).
-4. **Update docs** from "Linux-first" to "Linux and macOS" once darwin artifacts are produced and
-   tested.
-5. **CI**: add a macOS build/smoke lane so the darwin artifact is verified, not just produced.
-
-### Direction
-macOS is a well-scoped port: the daemon already handles darwin Chrome paths (system Chrome via
-Playwright is the preferred browser on both platforms) and the build is platform-agnostic. The work
-is mostly in the package boundary (`runtime.ts`), the build/CI, and verification. Windows is not a
-stated goal and should stay out of scope.
+**Linux and macOS are supported targets.** The package runtime validates the host platform and
+architecture against the bundled manifest, and the build produces the matching Bun runtime bundle.
+System Chrome paths are selected per platform by the vendored daemon configuration. Windows remains
+out of scope.
 
 ---
 
@@ -238,9 +201,8 @@ Since then the following have been implemented and are now production scope:
   output ceiling. Provider-local ids render as `chatgpt-web/high` instead of a doubled prefix.
 - **R2 — `autoLogin` opt-out flag.** Lazy login is opt-out via `internet_settings`; headless users
   are not surprised by a Chrome window.
-- **R2b — Conversation continuity + unobtrusive headed browser.** One ChatGPT conversation per Pi
-  session, full-history replay fallback, ~1-minute idle shutdown, small top-left window, and the
-  read-only warning no longer repeats in browser-only turns.
+- **R2b — Conversation continuity + unobtrusive headed browser.** See the canonical
+  [durable conversation review](durable-conversations.md).
 - **R3 — `internet_search` + `internet_fetch`.** Keyless RSS search plus bounded, SSRF-aware page
   fetching. Read-only, no interactive approval.
 - **R4 — `internet_doctor`.** Bounded, cancellable `doctor --json` diagnostics with strict report
@@ -248,19 +210,16 @@ Since then the following have been implemented and are now production scope:
 - **R4b — Full harness / local file access.** Account-scoped `internet_harness`; safe static `@file`
   expansion in both modes; Full mode wires the vendored broker/MCP path with private runtime-key
   storage.
-- **Durable conversation mode.** Canary-gated, account-scoped `internet_account_conversation_mode`;
-  accounts default to isolated Temporary Chat. Durable v1 rejects attachments and ambiguous/replayed/
-  diverged turns.
 - **Account-scoped tools and stable provider names.** `chatgpt-web` for `default`, `chatgpt-web-<id>`
   for others; enabling/disabling unrelated accounts does not rename a provider.
 - **Owned daemon lifecycle.** Package-owned private config, isolated Chrome login, health-gated
   auto-start, serialized lifecycle, graceful shutdown, and the `internet_daemon` tool.
 
 ### Remaining roadmap (from `plan/roi-roadmap.md`)
-- **R5 — Hybrid capture** (interception primary, DOM fallback): top medium-effort investment to
-  harden the core path against ChatGPT UI churn.
 - **R6 — Multi-provider seam + Fusion** (`internet_ask_all`): later, larger bet.
-- **R7 — Full-mode tool bridge** (`codex_tool_call`/`exec`/`apply_patch`): later, approval-gated.
+
+Hybrid capture, Full-mode tool bridging, macOS support, and durable conversation continuity are
+implemented and verified in the current package.
 
 ---
 
@@ -273,10 +232,9 @@ The package is on the right track against all five principles:
    Pi-native integration) is what makes it unique.
 3. **Runtime** — use the current runtime: vendor + embed Bun as an isolated child process over system
    Chrome. Electron is not an option (it fights the provider model and adds a second browser).
-4. **Council** — correctly deferred as future; do not hand-roll a parallel system.
-5. **macOS + Linux** — both are required targets; Linux is done, **macOS is the next concrete
-   milestone** and is well-scoped (relax `runtime.ts`, build/verify a darwin artifact, update docs/CI).
+4. **Council** — implemented as a bounded Pi-native workflow; keep Electron-specific orchestration separate.
+5. **macOS + Linux** — both are supported targets; runtime selection and platform-specific Chrome
+   configuration are implemented.
 
-The single highest-value next step is **macOS support** (Principle 5), because it is well-scoped and
-directly closes the gap to the stated goal. After that, **hybrid capture** (R5) is the top
-robustness investment for the core model path.
+The main remaining product investment is the multi-provider seam and Fusion workflow. Keep the
+current durable conversation and provider boundaries stable while expanding that surface.

@@ -5,8 +5,9 @@ codex-chatgpt-web daemon already provides and what Pi currently lacks. It builds
 [review/review-and-brainstorm](../review/review-and-brainstorm.md) (MVP = model routing) and
 [multi-account-and-providers.md](multi-account-and-providers.md) (multi-account + Claude/Gemini).
 
-Status: **partially implemented.** Model routing, lifecycle, multi-account management, public web
-search/fetch, and account diagnostics are implemented; remaining items are proposals.
+Status: **partially implemented.** Model routing, lifecycle, durable conversations, multi-account
+management, public web search/fetch, account diagnostics, hybrid capture, and Full-mode tools are
+implemented; multi-provider Fusion remains a proposal.
 
 ---
 

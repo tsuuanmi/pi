@@ -7,6 +7,8 @@
 - Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
 - Replace the package-root `registerOpenAiProviders` export with generic
   `registerInternetProviders`.
+- Remove the ChatGPT conversation-mode account field and require the durable conversation journal;
+  existing mode-bearing account and daemon configuration must be recreated.
 
 ### Added
 
@@ -19,8 +21,7 @@
 - Add account removal, provider-specific validation, and automatic browser-port allocation.
 - Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
 
-- Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.
-- Add `internet_account_conversation_mode`; accounts default to durable conversation mode.
+- Bind every Pi session to one account-scoped, owner-private ChatGPT conversation with canonical suffix synchronization.
 - Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun host-native runtime
   inside the package, removing the runtime dependency on another repository or manually started daemon.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
@@ -42,6 +43,8 @@
 
 ### Changed
 
+- Make durable ChatGPT conversations universal across browser-only and Full modes; each later turn
+  reopens the saved conversation and sends only the current suffix.
 - Pin all direct vendored runtime dependencies to exact lockfile versions.
 - Mark Internet as optional for root Pi bundling so standard builds can omit its platform-specific runtime unless the package is built first.
 - Register provider/tool control through `onHook(...)` and HUD refresh through the observation-only `turn_end` event.
@@ -59,12 +62,14 @@
   of `chatgpt-web/chatgpt-web/high`; map them to canonical daemon routes at the request boundary.
 - Keep the headed daemon/browser reusable for 60 quiet seconds, use a 700×500 window at `(0,0)`, and
   keep browser/tunnel idle cleanup in the daemon instead of stopping it on every Pi session exit.
-- Keep Full harness on Temporary Chat; durable v1 rejects attachments and ambiguous, replayed, or diverged turns before another browser submit.
+- Use one durable ChatGPT conversation for browser-only and Full harness turns; reject attachments and ambiguous, replayed, or diverged turns before another browser submit.
 - Document that upstream advanced to `9f74486` (a dead-code/test cleanup) and was deliberately not
   synced: the package depends on none of the removed code, and the turn-metadata, login, doctor, and
   model-catalog contracts it relies on are unchanged between v2.1.9 and `9f74486`.
 
 ### Removed
+
+- Remove the obsolete ChatGPT conversation-mode configuration and account tool.
 
 - Remove unused Anthropic/Google stubs and custom turn adapter/replay stubs that duplicated deferred
   or host-owned responsibilities.
@@ -74,18 +79,14 @@
 ### Fixed
 
 - Load account registries without rejecting older schema version values.
-- Prevent intermediate ChatGPT search-tool payloads from being returned as the final answer; wait for the actual Markdown response.
+- Capture every ChatGPT conversation response and select the latest message only after the browser turn completes, avoiding both premature intermediate results and brittle final-Markdown detection.
 - Allow the durable conversation canary enough time to complete its browser turn, accept non-empty
   model reply variance after validating and reopening the canonical conversation URL, exclude
   request-only environment blocks from persistent history, acknowledge multi-phase assistant output
   as one response, and keep each Pi session bound to one ChatGPT conversation id across turns.
-- Fix durable conversation mode so it actually engages: propagate the runtime mode onto the provider
-  config (the browser-only guard previously always failed), and repair the canary's model id, prompt
-  images, and text-delta callback.
-- Re-read the account from the registry before generating daemon config so a conversation-mode change
-  survives daemon restarts without a Pi reload.
-- Fix the durable conversation canary's capability metadata so browser-only checks include the required
-  local-tools flag.
+- Fix durable conversation continuation across browser-only and Full harness requests, including the
+  canary model id, prompt images, and text-delta callback.
+- Fix the durable conversation canary's capability metadata for tool-capable and read-only turns.
 - Stop repeating the local-computer warning in browser-only ChatGPT Web prompt context while retaining
   actionable Full-harness guidance.
 - Add the daemon-required stable turn identity and trusted read-only environment metadata to Pi's

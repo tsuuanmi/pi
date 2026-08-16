@@ -1,20 +1,19 @@
 # Internet — Multi-Account & Multi-Provider Brainstorm
 
-This document brainstorms how `internet` supports **multiple accounts per provider** and stays
-future-proof for **Claude and Gemini** providers, while keeping the MVP minimal and not changing
-the Pi ecosystem.
+This document records the original design for **multiple accounts per provider** and **Claude and
+Gemini** providers. The design is now implemented; the remaining sections preserve the rationale and
+tradeoffs.
 
-> **Source:** the account = daemon-instance model is grounded in
-> `/home/superman/workspaces/codex-chatgpt-web/src/config.ts` (`CODEX_CHATGPT_WEB_HOME`, `port`,
-> `storageStatePath`, `brokerSocketPath`, `controlToken`) and the Pi provider API
-> `/home/superman/workspaces/pi/packages/pi/src/api/provider-types.ts`.
-> See [source-repositories.md](source-repositories.md).
+> **Source:** the account = daemon-instance model is implemented by `src/accounts/registry.ts` and
+> `src/daemon/config.ts`; the vendored daemon configuration is under
+> `vendor/codex-chatgpt-web/src/config.ts`. See [source-repositories.md](source-repositories.md).
 
-- **MVP:** ChatGPT Web via one codex-chatgpt-web daemon. Works with current Pi as-is.
-- **Next:** multiple ChatGPT accounts.
-- **Future:** Claude and Gemini providers behind the same abstraction.
+- **Implemented:** ChatGPT Web via one account-scoped daemon per configured account.
+- **Implemented:** multiple ChatGPT accounts plus Anthropic and Gemini API providers.
+- **Current boundary:** each account is registered as a provider; provider-specific request adapters
+  remain behind the existing provider boundary.
 
-Status: **proposal / brainstorm.** Nothing is implemented.
+Status: **historical design record.** See current source and `docs/architecture.md` for behavior.
 
 ---
 

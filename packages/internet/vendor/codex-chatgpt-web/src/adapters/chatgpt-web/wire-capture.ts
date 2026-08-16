@@ -1,5 +1,4 @@
 import type { Page, Response } from "playwright-core";
-import { isChatGptSearchToolPayload } from "./tool-payload";
 import { parseChatGptWireResponse } from "./wire-response";
 
 function isConversationResponse(response: Response): boolean {
@@ -16,43 +15,43 @@ function isConversationResponse(response: Response): boolean {
 
 export class ChatGptWireCapture {
   private readonly page: Page;
-  private readonly result: Promise<string | undefined>;
-  private resolveResult!: (value: string | undefined) => void;
-  private settled = false;
+  private readonly captured: Array<string | undefined> = [];
+  private readonly pending = new Set<Promise<void>>();
 
   constructor(page: Page) {
     this.page = page;
-    this.result = new Promise(resolve => {
-      this.resolveResult = resolve;
-    });
     page.on("response", this.onResponse);
   }
 
   async waitForText(timeoutMs = 1_500): Promise<string | undefined> {
-    return Promise.race([
-      this.result,
-      new Promise<undefined>(resolve => setTimeout(resolve, timeoutMs)),
-    ]);
+    const pending = [...this.pending];
+    if (pending.length > 0) {
+      await Promise.race([
+        Promise.all(pending),
+        new Promise<void>(resolve => setTimeout(resolve, timeoutMs)),
+      ]);
+    }
+    return this.captured.filter((text): text is string => Boolean(text)).at(-1);
   }
 
   dispose(): void {
     this.page.off("response", this.onResponse);
-    this.settle(undefined);
   }
 
   private readonly onResponse = (response: Response): void => {
     if (!isConversationResponse(response)) return;
-    void response.text()
+    const index = this.captured.length;
+    this.captured.push(undefined);
+    let pending!: Promise<void>;
+    pending = response.text()
       .then(parseChatGptWireResponse)
       .then(text => {
-        if (text && !isChatGptSearchToolPayload(text)) this.settle(text);
+        this.captured[index] = text;
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        this.pending.delete(pending);
+      });
+    this.pending.add(pending);
   };
-
-  private settle(value: string | undefined): void {
-    if (this.settled) return;
-    this.settled = true;
-    this.resolveResult(value);
-  }
 }

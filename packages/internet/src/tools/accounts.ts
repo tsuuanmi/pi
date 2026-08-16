@@ -11,7 +11,6 @@ interface AddAccountParams {
 	host?: string;
 	port?: number;
 	enabled?: boolean;
-	conversationMode?: "temporary" | "durable";
 	apiKeyEnv?: string;
 }
 
@@ -25,11 +24,10 @@ function accountInput(params: AddAccountParams): InternetAccountInput {
 			configDir: params.configDir,
 			host: params.host,
 			port: params.port,
-			conversationMode: params.conversationMode,
 		};
 	}
 	if (!params.apiKeyEnv) throw new Error(`${params.provider} accounts require apiKeyEnv.`);
-	if (params.configDir || params.host || params.port || params.conversationMode) {
+	if (params.configDir || params.host || params.port) {
 		throw new Error(`Browser-daemon settings are not valid for ${params.provider} accounts.`);
 	}
 	return { ...common, provider: params.provider, apiKeyEnv: params.apiKeyEnv };
@@ -59,7 +57,6 @@ export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">):
 			host: Type.Optional(Type.String({ minLength: 1 })),
 			port: Type.Optional(Type.Integer({ minimum: 1, maximum: 65_535 })),
 			enabled: Type.Optional(Type.Boolean()),
-			conversationMode: Type.Optional(Type.Union([Type.Literal("temporary"), Type.Literal("durable")])),
 			apiKeyEnv: Type.Optional(Type.String({ minLength: 1 })),
 		}),
 		async execute(_id, params) {
@@ -87,20 +84,6 @@ export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">):
 		parameters: Type.Object({ id: Type.String({ minLength: 1 }), enabled: Type.Boolean() }),
 		async execute(_id, params) {
 			const account = await new AccountRegistry().setEnabled(params.id, params.enabled);
-			return { content: [{ type: "text", text: JSON.stringify(account, null, 2) }], details: account };
-		},
-	});
-
-	host.registerTool({
-		name: "internet_account_conversation_mode",
-		label: "Internet Account Conversation Mode",
-		description: "Set temporary or durable ChatGPT Web conversation mode for one account.",
-		parameters: Type.Object({
-			id: Type.String({ minLength: 1 }),
-			mode: Type.Union([Type.Literal("temporary"), Type.Literal("durable")]),
-		}),
-		async execute(_id, params) {
-			const account = await new AccountRegistry().setConversationMode(params.id, params.mode);
 			return { content: [{ type: "text", text: JSON.stringify(account, null, 2) }], details: account };
 		},
 	});

@@ -502,9 +502,6 @@ export function startServer(
       }
       if (req.method === "POST" && url.pathname === "/admin/conversation-canary") {
         if (!controlAuthorized(req)) return new Response("Unauthorized", { status: 401 });
-        if (config.mode !== "browser-only" || config.conversationMode !== "durable") {
-          return Response.json({ status: "refused", reason: "durable_browser_only_required" }, { status: 409 });
-        }
         return httpTurns.track(async () => {
           const provider = providerConfig(config);
           const stateDir = provider.chatgptWeb?.conversationStateDir;

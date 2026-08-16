@@ -31,7 +31,6 @@ import { CHATGPT_MAX_INPUT_IMAGES, type CompiledChatGptWebPrompt, type ChatGptWe
 import { estimateCompiledChatGptWebInputTokens } from "./input-tokens";
 import {
   assertAuthenticatedChatGptPage,
-  assertTemporaryChatPage,
   CHATGPT_ASSISTANT_TURN_SELECTOR,
   CHATGPT_COMPLETION_ACTION_SELECTOR,
   CHATGPT_COMPOSER_SELECTOR,
@@ -40,8 +39,8 @@ import {
   CHATGPT_EFFORT_MENU_SELECTOR,
   CHATGPT_EFFORT_SLIDER_SELECTOR,
   CHATGPT_STOP_BUTTON_SELECTOR,
-  CHATGPT_TEMPORARY_CHAT_URL,
   CHATGPT_USER_TURN_SELECTOR,
+  CHATGPT_HOME_URL,
   detectChatGptAccountCapabilities,
   parseChatGptEffortSliderState,
 } from "../../chatgpt-session";
@@ -63,7 +62,6 @@ import {
   ChatGptLunaCheckpointStream,
   type CapturedChatGptLunaCheckpoint,
 } from "./rolling-checkpoint";
-import { isChatGptSearchToolPayload } from "./tool-payload";
 import { ChatGptWireCapture } from "./wire-capture";
 
 export { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
@@ -239,7 +237,7 @@ export function assertChatGptWebInputWithinLimits(
 
 const browserStageTimeouts = {
   browserPage: 60_000,
-  temporaryChatPreparation: 150_000,
+  conversationPreparation: 60_000,
   effortSelection: 120_000,
   promptAttachment: 60_000,
   fileAttachment: 120_000,
@@ -278,14 +276,14 @@ export interface BrowserConversationTurn {
   kind: "create" | "continue";
   conversationUrl?: string;
   onClickAttempt: () => void;
-  onConversationReady: (conversationUrl: string, assistantText: string) => void;
+  onConversationReady: (conversationUrl: string, assistantText: string, page: Page) => void;
   onConflict: () => void;
 }
 
 export interface BrowserTurn {
   traceId: string;
   modelId: string;
-  conversation?: BrowserConversationTurn;
+  conversation: BrowserConversationTurn;
   reasoning?: string;
   capabilities: ChatGptWebCapabilities;
   prepare: () => Promise<CompiledChatGptWebPrompt & { release: () => void }>;
@@ -315,19 +313,16 @@ export interface ResolvedBrowserConfig {
   browserWindowPositionX: number;
   browserWindowPositionY: number;
   autoApproveToolCalls: boolean;
-  conversationMode: "temporary" | "durable";
 }
 
 export function chatGptTurnIsComplete(state: {
   responsePresent: boolean;
-  finalAnswerPresent: boolean;
   running: boolean;
   currentText: string;
   currentHtml?: string;
   completionActionVisible: boolean;
 }): boolean {
   return state.responsePresent
-    && state.finalAnswerPresent
     && !state.running
     && state.currentText.length > 0
     && state.completionActionVisible;
@@ -681,10 +676,6 @@ export function resolveBrowserConfig(provider: CodexProviderConfig): ResolvedBro
   if (browserHost === "launcher" && !browserHostDescriptorPath) {
     throw new Error("Launcher browser host requires chatgptWeb.browserHostDescriptorPath");
   }
-  const conversationMode = configured.conversationMode ?? "temporary";
-  if (conversationMode === "durable" && browserHost !== "managed-chrome") {
-    throw new Error("Durable ChatGPT conversations require the managed Chrome browser host");
-  }
   if (turnTimeoutMs !== undefined
     && (!Number.isFinite(turnTimeoutMs) || turnTimeoutMs <= 0)) {
     throw new Error("ChatGPT Web turnTimeoutMs must be a positive finite number");
@@ -705,7 +696,6 @@ export function resolveBrowserConfig(provider: CodexProviderConfig): ResolvedBro
     browserWindowPositionX: configured.browserWindowPositionX ?? 0,
     browserWindowPositionY: configured.browserWindowPositionY ?? 0,
     autoApproveToolCalls: configured.autoApproveToolCalls === true,
-    conversationMode,
   };
 }
 
@@ -798,7 +788,6 @@ export class ChatGptBrowserWorker {
 
   inspectSession(detectCapabilities: boolean): Promise<{
     authenticated: true;
-    temporary: true;
     url: string;
     solAvailable?: boolean;
     proAvailable?: boolean;
@@ -964,15 +953,6 @@ export class ChatGptBrowserWorker {
       if (this.managedBrowserReady === opening) this.managedBrowserReady = undefined;
       throw error;
     }
-  }
-
-  /** Temporary turns use isolated documents so capture remains turn-local. */
-  private async pageForNewTurn(): Promise<Page> {
-    if (this.config.browserHost === "launcher") {
-      throw new Error("Launcher turns require an explicitly leased browser surface");
-    }
-    const { context } = await this.ensureManagedBrowser();
-    return await context.newPage();
   }
 
   private async pageForConversation(turn: BrowserConversationTurn): Promise<Page> {
@@ -1185,36 +1165,6 @@ export class ChatGptBrowserWorker {
     await throwIfChatGptSessionFailureAlert(page);
     await assertAuthenticatedChatGptPage(page);
     await captureDiagnostic?.("conversation-session-verified");
-    return composer;
-  }
-
-  /** Put every Temporary turn on one fully hydrated isolated document. */
-  private async prepareTemporaryChatSurface(
-    page: Page,
-    captureDiagnostic?: (checkpoint: string) => Promise<void>,
-  ): Promise<Locator> {
-    // Launcher verification refreshes its owned page before attaching Playwright so a newly added
-    // connector is present in the catalog. Navigating again here destroys that freshly hydrated
-    // document and made the first verification race a second SPA bootstrap. A leased turn starts on
-    // about:blank and therefore still performs exactly one navigation through this same method.
-    if (page.url() !== CHATGPT_TEMPORARY_CHAT_URL) {
-      await page.goto(CHATGPT_TEMPORARY_CHAT_URL, {
-        waitUntil: "domcontentloaded",
-        timeout: 60_000,
-      });
-      await captureDiagnostic?.("temporary-chat-navigation-complete");
-    }
-    let composer: Locator;
-    try {
-      composer = await this.activeComposer(page);
-    } catch {
-      throw new Error("ChatGPT web login is expired or the Temporary Chat surface is unavailable");
-    }
-    await captureDiagnostic?.("composer-ready");
-    await throwIfChatGptSessionFailureAlert(page);
-    await assertAuthenticatedChatGptPage(page);
-    await assertTemporaryChatPage(page);
-    await captureDiagnostic?.("session-verified");
     return composer;
   }
 
@@ -1537,36 +1487,43 @@ export class ChatGptBrowserWorker {
     );
   }
 
+  private async prepareChatGptHomeSurface(page: Page): Promise<Locator> {
+    if (page.url() !== CHATGPT_HOME_URL) {
+      await page.goto(CHATGPT_HOME_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    }
+    const composer = await this.activeComposer(page);
+    await throwIfChatGptSessionFailureAlert(page);
+    await assertAuthenticatedChatGptPage(page);
+    return composer;
+  }
+
   private async verifyConnectorExclusive(): Promise<string> {
     const page = await this.ensurePage();
-    await this.prepareTemporaryChatSurface(page);
+    await this.prepareChatGptHomeSurface(page);
     await this.selectConnector(page);
     return this.config.appName;
   }
 
   private async inspectSessionExclusive(detectCapabilities: boolean): Promise<{
     authenticated: true;
-    temporary: true;
     url: string;
     solAvailable?: boolean;
     proAvailable?: boolean;
   }> {
     const page = await this.ensurePage();
-    await this.prepareTemporaryChatSurface(page);
+    await this.prepareChatGptHomeSurface(page);
     const url = page.url();
-    if (!detectCapabilities) return { authenticated: true, temporary: true, url };
+    if (!detectCapabilities) return { authenticated: true, url };
     const capabilities = await detectChatGptAccountCapabilities(page);
-    return { authenticated: true, temporary: true, url, ...capabilities };
+    return { authenticated: true, url, ...capabilities };
   }
 
   private async conversationCanaryExclusive(
     abortSignal?: AbortSignal,
   ): Promise<{ conversationUrl: string; response: string }> {
-    if (this.config.browserHost !== "managed-chrome") {
-      throw new Error("Durable conversation canary requires managed Chrome");
-    }
     const threadId = `canary-${Date.now()}`;
     let conversationUrl = "";
+    let submittedPage: Page | undefined;
     const response = await this.runBrowserTurn({
       traceId: `conversation-canary-${Date.now()}`,
       modelId: CHATGPT_WEB_MODEL_ID,
@@ -1574,7 +1531,10 @@ export class ChatGptBrowserWorker {
         threadId,
         kind: "create",
         onClickAttempt: () => {},
-        onConversationReady: (url) => { conversationUrl = url; },
+        onConversationReady: (url, _assistantText, page) => {
+          conversationUrl = url;
+          submittedPage = page;
+        },
         onConflict: () => {},
       },
       capabilities: { localToolsEnabled: false, solAvailable: true, proAvailable: false },
@@ -1588,20 +1548,22 @@ export class ChatGptBrowserWorker {
       onTextDelta: () => {},
     });
     conversationUrl = validateConversationCanary(response, conversationUrl);
-    const submittedPage = this.conversationPages.get(threadId);
     if (!submittedPage || submittedPage.isClosed()) {
       throw new Error("Durable conversation canary lost its submitted page before reopen verification");
     }
-    await submittedPage.close();
-    this.conversationPages.delete(threadId);
-    const page = await this.pageForConversation({
-      threadId,
-      kind: "continue",
-      conversationUrl,
-      onClickAttempt: () => {},
-      onConversationReady: () => {},
-      onConflict: () => {},
-    });
+    let page = submittedPage;
+    if (this.config.browserHost !== "launcher") {
+      await submittedPage.close();
+      this.conversationPages.delete(threadId);
+      page = await this.pageForConversation({
+        threadId,
+        kind: "continue",
+        conversationUrl,
+        onClickAttempt: () => {},
+        onConversationReady: () => {},
+        onConflict: () => {},
+      });
+    }
     await this.prepareConversationSurface(page, {
       threadId,
       kind: "continue",
@@ -1615,7 +1577,7 @@ export class ChatGptBrowserWorker {
 
   private async smokeTestExclusive(abortSignal?: AbortSignal): Promise<{ effort: string; response: string }> {
     const page = await this.ensurePage();
-    await this.prepareTemporaryChatSurface(page);
+    await this.prepareChatGptHomeSurface(page);
     const account = await detectChatGptAccountCapabilities(page);
     // Core smoke runs before the optional MCP connector is configured, so it must remain a
     // browser-only transport check. Connector setup has its own explicit verification operation.
@@ -1624,15 +1586,26 @@ export class ChatGptBrowserWorker {
     const reasoning = account.solAvailable ? "high" : "low";
     const mode = resolveChatGptWebModelMode(modelId, reasoning, capabilities);
     const traceId = `smoke_${randomUUID().replaceAll("-", "")}`;
+    const threadId = `smoke_${randomUUID().replaceAll("-", "")}`;
     const response = await this.runBrowserTurn({
       traceId,
       modelId,
       reasoning,
       capabilities,
+      conversation: {
+        threadId,
+        kind: "create",
+        onClickAttempt: () => {},
+        onConversationReady: () => {},
+        onConflict: () => {},
+      },
       prepare: async () => ({ text: CHATGPT_SMOKE_TEXT, images: [], release: () => {} }),
       abortSignal,
       onTextDelta: () => {},
     }, undefined, page);
+    const smokePage = this.conversationPages.get(threadId);
+    if (smokePage && !smokePage.isClosed()) await smokePage.close();
+    this.conversationPages.delete(threadId);
     if (response.trim() !== CHATGPT_SMOKE_EXPECTED) {
       throw new Error(
         `ChatGPT smoke test returned an unexpected answer (${JSON.stringify(response.trim().slice(0, 200))})`,
@@ -1980,7 +1953,6 @@ export class ChatGptBrowserWorker {
     const prepared = await turn.prepare();
     const diagnostics = new ChatGptBrowserDiagnostics(turn.traceId);
     let turnConnection: Browser | undefined;
-    let managedPage: Page | undefined;
     let diagnosticPage: Page | undefined;
     let wireCapture: ChatGptWireCapture | undefined;
     try {
@@ -2001,9 +1973,7 @@ export class ChatGptBrowserWorker {
       const page = await this.runStage(turn.traceId, "browser_page", browserStageTimeouts.browserPage, async (abortSignal) => {
         if (maintenancePage) return maintenancePage;
         if (!launcherSurfaceId) {
-          const managed = turn.conversation
-            ? await this.pageForConversation(turn.conversation)
-            : await this.pageForNewTurn();
+          const managed = await this.pageForConversation(turn.conversation);
           if (abortSignal.aborted) {
             await managed.close().catch(() => {});
             throw new DOMException("ChatGPT browser page acquisition aborted", "AbortError");
@@ -2023,7 +1993,6 @@ export class ChatGptBrowserWorker {
         turnConnection = connection.browser;
         return connection.page;
       });
-      if (!maintenancePage && !launcherSurfaceId) managedPage = page;
       diagnosticPage = page;
       await diagnostics.capture(page, "browser-page-acquired");
       console.info(
@@ -2031,11 +2000,9 @@ export class ChatGptBrowserWorker {
       );
       await this.runStage(
         turn.traceId,
-        turn.conversation ? "conversation_preparation" : "temporary_chat_preparation",
-        browserStageTimeouts.temporaryChatPreparation,
-        () => turn.conversation
-          ? this.prepareConversationSurface(page, turn.conversation, checkpoint => diagnostics.capture(page, checkpoint))
-          : this.prepareTemporaryChatSurface(page, checkpoint => diagnostics.capture(page, checkpoint)),
+        "conversation_preparation",
+        browserStageTimeouts.conversationPreparation,
+        () => this.prepareConversationSurface(page, turn.conversation, checkpoint => diagnostics.capture(page, checkpoint)),
       );
       const mode = await this.runStage(turn.traceId, "effort_selection", browserStageTimeouts.effortSelection, () => (
         this.selectModelAndEffort(
@@ -2082,7 +2049,7 @@ export class ChatGptBrowserWorker {
         await settleChatGptUi();
         await diagnostics.capture(page, "send-ready");
         await throwIfChatGptSessionFailureAlert(page);
-        turn.conversation?.onClickAttempt();
+        turn.conversation.onClickAttempt();
         await sendButton.press("Enter");
         const evidence = await this.waitForSubmissionAccepted(
           page,
@@ -2140,9 +2107,6 @@ export class ChatGptBrowserWorker {
         }
 
         const snapshot = await this.responseDomSnapshot(responseTurn);
-        const finalMarkdown = snapshot.markdownSegments.at(-1)?.text ?? "";
-        const finalAnswerPresent = snapshot.markdownSegments.length > 0
-          && !isChatGptSearchToolPayload(finalMarkdown);
         const stop = page.locator(CHATGPT_STOP_BUTTON_SELECTOR).last();
         const running = await stop.isVisible().catch(() => false);
         if (running) sawRunning = true;
@@ -2165,7 +2129,6 @@ export class ChatGptBrowserWorker {
           if (domError) throw new Error(domError);
           if (completionTracker.update({
             responsePresent: snapshot.responsePresent,
-            finalAnswerPresent,
             running,
             currentText: snapshot.visibleText,
             currentHtml: snapshot.fullHtml,
@@ -2223,11 +2186,11 @@ export class ChatGptBrowserWorker {
         atomicWriteFile(this.config.storageStatePath, `${JSON.stringify(state)}\n`);
       }
       await diagnostics.capture(page, "turn-completed");
-      turn.conversation?.onConversationReady(page.url(), finalText);
+      turn.conversation.onConversationReady(page.url(), finalText, page);
       console.info(`[chatgpt-web] browser turn ${turn.traceId} completed (markdownChars=${finalText.length})`);
       return finalText;
     } catch (error) {
-      turn.conversation?.onConflict();
+      turn.conversation.onConflict();
       if (diagnosticPage && !diagnosticPage.isClosed()) {
         await diagnostics.capture(diagnosticPage, "turn-failed", error);
       }
@@ -2239,12 +2202,6 @@ export class ChatGptBrowserWorker {
         await turnConnection.close().catch(error => {
           console.error(
             `[chatgpt-web] failed to release launcher browser connection for ${turn.traceId}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        });
-      } else if (!turn.conversation && managedPage && !managedPage.isClosed()) {
-        await managedPage.close().catch(error => {
-          console.error(
-            `[chatgpt-web] failed to close managed browser tab for ${turn.traceId}: ${error instanceof Error ? error.message : String(error)}`,
           );
         });
       }

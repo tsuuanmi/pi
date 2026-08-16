@@ -5,9 +5,9 @@ current Pi as-is**, and it brainstorms the path forward. It also locks the scope
 the codex-chatgpt-web daemon is the MVP provider.** Codex and Claude Code are **explicitly deferred** —
 they are future work, not part of this package's first milestone.
 
-Status: **proposal**. This is a review of `architecture.md` / `layout.md` / `how-it-works.md` /
-`pi-integration.md` with concrete recommendations to make the MVP smaller, more robust, and
-cheaper to ship.
+Status: **historical MVP review**. The recommendations below describe the original MVP boundary;
+current architecture and implementation status are maintained in `review/architecture-review.md` and
+`review/durable-conversations.md`.
 
 ---
 

@@ -29,7 +29,6 @@ describe("internetExtension", () => {
 				"internet_account_add",
 				"internet_account_remove",
 				"internet_account_set_enabled",
-				"internet_account_conversation_mode",
 				"internet_status",
 				"internet_doctor",
 				"internet_control",

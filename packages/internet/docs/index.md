@@ -65,7 +65,7 @@ bridging, and safe public web access.
 - [Multi-account/provider design](plan/multi-account-and-providers.md)
 - [Architecture review](review/architecture-review.md)
 - [Implementation review](review/implementation-review.md)
-- [Durable canary failure analysis](review/durable-canary-failure.md)
+- [Durable conversation lifecycle and recovery](review/durable-conversations.md)
 
 The brainstorm/review files preserve design history. Source and the mirrored references above are the
 authoritative current behavior.

@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import { readHarnessConfig } from "#internet/daemon/harness";
 
-const CONFIG_VERSION = 3;
+const CONFIG_VERSION = 4;
 const APP_NAME = "Codex Native2";
 const BROWSER_IDLE_SHUTDOWN_MS = 60 * 1_000;
 const BROWSER_WINDOW_WIDTH = 700;
@@ -28,7 +28,7 @@ interface OwnedTunnelConfig {
 }
 
 export interface OwnedDaemonConfig {
-	version: 3;
+	version: 4;
 	releaseVersion: string;
 	mode: "browser-only" | "full";
 	host: "127.0.0.1";
@@ -45,7 +45,6 @@ export interface OwnedDaemonConfig {
 	browserWindowPositionX: number;
 	browserWindowPositionY: number;
 	idleShutdownMs: number;
-	conversationMode: "temporary" | "durable";
 	conversationStateDir: string;
 	solAvailable: boolean;
 	proAvailable: boolean;
@@ -135,7 +134,6 @@ export async function ensureOwnedDaemonConfig(
 			existing.browserWindowPositionX === BROWSER_WINDOW_POSITION_X &&
 			existing.browserWindowPositionY === BROWSER_WINDOW_POSITION_Y &&
 			existing.idleShutdownMs === BROWSER_IDLE_SHUTDOWN_MS &&
-			existing.conversationMode === (harness.mode === "full" ? "temporary" : account.conversationMode) &&
 			existing.conversationStateDir === join(account.configDir, "conversations")
 		) {
 			return existing;
@@ -168,7 +166,6 @@ export async function ensureOwnedDaemonConfig(
 		browserWindowPositionX: BROWSER_WINDOW_POSITION_X,
 		browserWindowPositionY: BROWSER_WINDOW_POSITION_Y,
 		idleShutdownMs: BROWSER_IDLE_SHUTDOWN_MS,
-		conversationMode: harness.mode === "full" ? "temporary" : account.conversationMode,
 		conversationStateDir: join(account.configDir, "conversations"),
 		solAvailable: existing?.solAvailable ?? true,
 		proAvailable: existing?.proAvailable ?? false,

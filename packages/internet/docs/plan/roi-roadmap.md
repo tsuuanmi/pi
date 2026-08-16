@@ -4,7 +4,7 @@ Grounded, prioritized features for `@tsuuanmi/pi-internet` after the owned-daemo
 lists the evidence (docs + repo source), design, effort, impact, risk, and acceptance criteria so
 the tradeoff is explicit before any code.
 
-> Status: **R1–R4 implemented.** R5–R7 remain proposals.
+> Status: **R1–R5 and R7 implemented.** R6 remains the next proposal.
 
 Sources:
 - Daemon repo `/home/superman/workspaces/codex-chatgpt-web` (vendored at commit `bda266b4`).
@@ -104,22 +104,24 @@ an actionable message; `internet_daemon login` still works.
 
 ---
 
-### R2b. Conversation continuity + unobtrusive headed browser — **Refined target**
+### R2b. Conversation continuity + unobtrusive headed browser — **Implemented**
 
 **Problem.** Consecutive `--print` invocations appear to start fresh: each is a new process/session,
 so the daemon receives only the current message and cannot replay history. Within one session, the
-daemon opened a fresh Temporary Chat per turn, so continuity relied entirely on history replay.
+daemon opened a fresh isolated conversation per turn, so continuity was not durable across browser turns.
 
-**Evidence.** `implementation-plan-conversation-continuity.md`; daemon
-`src/adapters/chatgpt-web/browser-worker.ts` (`pageForNewTurn` → fresh Temporary Chat) and
-`src/adapters/chatgpt-web/prompt.ts` (`compileChatGptWebPrompt` replays history); Prometheus
+**Evidence.** `implementation-plan-conversation-continuity.md`; the vendored daemon
+`vendor/codex-chatgpt-web/src/adapters/chatgpt-web/browser-worker.ts` (conversation creation and
+canonical URL continuation) and `vendor/codex-chatgpt-web/src/adapters/chatgpt-web/prompt.ts`
+(suffix prompt compilation); Prometheus
 `electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
 
-**Refined design.** Keep the stable Pi session thread ID and full-history replay as the correctness
-fallback, but also keep **one ChatGPT conversation tab per Pi session ID** so ChatGPT retains context
-in the chat. The daemon owns a **~1-minute idle shutdown** (no new request/message for 60 s) and
-launches headed Chrome at a **small top-left window**. Separate CLI runs continue by resuming the Pi
-session (`--continue`, `--resume`, or `--session`) rather than a duplicate package session database.
+**Implemented design.** Bind the stable Pi session thread ID to **one durable ChatGPT conversation**.
+Normal continuation sends only the new suffix after the journal checkpoint. The daemon owns a
+**~1-minute idle shutdown** (no new request/message for 60 s) and launches headed Chrome at a **small
+top-left window**. Browser restart reopens the saved canonical URL. Separate CLI runs continue by
+resuming the Pi session (`--continue`, `--resume`, or `--session`) rather than a duplicate package
+session database.
 
 **Effort:** Medium. **Impact:** High (removes repeated Chrome startup and keeps in-chat context while
 preserving browser-check reliability). **Risk:** Low–Medium (long-lived SPA DOM).
@@ -212,21 +214,17 @@ in full mode, the model can read/edit a local file via bridged `codex_*` tools w
 
 ## Tier 3 — Robustness of the core path
 
-### R5. Hybrid capture (network interception primary + DOM fallback)
+### R5. Hybrid capture (network interception primary + DOM fallback) — **Implemented**
 
-**Problem.** The daemon uses DOM parsing as its capture method. The rendered UI is the least stable
-contract (cosmetic, silent changes); the wire (SSE/JSON) is the most stable and richer (reasoning,
-tool calls, usage, citations).
+**Problem.** DOM parsing is vulnerable to rendered UI changes. The wire (SSE/JSON) is richer and more
+stable for reasoning, tool calls, usage, and citations.
 
-**Evidence.** `best-of-both.md` §1–§2 (the endpoint-vs-UI argument and hybrid design); Prometheus
-`src/provider-catalog.cjs` + `src/automation/*.cjs` contain working per-provider interceptors and
-parsers that can be ported; daemon `src/adapters/chatgpt-web/browser-worker.ts` is the current DOM
-path.
+**Evidence.** The vendored `browser-worker.ts` and `wire-capture.ts` implement authenticated
+conversation wire capture with DOM extraction as the explicit compatibility fallback.
 
-**Design.**
-- In the vendored daemon's browser worker, add an interception layer as the primary capture; keep DOM
-  parsing as the fallback on `endpointChanged | opaqueFormat | transportChanged`.
-- Port the capture/parse logic from Prometheus where it maps cleanly; keep the hybrid in one place.
+**Implemented design.** Wire capture selects the latest conversation response without classifying model
+output by brittle payload shape. DOM extraction remains the single fallback when wire capture does not
+produce an answer.
 
 **Effort:** Medium–High. **Impact:** High (protects the core model path against ChatGPT UI churn).
 **Risk:** Medium (touches vendored daemon internals; endpoint obfuscation/auth).
@@ -251,25 +249,26 @@ fails; no double-parsing or duplicate parser.
 
 **Acceptance:** N providers run concurrently; fused answer with attribution and disagreement list.
 
-### R7. Full-mode tool bridge (`codex_tool_call`/`exec`/`apply_patch`)
+### R7. Full-mode tool bridge (`codex_tool_call`/`exec`/`apply_patch`) — **Implemented**
 
 **Problem.** Native Codex tools not exposed to Pi.
 
 **Evidence.** `features-brainstorm.md` §2.5/§3 (P4, needs approval gate); `tool_call` approval hook
 already exists in `hooks.ts`.
 
-**Design.** Map bridge tools through the existing approval gate.
+**Implemented design.** Brokered `codex_*` tools use the existing approval gate and owner-private
+runtime-key/tunnel state.
 
-**Effort:** High. **Impact:** High. **Risk:** High. **ROI:** Low now. **Acceptance:** every bridged
-tool requires interactive approval.
+**Effort:** High. **Impact:** High. **Risk:** High. **Acceptance:** every bridged tool requires
+interactive approval.
 
 ---
 
 ## Recommendation
 
-R1–R4 are implemented: correctness/safety fixes, web access, and account diagnostics. **R5** is the
-top medium-effort investment next because it hardens the primary path. **R6/R7** are later, larger
-bets once the seam and approval surface are proven.
+R1–R5 and R7 are implemented: correctness/safety fixes, durable conversation continuity, web access,
+account diagnostics, hybrid capture, and Full-mode tools. **R6** is the remaining larger bet once the
+multi-provider seam and synthesis contract are finalized.
 
 ## Open questions
 

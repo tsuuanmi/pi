@@ -8,7 +8,6 @@ import { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 interface ConversationToolDetails {
 	account: string;
-	mode: "temporary" | "durable";
 	authority: boolean;
 	action: "status" | "canary" | "reset";
 }
@@ -30,7 +29,6 @@ export function registerConversationTool(host: Pick<ExtensionAPI, "registerTool"
 				const authority = await pathExists(join(stateDir, "authority.json"));
 				const result: ConversationToolDetails = {
 					account: account.id,
-					mode: account.conversationMode,
 					authority,
 					action: "status",
 				};
@@ -44,20 +42,15 @@ export function registerConversationTool(host: Pick<ExtensionAPI, "registerTool"
 				await rm(stateDir, { recursive: true, force: true });
 				const result: ConversationToolDetails = {
 					account: account.id,
-					mode: account.conversationMode,
 					authority: false,
 					action: "reset" as const,
 				};
 				return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], details: result };
 			}
-			if (account.conversationMode !== "durable") {
-				throw new Error("Set the account conversation mode to durable before running the canary.");
-			}
 			await manager.ensureReady(account.id);
 			await (await DaemonClient.forAccount(account)).conversationCanary(signal);
 			const result: ConversationToolDetails = {
 				account: account.id,
-				mode: account.conversationMode,
 				authority: true,
 				action: "canary" as const,
 			};

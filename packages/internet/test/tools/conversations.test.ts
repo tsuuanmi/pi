@@ -5,7 +5,7 @@ import { registerConversationTool } from "#internet/tools/conversations";
 import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet_conversation", () => {
-	it("reports mode and authority without starting the daemon", async () => {
+	it("reports authority without starting the daemon", async () => {
 		const previous = process.env.PI_AGENT_DIR;
 		const agentDir = await mkdtemp(join(tmpdir(), "pi-internet-conversation-tool-"));
 		process.env.PI_AGENT_DIR = agentDir;
@@ -16,7 +16,7 @@ describe("internet_conversation", () => {
 			const manager = { stop: vi.fn(), ensureReady: vi.fn() } as any;
 			const tool = captureTools((host) => registerConversationTool(host, manager)).get("internet_conversation");
 			const result = await tool?.execute("status", { action: "status" }, undefined, undefined, {} as never);
-			expect(result?.details).toEqual({ account: "default", mode: "durable", authority: true, action: "status" });
+			expect(result?.details).toEqual({ account: "default", authority: true, action: "status" });
 			expect(manager.ensureReady).not.toHaveBeenCalled();
 		} finally {
 			if (previous === undefined) delete process.env.PI_AGENT_DIR;

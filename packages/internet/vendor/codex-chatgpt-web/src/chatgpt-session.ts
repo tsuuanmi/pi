@@ -1,7 +1,7 @@
 import type { Locator, Page } from "playwright-core";
 import type { ChatGptWebAccountCapabilities } from "./chatgpt-web-models";
 
-export const CHATGPT_TEMPORARY_CHAT_URL = "https://chatgpt.com/?temporary-chat=true";
+export const CHATGPT_HOME_URL = "https://chatgpt.com/";
 export const CHATGPT_COMPOSER_SELECTOR = [
   '[data-testid="prompt-textarea"]',
   "#prompt-textarea",
@@ -49,16 +49,17 @@ export function chatGptAuthenticationSurfaceReady(
   if (evidence.visibleComposerCount !== 1) return false;
   try {
     const actual = new URL(evidence.url);
-    const expected = new URL(CHATGPT_TEMPORARY_CHAT_URL);
+    const expected = new URL(CHATGPT_HOME_URL);
     return actual.origin === expected.origin
       && actual.pathname === expected.pathname
-      && actual.searchParams.get("temporary-chat") === "true";
+      && actual.search === ""
+      && actual.hash === "";
   } catch {
     return false;
   }
 }
 
-export async function isAuthenticatedTemporaryChatPage(page: Page): Promise<boolean> {
+export async function isAuthenticatedChatGptHome(page: Page): Promise<boolean> {
   const evidence = await page.evaluate(({ composerSelector }) => {
     const visible = (element: Element): boolean => {
       const style = getComputedStyle(element);
@@ -113,14 +114,6 @@ export async function assertAuthenticatedChatGptPage(page: Page): Promise<void> 
   );
   if (!await anyVisible(composer)) {
     throw new Error("ChatGPT authentication could not be verified: no visible composer is present");
-  }
-}
-
-export async function assertTemporaryChatPage(page: Page): Promise<void> {
-  const url = new URL(page.url());
-  const expected = new URL(CHATGPT_TEMPORARY_CHAT_URL);
-  if (url.origin !== expected.origin || url.pathname !== expected.pathname || url.searchParams.get("temporary-chat") !== "true") {
-    throw new Error(`ChatGPT left the isolated Temporary Chat surface (${page.url()})`);
   }
 }
 

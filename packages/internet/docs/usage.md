@@ -54,7 +54,6 @@ Use `internet_daemon` actions `status`, `start`, `stop`, and `restart` for lifec
 - `internet_account_add` adds one `openai`, `anthropic`, or `google` account.
 - `internet_account_remove { id }` removes metadata without deleting private data.
 - `internet_account_set_enabled { id, enabled }` changes startup/provider availability.
-- `internet_account_conversation_mode { id, mode }` changes only ChatGPT Web temporary/durable mode.
 
 ChatGPT account ports are allocated from `17841` when omitted and must remain unique loopback
 endpoints.
@@ -65,11 +64,12 @@ ChatGPT Web exposes capability-scoped Luna/Sol route models. Pi `@file` referenc
 for regular workspace-local files, under bounded count and byte limits. API providers use their
 native image/text support and do not use the browser replay adapter.
 
-## Temporary and durable conversations
+## Durable conversations
 
-Temporary mode is the default and isolates each turn from ChatGPT history. Durable mode binds one Pi
-session to one canonical ChatGPT conversation after a live canary. It rejects attachments,
-ambiguous/diverged replay, and conversation-id changes rather than silently forking state.
+Each Pi session binds to one canonical ChatGPT conversation after a live canary. Browser and daemon
+idle shutdown do not remove the binding; the next ChatGPT turn reopens the saved conversation URL.
+The adapter rejects attachments, ambiguous/diverged replay, and conversation-id changes rather than
+silently forking state.
 
 ## Full local-tool mode
 
@@ -82,9 +82,9 @@ internet_harness {
 }
 ```
 
-Full mode is account-scoped and remains on Temporary Chat. The vendored broker/MCP tunnel exposes
-registered `codex_*` tools. Pi requests approval and denies unrecognized or mismatched bridges. Use
-`internet_harness { action: "disable" }` to return to browser-only mode.
+Full mode uses the same durable ChatGPT conversation as browser-only mode. The vendored broker/MCP
+tunnel exposes registered `codex_*` tools. Pi requests approval and denies unrecognized or mismatched
+bridges. Use `internet_harness { action: "disable" }` to return to read-only browser mode.
 
 ## Council
 
