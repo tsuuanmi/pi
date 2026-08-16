@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import { readHarnessConfig } from "#internet/daemon/harness";
 
-const APP_NAME = "Codex Native2";
+const APP_NAME = "Pi Internet";
 const OWNED_DAEMON_CONFIG_FIELDS = new Set([
 	"releaseVersion",
 	"mode",
@@ -236,8 +236,10 @@ function validateOwnedConfig(value: unknown, account: OpenAiInternetAccount): as
 	if (!/^[A-Za-z0-9_-]{40,}$/.test(config.controlToken ?? "")) {
 		throw new Error(`Invalid owned daemon control token: ${path}`);
 	}
+	if (config.appName !== APP_NAME) {
+		throw new Error(`Invalid owned daemon connector identity: ${path}`);
+	}
 	const requiredStrings = [
-		config.appName,
 		config.chromeExecutablePath,
 		config.storageStatePath,
 		config.brokerSocketPath,

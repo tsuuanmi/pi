@@ -9,8 +9,9 @@ architecture, scope, and integration surface.
 > **Source:** both repos are on disk for inspection:
 > - Prometheus: `/home/superman/workspaces/prometheus` (`src/mcp-server.js`, `src/provider-catalog.cjs`,
 >   `electron/rest-api.cjs`, `src/automation/*.cjs`)
-> - Daemon (what `internet` wraps): `/home/superman/workspaces/codex-chatgpt-web`
->   (`src/server.ts`, `src/bridge.ts`, `src/adapters/chatgpt-web/browser-worker.ts`)
+> - Pi-owned runtime: `vendor/runtime`
+>   (`src/adapters/chatgpt-web/server.ts`, `src/adapters/chatgpt-web/responses/bridge.ts`,
+>   `src/adapters/chatgpt-web/browser-worker.ts`)
 >
 > See [source-repositories.md](source-repositories.md) for the full file map.
 
@@ -26,7 +27,7 @@ the product's web UI and capture the model's streaming response.**
 
 | | Prometheus | internet |
 |---|---|---|
-| Core mechanism | Electron app drives browser sessions; intercepts `fetch`/SSE to capture model output | codex-chatgpt-web daemon drives Chrome; parses the rendered DOM to capture model output |
+| Core mechanism | Electron app drives browser sessions; intercepts `fetch`/SSE to capture model output | Pi-owned runtime drives Chrome and captures authenticated conversation payloads |
 | Model providers | ChatGPT, Claude, Gemini, GoogleAI, DeepSeek, Grok, Z.ai, Copilot, Meta AI, Qwen, Perplexity (11) | MVP: ChatGPT Web only. Future: Claude, Gemini (via API) |
 | Integration surface | MCP server (stdio) + REST API (`/v1/chat/completions`) | Pi package (extension) — registers as a Pi provider + tools |
 | Host | Standalone Electron desktop app | Pi agent (extension) |
@@ -44,17 +45,16 @@ This is the **biggest architectural difference**.
   Claude `/completion`, Gemini `BimAJc`) and parses the SSE/JSON stream directly. It captures the raw
   wire response, not the rendered DOM.
 
-- **internet** (via codex-chatgpt-web) uses **DOM parsing**: it types the prompt into the ChatGPT
-  composer, then reads the rendered assistant-turn DOM, extracting markdown segments and reasoning
-  summaries. It does **not** intercept the network.
+- **internet** uses authenticated **conversation wire capture** after submitting through the ChatGPT
+  composer. Missing or invalid wire payloads fail explicitly; rendered DOM is not an answer fallback.
 
 | Capture method | Prometheus | internet |
 |---|---|---|
-| Network `fetch`/SSE interception | ✅ primary | ❌ |
-| DOM / rendered-content parsing | ❌ | ✅ primary |
-| Per-provider stream parser | ✅ (per-provider `interceptor.parser`) | ❌ (single ChatGPT DOM path) |
-| Robust to UI layout changes | ✅ while endpoint/parser remain stable | ❌ DOM selectors/rendering can change |
-| Robust to network/API changes | ❌ endpoints/formats can change | ✅ while rendered-turn semantics remain stable |
+| Network response interception | ✅ primary | ✅ authoritative conversation payload |
+| DOM answer extraction | ❌ | ❌ |
+| Per-provider stream parser | ✅ | ChatGPT conversation parser |
+| Robust to UI layout changes | ✅ while endpoint/parser remain stable | ✅ for answer extraction |
+| Robust to network/API changes | ❌ endpoints/formats can change | ❌ payload formats can change |
 
 ### 2.2 Provider model
 
@@ -147,9 +147,9 @@ This is the **biggest architectural difference**.
    similar skill set later (e.g. `internet-research`, `internet-summarize`) once the MVP tool
    surface is stable.
 
-4. **Both capture contracts are fragile.** Prometheus's endpoint/parser path can break on transport
-   changes; internet's DOM path can break on rendering/selector changes. The strongest port is
-   network interception as primary capture with the existing DOM parser as fallback.
+4. **Both capture contracts are fragile.** Their network payload formats can change. Internet keeps
+   one authoritative authenticated-wire parser and fails explicitly rather than hiding protocol
+   changes behind a lower-fidelity DOM fallback.
 
 ## 5. What Prometheus can learn from internet
 
@@ -169,7 +169,7 @@ This is the **biggest architectural difference**.
 
 Prometheus and internet are **siblings** — same core idea, different execution. Prometheus is a
 **broad, browser-only, standalone MCP/REST service** (11 providers, network interception). internet
-is a **narrow, browser-optional, Pi-native package** (ChatGPT Web MVP, DOM parsing, future API
-providers). The two are complementary: internet could adopt Prometheus's multi-provider breadth and
+is a **narrow, browser-optional, Pi-native package** (ChatGPT Web authenticated-wire capture plus
+native API providers). The two are complementary: internet could adopt Prometheus's multi-provider breadth and
 smart-routing ideas, while Prometheus could adopt internet's Pi integration and browser-less
 search/fetch.

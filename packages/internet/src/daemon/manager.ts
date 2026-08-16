@@ -174,7 +174,7 @@ export class OwnedDaemonManager {
 		if (options.storageStatePath) args.push("--import-storage-state", resolve(options.storageStatePath));
 		const child = this.spawnProcess(runtime.launcher, args, {
 			stdio: "inherit",
-			env: { ...process.env, CODEX_CHATGPT_WEB_HOME: account.configDir },
+			env: { ...process.env, PI_INTERNET_RUNTIME_HOME: account.configDir },
 		});
 		await new Promise<void>((resolve, reject) => {
 			child.once("error", reject);
@@ -218,7 +218,7 @@ export class OwnedDaemonManager {
 		});
 		const child = this.spawnProcess(runtime.launcher, ["--home", account.configDir, "serve"], {
 			stdio: ["ignore", "ignore", "inherit"],
-			env: { ...process.env, CODEX_CHATGPT_WEB_HOME: account.configDir },
+			env: { ...process.env, PI_INTERNET_RUNTIME_HOME: account.configDir },
 		});
 		this.processes.set(account.id, child);
 		this.managedAccounts.add(account.id);
@@ -248,7 +248,7 @@ export class OwnedDaemonManager {
 	): Promise<void> {
 		const child = this.spawnProcess(runtime.launcher, ["--home", account.configDir, "tunnel", action], {
 			stdio: ["ignore", "ignore", "inherit"],
-			env: { ...process.env, CODEX_CHATGPT_WEB_HOME: account.configDir },
+			env: { ...process.env, PI_INTERNET_RUNTIME_HOME: account.configDir },
 		});
 		await new Promise<void>((resolve, reject) => {
 			child.once("error", reject);

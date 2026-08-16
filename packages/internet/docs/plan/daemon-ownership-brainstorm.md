@@ -72,10 +72,11 @@ a major footprint and portability tradeoff that must be accepted explicitly.
 
 ### 2.1 The macOS gate is narrow
 
-The macOS-only error comes from a single check in `src/setup.ts` (lines 269–272), which blocks
+The macOS-only error came from a check in `src/adapters/chatgpt-web/setup.ts`, which blocked
 **terminal-only managed Chrome setup** on non-macOS. It is **not** a general platform restriction:
 
-- `loginToChatGpt` (`src/browser-login.ts`) — the `login` subcommand — is **not** macOS-gated.
+- `loginToChatGpt` (`src/adapters/chatgpt-web/browser-login.ts`) — the `login` subcommand — was not
+  macOS-gated.
 - `serve` (`src/cli.ts`) — the daemon HTTP server — is **not** macOS-gated.
 
 So the daemon can run and log in on Linux; only the `setup` convenience flow is macOS-only.
@@ -166,7 +167,7 @@ both**:
 
 **Decision:** vendor the **daemon** (not Prometheus) as the runtime, because it already exposes the
 `openai-responses` HTTP surface Pi needs and owns the isolated-browser login. Adopt Prometheus's
-**hybrid-capture** idea as a later robustness improvement, and keep internet's **Pi-native**
+**authenticated-wire capture** idea, without a DOM answer fallback, and keep internet's **Pi-native**
 integration rather than adding an MCP/REST layer.
 
 ---

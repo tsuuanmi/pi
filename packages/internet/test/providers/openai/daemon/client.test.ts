@@ -7,7 +7,7 @@ describe("DaemonClient", () => {
 		const requests: Array<{ url: string; init: RequestInit }> = [];
 		const fetch = async (input: string | URL | Request, init?: RequestInit) => {
 			requests.push({ url: String(input), init: init ?? {} });
-			return Response.json({ status: "ok", accepting_turns: true, active_http_turns: 0, active_browser_turns: 0 });
+			return Response.json({ status: "ok", accepting_turns: true, active_http_turns: 0, active_adapter_turns: 0 });
 		};
 		const client = await DaemonClient.create({ config, fetch: fetch as typeof globalThis.fetch });
 		await client.health();

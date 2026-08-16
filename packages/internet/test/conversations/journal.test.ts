@@ -8,11 +8,11 @@ import {
 	conversationAccountFingerprint,
 	parseConversationUrl,
 	writeDurableConversationAuthority,
-} from "#internet-vendor/adapters/chatgpt-web/conversation-journal";
+} from "../../vendor/runtime/src/adapters/chatgpt-web/conversation-journal.js";
 import {
 	acknowledgedConversationCheckpoint,
 	canonicalConversationEvents,
-} from "#internet-vendor/adapters/chatgpt-web/conversation-sync";
+} from "../../vendor/runtime/src/adapters/chatgpt-web/conversation-sync.js";
 
 describe("durable conversation journal", () => {
 	it("persists private CAS transitions without prompt content", async () => {

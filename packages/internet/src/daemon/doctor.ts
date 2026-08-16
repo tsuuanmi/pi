@@ -86,7 +86,7 @@ function executeDoctor(
 				["--home", account.configDir, "doctor", "--json"],
 				{
 					encoding: "utf8",
-					env: { ...process.env, CODEX_CHATGPT_WEB_HOME: account.configDir },
+					env: { ...process.env, PI_INTERNET_RUNTIME_HOME: account.configDir },
 					killSignal: "SIGKILL",
 					maxBuffer: DOCTOR_MAX_BUFFER_BYTES,
 					timeout: options.timeoutMs ?? DOCTOR_TIMEOUT_MS,

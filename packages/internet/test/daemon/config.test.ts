@@ -40,11 +40,12 @@ describe("owned daemon config", () => {
 	it("creates a private loopback config with an isolated browser profile", async () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-config-"));
 		const created = await ensureOwnedDaemonConfig(account(configDir), {
-			releaseVersion: "2.1.8",
+			releaseVersion: "0.1.0",
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		expect(created).toMatchObject({
 			mode: "browser-only",
+			appName: "Pi Internet",
 			host: "127.0.0.1",
 			port: 17841,
 			headed: true,
@@ -72,16 +73,27 @@ describe("owned daemon config", () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-obsolete-config-"));
 		const target = account(configDir);
 		const created = await ensureOwnedDaemonConfig(target, {
-			releaseVersion: "2.1.8",
+			releaseVersion: "0.1.0",
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		await writeFile(join(configDir, "config.json"), `${JSON.stringify({ ...created, [field]: value })}\n`);
 		await expect(
 			ensureOwnedDaemonConfig(target, {
-				releaseVersion: "2.1.8",
+				releaseVersion: "0.1.0",
 				runtimeCommand: ["/runtime/bin/daemon"],
 			}),
 		).rejects.toThrow(`contains unsupported fields: ${field}`);
+	});
+
+	it("rejects the retired connector identity", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-retired-connector-"));
+		const target = account(configDir);
+		const created = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "0.1.0",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		await writeFile(join(configDir, "config.json"), `${JSON.stringify({ ...created, appName: "Codex Native2" })}\n`);
+		await expect(ensureOwnedDaemonConfig(target)).rejects.toThrow("Invalid owned daemon connector identity");
 	});
 
 	it("derives Full-mode tunnel settings from private harness state", async () => {
@@ -97,7 +109,7 @@ describe("owned daemon config", () => {
 			runtimeKeyFile,
 		});
 		const created = await ensureOwnedDaemonConfig(target, {
-			releaseVersion: "2.1.8",
+			releaseVersion: "0.1.0",
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		expect(created).toMatchObject({
@@ -115,7 +127,7 @@ describe("owned daemon config", () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-capabilities-"));
 		const target = account(configDir);
 		await ensureOwnedDaemonConfig(target, {
-			releaseVersion: "2.1.8",
+			releaseVersion: "0.1.0",
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		await expect(readOwnedDaemonCapabilities(target)).resolves.toEqual({

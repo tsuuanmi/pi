@@ -16,13 +16,13 @@ const account: OpenAiInternetAccount = {
 
 const runtime: DaemonRuntime = {
 	root: "/runtime",
-	launcher: "/runtime/bin/codex-chatgpt-web",
+	launcher: "/runtime/bin/pi-internet-runtime",
 	manifest: {
 		schemaVersion: 1,
-		appVersion: "2.1.8",
+		appVersion: "0.1.0",
 		platform: "linux",
 		arch: "x64",
-		launcher: "bin/codex-chatgpt-web",
+		launcher: "bin/pi-internet-runtime",
 	},
 };
 
@@ -75,7 +75,7 @@ describe("runDaemonDoctor", () => {
 				killSignal: "SIGKILL",
 				maxBuffer: 1024 * 1024,
 				timeout: 45_000,
-				env: expect.objectContaining({ CODEX_CHATGPT_WEB_HOME: account.configDir }),
+				env: expect.objectContaining({ PI_INTERNET_RUNTIME_HOME: account.configDir }),
 			}),
 		);
 	});

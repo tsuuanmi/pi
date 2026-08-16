@@ -2,7 +2,7 @@ import {
 	acknowledgedConversationCheckpoint,
 	canonicalConversationEvents,
 	conversationSuffix,
-} from "#internet-vendor/adapters/chatgpt-web/conversation-sync";
+} from "../../vendor/runtime/src/adapters/chatgpt-web/conversation-sync.js";
 
 const authority = "authority";
 

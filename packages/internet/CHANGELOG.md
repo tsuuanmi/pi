@@ -11,21 +11,26 @@
   existing mode-bearing account and daemon configuration must be recreated.
 - Remove daemon configuration versions and external browser-launcher/CDP host support; managed
   Chrome is now the only browser host, and obsolete configurations must be recreated.
+- Replace the `codex-chatgpt-web` runtime identity with the Pi-owned provider-neutral `vendor/runtime`
+  package; existing runtime state, journals, browser state, and old environment variables must be
+  recreated.
+- Rename daemon health activity from `active_browser_turns` to provider-neutral
+  `active_adapter_turns`.
 
 ### Added
 
 - Add native macOS (`x64`/`arm64`) daemon resolution, platform Chrome defaults, and Ubuntu/macOS
   package CI.
 - Add verified ChatGPT/OpenAI-only browser storage-state import for daemon-owned login.
-- Use ChatGPT conversation wire payloads as the primary response source with explicit DOM fallback
-  provenance.
+- Use authenticated ChatGPT conversation wire payloads as the sole response source; invalid or
+  missing wire payloads fail the turn instead of using DOM extraction.
 - Add Anthropic and Gemini API account providers using environment-referenced credentials.
 - Add account removal, provider-specific validation, and automatic browser-port allocation.
 - Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
 
 - Bind every Pi session to one account-scoped, owner-private ChatGPT conversation with canonical suffix synchronization.
-- Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun host-native runtime
-  inside the package, removing the runtime dependency on another repository or manually started daemon.
+- Own the neutral private Bun runtime inside the package and build its host-native launcher from
+  `vendor/runtime`, removing the upstream package identity and manually started-daemon dependency.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
   lifecycle management, graceful shutdown, and the `internet_daemon` tool.
 - Implement ChatGPT Web provider registration through Pi's native `openai-responses` transport,
@@ -65,14 +70,17 @@
 - Keep the headed daemon/browser reusable for 60 quiet seconds, use a 700×500 window at `(0,0)`, and
   keep browser/tunnel idle cleanup in the daemon instead of stopping it on every Pi session exit.
 - Use one durable ChatGPT conversation for browser-only and Full harness turns; reject attachments and ambiguous, replayed, or diverged turns before another browser submit.
-- Document that upstream advanced to `9f74486` (a dead-code/test cleanup) and was deliberately not
-  synced: the package depends on none of the removed code, and the turn-metadata, login, doctor, and
-  model-catalog contracts it relies on are unchanged between v2.1.9 and `9f74486`.
+- Enforce the provider-neutral runtime boundary: configuration paths, process/service lifecycle,
+  bounded I/O, and HTTP hosting remain in core; ChatGPT configuration, routes, Responses protocol,
+  login state, setup, and diagnostics live under `vendor/runtime/src/adapters/chatgpt-web/`.
+- Use `Pi Internet` as the fresh connector identity.
 
 ### Removed
 
 - Remove browser-host selectors, launcher descriptors, helper IPC, ownership handoff, and launcher
   diagnostics from the ChatGPT Web runtime.
+- Remove upstream Codex route mutation, route CLI commands, journal migration, and legacy connector
+  compatibility paths.
 - Remove the obsolete ChatGPT conversation-mode configuration and account tool.
 
 - Remove unused Anthropic/Google stubs and custom turn adapter/replay stubs that duplicated deferred
@@ -95,8 +103,7 @@
   actionable Full-harness guidance.
 - Add the daemon-required stable turn identity and trusted read-only environment metadata to Pi's
   serialized ChatGPT Web requests, enabling browser-session replay across retries and tool rounds.
-- Port the upstream v2.1.9 durable login capture flow so stored browser state is independently
-  verified before Pi treats an account as authenticated.
+- Verify stored browser state independently before Pi treats an account as authenticated.
 - Export a working async extension factory instead of the scaffold's no-op factory.
 
 ### Historical scaffold

@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import process from "node:process";
 
 const packageRoot = resolve(import.meta.dirname, "..");
-const vendorRoot = join(packageRoot, "vendor", "codex-chatgpt-web");
+const vendorRoot = join(packageRoot, "vendor", "runtime");
 const sourceRuntime = join(vendorRoot, "dist", "runtime");
 const targetRuntime = join(packageRoot, "dist", "daemon", "runtime");
 
@@ -13,8 +13,7 @@ await rm(targetRuntime, { recursive: true, force: true });
 await mkdir(targetRuntime, { recursive: true });
 await cp(sourceRuntime, targetRuntime, { recursive: true });
 await cp(join(vendorRoot, "LICENSE"), join(targetRuntime, "LICENSE"));
-await cp(join(vendorRoot, "SNAPSHOT.md"), join(targetRuntime, "SNAPSHOT.md"));
-await chmod(join(targetRuntime, "bin", "codex-chatgpt-web"), 0o755);
+await chmod(join(targetRuntime, "bin", "pi-internet-runtime"), 0o755);
 await rm(join(vendorRoot, "dist"), { recursive: true, force: true });
 
 function run(command, args, cwd) {

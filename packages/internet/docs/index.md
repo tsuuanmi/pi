@@ -63,9 +63,12 @@ bridging, and safe public web access.
 - [Multi-account sign-in analysis](plan/multi-account-signin.md)
 - [Council design](plan/council-via-orchestrator.md)
 - [Multi-account/provider design](plan/multi-account-and-providers.md)
+- [Pi-owned provider runtime](plan/codex-chatgpt-web-pi-owned.md)
 - [Architecture review](review/architecture-review.md)
 - [Implementation review](review/implementation-review.md)
 - [Durable conversation lifecycle and recovery](review/durable-conversations.md)
+- [Provider-neutral runtime boundary](review/daemon-boundary.md)
+- [Former `codex-chatgpt-web` runtime review](review/codex-chatgpt-web-review.md)
 
 The brainstorm/review files preserve design history. Source and the mirrored references above are the
 authoritative current behavior.

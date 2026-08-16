@@ -23,7 +23,7 @@ export async function readDaemonStatusSnapshot(): Promise<DaemonStatus> {
 export const readDaemonStatus: ExtensionHudProvider = async () => {
 	const status = await readDaemonStatusSnapshot();
 	if (!status.available || !status.health) return undefined;
-	const active = status.health.active_http_turns + status.health.active_browser_turns;
+	const active = status.health.active_http_turns + status.health.active_adapter_turns;
 	return [
 		{
 			id: "internet",

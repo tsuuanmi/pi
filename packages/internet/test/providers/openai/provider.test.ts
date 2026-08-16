@@ -17,7 +17,7 @@ async function account(): Promise<OpenAiInternetAccount> {
 		enabled: true,
 	};
 	const config = await ensureOwnedDaemonConfig(target, {
-		releaseVersion: "2.1.8",
+		releaseVersion: "0.1.0",
 		runtimeCommand: ["/runtime/bin/daemon"],
 	});
 	await writeFile(

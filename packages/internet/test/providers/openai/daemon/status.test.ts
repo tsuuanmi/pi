@@ -12,7 +12,7 @@ describe("readDaemonStatusSnapshot", () => {
 		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({
 			baseUrl: () => "http://127.0.0.1:17841/v1",
-			health: async () => ({ status: "ok", accepting_turns: true, active_http_turns: 0, active_browser_turns: 0 }),
+			health: async () => ({ status: "ok", accepting_turns: true, active_http_turns: 0, active_adapter_turns: 0 }),
 		} as DaemonClient);
 		await expect(readDaemonStatusSnapshot()).resolves.toMatchObject({ available: true });
 	});

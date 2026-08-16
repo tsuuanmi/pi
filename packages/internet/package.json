@@ -28,10 +28,6 @@
 		"#internet-test/*": {
 			"types": "./test/*.ts",
 			"import": "./test/*.ts"
-		},
-		"#internet-vendor/*": {
-			"types": "./vendor/codex-chatgpt-web/src/*.ts",
-			"import": "./vendor/codex-chatgpt-web/src/*.ts"
 		}
 	},
 	"files": [

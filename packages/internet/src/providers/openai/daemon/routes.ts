@@ -15,7 +15,7 @@ export interface DaemonHealth {
 	config_fingerprint: string;
 	accepting_turns: boolean;
 	active_http_turns: number;
-	active_browser_turns: number;
+	active_adapter_turns: number;
 }
 
 export interface CompactRequest {

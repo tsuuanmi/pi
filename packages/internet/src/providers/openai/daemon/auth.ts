@@ -20,8 +20,8 @@ interface ConfigFile {
 }
 
 export function getDaemonConfigDir(env: NodeJS.ProcessEnv = process.env): string {
-	const configured = env.CODEX_CHATGPT_WEB_HOME?.trim();
-	return configured ? resolve(configured) : join(homedir(), ".codex-chatgpt-web");
+	const configured = env.PI_INTERNET_RUNTIME_HOME?.trim();
+	return configured ? resolve(configured) : join(homedir(), ".pi/agent/internet");
 }
 
 export function daemonBaseUrl(config: Pick<DaemonConfig, "host" | "port">, includeVersion = false): string {

@@ -26,11 +26,37 @@ privately. Raw passwords and 2FA secrets are not accepted.
 
 ## ChatGPT inference
 
-Pi serializes a normal `openai-responses` request to the account's loopback daemon. The daemon owns
-browser replay, prompt adaptation, turn identity, durable conversation binding, and Luna checkpoints.
-It captures the authenticated conversation response from the network payload when possible; DOM
-extraction is used only when wire capture is unavailable or invalid. The daemon returns Responses
-SSE, which Pi decodes through its built-in transport.
+Pi serializes a normal `openai-responses` request to the account's loopback daemon. The neutral
+runtime starts the bounded Bun HTTP host and owns process/service primitives. The ChatGPT Web
+adapter owns the Responses routes and projection, browser replay, prompt adaptation, turn identity,
+durable conversation binding, and Luna checkpoints. It captures the authenticated conversation
+response from the authenticated network payload; missing or invalid wire responses fail clearly and
+never fall back to DOM answer extraction. Pi decodes the returned Responses SSE through its built-in
+transport.
+
+### Dependency boundary
+
+`vendor/runtime/src/cli.ts` is the composition root. It loads the ChatGPT adapter, which may import
+neutral runtime modules such as `server.ts`, `service.ts`, `config.ts`, `http-body.ts`, and
+`event-queue.ts`. Neutral modules never import `adapters/chatgpt-web/`. Responses parsing and SSE
+projection stay with the adapter because they encode OpenAI/Codex protocol semantics rather than a
+provider-neutral runtime contract.
+
+### Request flow
+
+```text
+HTTP POST /v1/responses
+  -> core server.ts (Bun HTTP host)
+  -> adapters/chatgpt-web/server.ts (bounded body and route dispatch)
+  -> adapters/chatgpt-web/responses/parser.ts
+  -> adapters/chatgpt-web/adapter.ts (browser turn)
+  -> adapters/chatgpt-web/responses/bridge.ts
+  -> HTTP 200 text/event-stream
+```
+
+A future runtime adapter may reuse the core host and lifecycle primitives without inheriting
+ChatGPT, OpenAI Responses, browser-state, or connector semantics. See the
+[provider-neutral runtime boundary](review/daemon-boundary.md) review.
 
 ## Full mode
 

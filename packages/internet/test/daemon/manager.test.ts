@@ -37,7 +37,7 @@ describe("OwnedDaemonManager", () => {
 		await mkdir(join(target.configDir, "browser"));
 		await writeFile(daemonLoginMarkerPath(target), JSON.stringify(authenticatedMarker()));
 		const config = await ensureOwnedDaemonConfig(target, {
-			releaseVersion: "2.1.8",
+			releaseVersion: "0.1.0",
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		const health = vi.fn(async () => ({ status: "ok", config_fingerprint: daemonConfigFingerprint(config) }));
@@ -48,7 +48,7 @@ describe("OwnedDaemonManager", () => {
 			runtime: {
 				root: "/runtime",
 				launcher: "/runtime/bin/daemon",
-				manifest: { schemaVersion: 1, appVersion: "2.1.8", platform: "linux", arch: "x64", launcher: "bin/daemon" },
+				manifest: { schemaVersion: 1, appVersion: "0.1.0", platform: "linux", arch: "x64", launcher: "bin/daemon" },
 			},
 			spawn: spawn as never,
 		});
@@ -76,7 +76,7 @@ describe("OwnedDaemonManager", () => {
 			runtime: {
 				root: "/runtime",
 				launcher: "/runtime/bin/daemon",
-				manifest: { schemaVersion: 1, appVersion: "2.1.8", platform: "linux", arch: "x64", launcher: "bin/daemon" },
+				manifest: { schemaVersion: 1, appVersion: "0.1.0", platform: "linux", arch: "x64", launcher: "bin/daemon" },
 			},
 			spawn: spawn as never,
 			waitForHealth: vi.fn(async () => {}),
@@ -101,7 +101,7 @@ describe("OwnedDaemonManager", () => {
 			runtime: {
 				root: "/runtime",
 				launcher: "/runtime/bin/daemon",
-				manifest: { schemaVersion: 1, appVersion: "2.1.8", platform: "linux", arch: "x64", launcher: "bin/daemon" },
+				manifest: { schemaVersion: 1, appVersion: "0.1.0", platform: "linux", arch: "x64", launcher: "bin/daemon" },
 			},
 			spawn: spawn as never,
 		});

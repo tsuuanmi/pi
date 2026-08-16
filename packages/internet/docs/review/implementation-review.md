@@ -5,8 +5,8 @@ provider-neutral implementation.
 
 ## Runtime and browser boundary
 
-The package vendors one fixed `codex-chatgpt-web` snapshot and compiles a native self-contained
-runtime for Linux or macOS on x64/arm64. Runtime manifests are host-matched and launcher paths are
+The package owns one neutral private runtime and compiles a native self-contained runtime for Linux
+or macOS on x64/arm64. Runtime manifests are host-matched and launcher paths are
 contained/executable. Owned config chooses platform Chrome defaults; Chrome remains the only host
 browser dependency.
 

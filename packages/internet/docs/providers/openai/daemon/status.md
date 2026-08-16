@@ -29,5 +29,5 @@ success returns `{ available: true, endpoint, health }`; on any error returns
 
 An `ExtensionHudProvider`. Returns `undefined` when the daemon is unavailable or health is missing.
 Otherwise it returns one HUD provider entry with the active turn count (`active_http_turns +
-active_browser_turns`) as the `turns` chip and a `ready`/`draining` `state` chip derived from
+active_adapter_turns`) as the `turns` chip and a `ready`/`draining` `state` chip derived from
 `accepting_turns`.

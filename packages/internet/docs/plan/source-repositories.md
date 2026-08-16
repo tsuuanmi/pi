@@ -1,51 +1,53 @@
 # Source Repositories — Reference
 
-The `internet` package owns its extension boundary and vendors the browser runtime. When implementing
-or debugging, treat the package source and vendored snapshot as authoritative. This page maps each
-concept to the relevant files.
+The `internet` package owns its extension boundary and its isolated browser runtime. When
+implementing or debugging, treat Pi source and the neutral runtime package as authoritative. This
+page maps each concept to the relevant files.
 
 ## Repository 1 — the daemon (the engine `internet` wraps)
 
-**Path:** `vendor/codex-chatgpt-web`
+**Path:** `vendor/runtime`
 
-This is the vendored bridge that `internet` talks to over loopback HTTP. It owns the browser, the
-ChatGPT session, Responses→prompt compilation, the turn broker, and SSE framing. The pinned snapshot
-and deliberate patch set are documented in `vendor/codex-chatgpt-web/SNAPSHOT.md`.
+This is the private runtime that `internet` talks to over loopback HTTP. It owns the browser
+adapter, Responses transport, turn broker, and SSE framing. It is Pi-owned; it is not synchronized
+as an upstream package.
 
-All daemon table paths below are relative to `vendor/codex-chatgpt-web/`.
+All daemon table paths below are relative to `vendor/runtime/`.
 
 | Concept | Source file |
 |---------|-------------|
-| Loopback HTTP daemon (routes) | `src/server.ts` |
-| Responses SSE bridge + batch builder | `src/bridge.ts` |
-| Request parsing (Responses → internal) | `src/responses/parser.ts` |
-| Responses schema | `src/responses/schema.ts` |
-| Replay / continuation state | `src/responses/state.ts` |
-| Compaction | `src/responses/compaction.ts` |
-| Reasoning envelope (`ocxr1`) | `src/responses/reasoning-envelope.ts` |
-| Config / defaults / validation | `src/config.ts` |
-| Domain types (`CodexParsedRequest`, `AdapterEvent`, `CodexUsage`) | `src/types.ts` |
-| Native passthrough (models/search → real Codex) | `src/native-passthrough.ts` |
-| Model catalog augmentation | `src/model-catalog.ts`, `src/chatgpt-web-models.ts` |
-| Reversible Codex `config.toml` edits | `src/codex-integration.ts` |
+| Provider-neutral Bun HTTP host | `src/server.ts` |
+| ChatGPT loopback routes | `src/adapters/chatgpt-web/server.ts` |
+| Responses SSE bridge + batch builder | `src/adapters/chatgpt-web/responses/bridge.ts` |
+| Request parsing (Responses → internal) | `src/adapters/chatgpt-web/responses/parser.ts` |
+| Responses schema | `src/adapters/chatgpt-web/responses/schema.ts` |
+| Replay / continuation state | `src/adapters/chatgpt-web/responses/state.ts` |
+| Compaction | `src/adapters/chatgpt-web/responses/compaction.ts` |
+| Reasoning envelope (`ocxr1`) | `src/adapters/chatgpt-web/responses/reasoning-envelope.ts` |
+| Neutral runtime paths / durable commands | `src/config.ts` |
+| ChatGPT config / defaults / validation | `src/adapters/chatgpt-web/config.ts` |
+| Adapter types (`ParsedRequest`, `AdapterEvent`, `Usage`) | `src/adapters/chatgpt-web/types.ts` |
+| Native passthrough (models/search → provider backend) | `src/adapters/chatgpt-web/native-passthrough.ts` |
+| Model catalog augmentation | `src/adapters/chatgpt-web/model-catalog.ts`, `src/adapters/chatgpt-web/models.ts` |
+| Upstream Codex `config.toml` edits | Removed; Pi owns route and account configuration |
 | HTTP body limits | `src/http-body.ts` |
-| Adapter error classification | `src/lib/errors.ts` |
-| Adapter base (`ProviderAdapter`) | `src/adapters/base.ts` |
-| ChatGPT Web adapter (runTurn) | `src/adapters/chatgpt-web/index.ts` |
+| Adapter error classification | `src/adapters/chatgpt-web/responses/errors.ts` |
+| ChatGPT turn contract | `src/adapters/chatgpt-web/turn-adapter.ts` |
+| ChatGPT Web adapter (runTurn) | `src/adapters/chatgpt-web/adapter.ts` |
 | Turn execution / sessions | `src/adapters/chatgpt-web/turn-execution.ts` |
 | Turn broker (token/binding/revoke) | `src/adapters/chatgpt-web/turn-broker.ts` |
 | **Browser automation** | `src/adapters/chatgpt-web/browser-worker.ts` |
-| **Browser login** | `src/browser-login.ts` (vendored snapshot carries the documented targeted v2.1.9 durable-capture patch) |
-| **ChatGPT session selectors / account caps** | `src/chatgpt-session.ts` |
-| MCP server (codex_* tools) | `src/adapters/chatgpt-web/mcp-server.ts` |
+| **Browser login** | `src/adapters/chatgpt-web/browser-login.ts` |
+| **ChatGPT session selectors / account caps** | `src/adapters/chatgpt-web/session.ts` |
+| MCP server (adapter tools) | `src/adapters/chatgpt-web/mcp-server.ts` |
 | Trusted environment extraction | `src/adapters/chatgpt-web/environment.ts` |
 | Prompt compilation (transport contract) | `src/adapters/chatgpt-web/prompt.ts` |
 | Model/effort resolution | `src/adapters/chatgpt-web/model.ts` |
 | Rolling checkpoint (Luna) | `src/adapters/chatgpt-web/rolling-checkpoint.ts` |
 | Concurrency cap (`MAX_CHATGPT_BROWSER_TABS`) | `src/adapters/chatgpt-web/concurrency.ts` |
-| Tunnel client (supply-chain) | `src/tunnel.ts`, `src/tunnel-service.ts` |
-| Doctor checks | `src/doctor.ts` |
-| Setup flow | `src/setup.ts` |
+| Tunnel client (supply-chain) | `src/adapters/chatgpt-web/tunnel.ts`, `src/adapters/chatgpt-web/tunnel-service.ts` |
+| Doctor checks | `src/adapters/chatgpt-web/doctor.ts` |
+| Setup flow | `src/adapters/chatgpt-web/setup.ts` |
 | CLI entry | `src/cli.ts` |
 
 ## Repository 2 — Prometheus (a sibling to learn from)

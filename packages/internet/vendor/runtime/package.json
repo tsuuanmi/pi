@@ -1,0 +1,48 @@
+{
+  "name": "pi-internet-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi's isolated browser-backed provider runtime.",
+  "packageManager": "bun@1.3.14",
+  "type": "module",
+  "bin": {
+    "pi-internet-runtime": "./src/cli.ts"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "bun run src/cli.ts serve",
+    "setup": "bun run src/cli.ts setup",
+    "doctor": "bun run src/cli.ts doctor",
+    "audit": "bun audit",
+    "typecheck": "bunx tsc --noEmit",
+    "build": "bun run scripts/build-runtime-bundle.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "chromium-bidi": "12.1.0",
+    "fflate": "0.8.3",
+    "playwright-core": "1.62.0",
+    "tiktoken": "1.0.22",
+    "turndown": "7.2.0",
+    "turndown-plugin-gfm": "1.0.2",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "@types/turndown": "5.0.5",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "bun": "1.3.14"
+  },
+  "keywords": [
+    "browser-runtime",
+    "responses-api",
+    "mcp",
+    "playwright"
+  ],
+  "license": "MIT"
+}

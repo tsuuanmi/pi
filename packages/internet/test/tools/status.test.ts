@@ -8,10 +8,10 @@ describe("internet_status", () => {
 		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({
 			baseUrl: () => "http://127.0.0.1:17841",
-			health: async () => ({ status: "ok", accepting_turns: true, active_http_turns: 1, active_browser_turns: 2 }),
+			health: async () => ({ status: "ok", accepting_turns: true, active_http_turns: 1, active_adapter_turns: 2 }),
 		} as DaemonClient);
 		const tool = captureTools(registerStatusTools).get("internet_status");
 		const result = await tool?.execute("call", {}, undefined, undefined, {} as never);
-		expect(result?.details).toMatchObject({ active_http_turns: 1, active_browser_turns: 2 });
+		expect(result?.details).toMatchObject({ active_http_turns: 1, active_adapter_turns: 2 });
 	});
 });

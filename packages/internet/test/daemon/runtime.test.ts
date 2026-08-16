@@ -4,17 +4,17 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
 
-async function runtime(platform: "linux" | "darwin", arch: "x64" | "arm64", launcher = "bin/codex-chatgpt-web") {
+async function runtime(platform: "linux" | "darwin", arch: "x64" | "arm64", launcher = "bin/pi-internet-runtime") {
 	const root = await mkdtemp(join(tmpdir(), "pi-internet-runtime-"));
 	const moduleDir = join(root, "src", "daemon");
 	const runtimeDir = join(moduleDir, "runtime");
 	await mkdir(join(runtimeDir, "bin"), { recursive: true });
 	await writeFile(
 		join(runtimeDir, "manifest.json"),
-		JSON.stringify({ schemaVersion: 1, appVersion: "2.1.8", platform, arch, launcher }),
+		JSON.stringify({ schemaVersion: 1, appVersion: "0.1.0", platform, arch, launcher }),
 	);
-	await writeFile(join(runtimeDir, "bin", "codex-chatgpt-web"), "#!/bin/sh\n");
-	await chmod(join(runtimeDir, "bin", "codex-chatgpt-web"), 0o755);
+	await writeFile(join(runtimeDir, "bin", "pi-internet-runtime"), "#!/bin/sh\n");
+	await chmod(join(runtimeDir, "bin", "pi-internet-runtime"), 0o755);
 	return pathToFileURL(join(moduleDir, "runtime.js")).href;
 }
 

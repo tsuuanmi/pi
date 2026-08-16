@@ -18,21 +18,62 @@ Pi extension host
   └─ tools / hooks / HUD
 ```
 
-## ChatGPT Web runtime
+## Browser runtime (provider-agnostic core + provider layer)
 
-The package vendors a reviewed `codex-chatgpt-web` snapshot and compiles it into a self-contained Bun
-launcher for Linux or macOS (`x64`/`arm64`). The host provides Google Chrome; no Playwright browser
-payload is downloaded at runtime. Runtime manifests and launcher containment/executable permissions
-are validated before spawn.
+The package owns a neutral private runtime and compiles it into a self-contained Bun launcher for
+Linux or macOS (`x64`/`arm64`). The host provides Google Chrome; no Playwright browser payload is
+downloaded at runtime. Runtime manifests and launcher containment/executable permissions are
+validated before spawn.
+
+The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and a
+ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-specific code is confined to
+`vendor/runtime/src/adapters/chatgpt-web/`. See the canonical
+[provider-neutral runtime boundary](review/daemon-boundary.md) review for the full module map.
+
+**Core (provider-agnostic):** runtime-home and durable-command handling, atomic writes, bounded HTTP
+body/event primitives, process and service lifecycle, and the Bun HTTP host. Core modules never
+import an adapter.
+
+**Provider layer (ChatGPT Web):** the OpenAI Responses routes and projection, turn/event types,
+health and control payloads, idle shutdown, browser automation against `chatgpt.com`, session,
+models, login, native backend passthrough, model catalog, tunnel, and web search. These live under
+`vendor/runtime/src/adapters/chatgpt-web/`.
+
+### Two provider boundaries
+
+1. **Package boundary** (`src/providers/`): `openai` (ChatGPT Web daemon), `anthropic` (native
+   messages), and `google` (OpenAI-compatible) implement `InternetProvider` and register with Pi.
+2. **Runtime boundary** (`vendor/runtime/src/cli.ts`): the composition root loads the ChatGPT
+   adapter. The adapter depends on neutral runtime primitives; neutral runtime modules do not depend
+   on the adapter.
+
+The package boundary is multi-provider. The isolated browser runtime currently has one adapter, so
+it uses direct composition instead of a speculative registry.
+
+### Request flow through the runtime
+
+```text
+HTTP POST /v1/responses
+  -> core server.ts (Bun HTTP host)
+  -> adapters/chatgpt-web/server.ts (bounded body and route dispatch)
+  -> adapters/chatgpt-web/responses/parser.ts
+  -> adapters/chatgpt-web/adapter.ts (browser turn)
+  -> adapters/chatgpt-web/responses/bridge.ts (Responses SSE)
+  -> HTTP 200 text/event-stream
+```
+
+The core owns reusable hosting and lifecycle primitives. The adapter owns the complete external
+protocol and browser-turn semantics. This keeps OpenAI/Codex wire concepts out of neutral modules
+and gives a future adapter an explicit inward-only dependency on the core.
 
 Each browser account owns one config directory, storage state, verification marker, loopback port,
 serialized lifecycle queue, and optional Full-mode tunnel. The manager accepts only narrowed
 `OpenAiInternetAccount` values, so API accounts cannot cross the process boundary.
 
-Browser turns use wire response capture as the primary answer source. The existing DOM extraction is
-the explicit compatibility fallback when no valid authenticated conversation payload is available.
-The daemon remains authoritative for replay, durable conversation IDs, rolling checkpoints, browser
-health, and Full-mode broker operation.
+Browser turns use authenticated wire response capture as the authoritative answer source. The
+adapter fails clearly when no valid conversation payload is available; it does not fall back to
+legacy DOM extraction. The daemon remains authoritative for replay, durable conversation IDs, rolling
+checkpoints, browser health, and Full-mode broker operation.
 
 ## API providers
 

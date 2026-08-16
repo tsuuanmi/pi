@@ -1,4 +1,4 @@
-import { parseChatGptWireResponse } from "#internet-vendor/adapters/chatgpt-web/wire-response";
+import { parseChatGptWireResponse } from "../../vendor/runtime/src/adapters/chatgpt-web/wire-response.js";
 
 describe("ChatGPT wire response capture", () => {
 	it("selects the latest assistant message after an intermediate event", () => {

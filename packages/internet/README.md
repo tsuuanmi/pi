@@ -5,7 +5,7 @@ Gemini API accounts, bounded multi-model councils, and public web search/fetch.
 
 ## Runtime model
 
-- ChatGPT Web uses the vendored `codex-chatgpt-web` snapshot compiled as a self-contained Bun
+- The browser-backed provider uses Pi's neutral private runtime compiled as a self-contained Bun
   executable for the build host (`linux` or `darwin`, `x64` or `arm64`). Google Chrome is the only
   host browser dependency.
 - Each ChatGPT account owns a private config directory, browser storage state, loopback port, daemon,
@@ -74,10 +74,10 @@ disables login prompting while preserving start of already authenticated account
 
 ## ChatGPT response capture
 
-The browser adapter captures the authenticated conversation response from the wire when the payload
-is parseable. DOM extraction is the explicit compatibility fallback and logs its provenance. Durable
-conversation replay, Luna rolling checkpoints, model capability gates, and Pi's built-in
-`openai-responses` SSE transport remain authoritative.
+The browser adapter captures the authenticated conversation response from the authenticated wire
+protocol. If the payload is invalid or absent, the turn fails clearly; DOM extraction is not used as
+an answer fallback. Durable conversation replay, Luna rolling checkpoints, model capability gates,
+and Pi's built-in `openai-responses` SSE transport remain authoritative.
 
 ## Council
 

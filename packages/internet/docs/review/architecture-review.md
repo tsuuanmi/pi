@@ -1,8 +1,8 @@
 # Internet — Architecture Review & Direction
 
 This review consolidates the current state of `@tsuuanmi/pi-internet` against the five product
-principles that define what this package should be. It is grounded in the implemented package source and the vendored runtime, and it records the decisions and the remaining work
-for each principle.
+principles that define what this package should be. It is grounded in the implemented package source
+and the Pi-owned runtime, and it records the decisions and remaining work for each principle.
 
 > Status: **review.** This is a living direction document, not a proposal. It supersedes the older
 > `review-and-brainstorm.md` framing where the two disagree, and it records the new features that
@@ -10,7 +10,7 @@ for each principle.
 
 Authoritative sources:
 - Package implementation: `packages/internet/src/`.
-- Vendored browser runtime: `packages/internet/vendor/codex-chatgpt-web/src/`.
+- Vendored browser runtime: `packages/internet/vendor/runtime/src/`.
 - Current package plan and review documents under `packages/internet/docs/`.
 
 ---
@@ -55,10 +55,10 @@ what makes it unique.
 
 ### What each repo contributes
 
-| Concern | codexweb (Council 3.x) | codex-chatgpt-web (daemon) | Prometheus | internet takes |
+| Concern | codexweb (Council 3.x) | pi-internet-runtime (daemon) | Prometheus | internet takes |
 |---|---|---|---|---|
-| Browser runtime / Responses surface | Electron + Playwright Council | Bun daemon, `/v1/responses`, isolated login, replay, compaction, broker, MCP | Electron + Playwright, 11 providers | **codex-chatgpt-web daemon** (vendored) |
-| Model-output capture | DOM (Council turns) | DOM parsing | Network interception (SSE/JSON) | **Hybrid** (interception primary, DOM fallback) |
+| Browser runtime / Responses surface | Electron + Playwright Council | Bun daemon, `/v1/responses`, isolated login, replay, compaction, broker, MCP | Electron + Playwright, 11 providers | **Pi-owned runtime daemon** |
+| Model-output capture | DOM (Council turns) | Authenticated conversation wire payload | Network interception (SSE/JSON) | **Authoritative wire capture** for the runtime adapter |
 | Multi-agent Council | ✅ core feature | ❌ | ❌ | **`internet_council` bounded workflow** (see §4) |
 | Multi-provider breadth | ❌ | single ChatGPT path | 11-provider catalog | **Provider seam** — future API providers |
 | Web search / fetch | ❌ | removed in `9f74486` | browser-based | **Keyless RSS + bounded SSRF-safe fetch** (unique) |
@@ -77,8 +77,8 @@ what makes it unique.
 
 ### Direction
 The "best of both" table in `architecture.md` and `plan/best-of-both.md` is the source of truth for
-what to take. Hybrid capture is implemented in the vendored ChatGPT adapter; the provider seam
-remains the next expansion point. Do not duplicate Prometheus's generic MCP runtime or its
+what to take. Wire capture is implemented in the Pi-owned ChatGPT adapter; the provider seam remains
+the next expansion point. Do not duplicate Prometheus's generic MCP runtime or its
 browser-driven Claude/Gemini path; prefer API-based providers.
 
 ---
@@ -102,14 +102,16 @@ Concretely, the current runtime wins on four points:
    app.
 2. **No second browser** — we use your **system Chrome** via Playwright; no bundled Chromium.
 3. **We control the lifecycle** — start/stop/login each account independently via a child process.
-4. **Reuse the mature daemon as-is** — it already runs in Bun; we embed it unchanged.
+4. **Own the mature Bun runtime** — Pi maintains the runtime and adapter boundary while preserving
+   process isolation.
 
 ### Why this is the right design (confirmed in `plan/daemon-ownership-brainstorm.md`)
 - The daemon is a **Bun application** (`Bun.serve`, `Bun.zstdDecompress`, `Bun.main`, `Bun.which`).
   It cannot run as plain Node. Porting those calls to Node is high-risk behavior drift.
 - Reimplementing browser automation natively is by far the largest scope (login, session, replay,
   compaction, SSE).
-- Vendoring the daemon's existing ~15.6K lines and embedding Bun reuses all the hard-won behavior.
+- Owning the existing Bun runtime reuses its hard-won browser behavior while allowing Pi to remove
+  upstream identity and compatibility paths.
 
 See [plan/runtime-architecture-brainstorm.md](../plan/runtime-architecture-brainstorm.md) for the
 full statement of the decision.
@@ -119,7 +121,7 @@ full statement of the decision.
   app + deps (~96MB).
 - A **build step** that requires Bun at build time (`scripts/build-daemon.mjs` →
   `build-runtime-bundle.ts`).
-- The vendored daemon is a **fixed snapshot** — no upstream sync.
+- The runtime is a **Pi-owned private package** — no upstream package contract or sync path.
 
 ### Current runtime architecture
 ```text
@@ -132,7 +134,7 @@ Pi process (Node)
 └── account-scoped Full-harness config
 
 Bundled child runtime (embedded Bun)
-└── codex-chatgpt-web: isolated Chrome, login/session, replay, compaction, SSE, turn ownership
+└── pi-internet-runtime: isolated Chrome, login/session, replay, compaction, SSE, turn ownership
 ```
 
 ### Lifecycle design (implemented)
@@ -186,7 +188,7 @@ The durable conversation and provider boundaries remain independent of council o
 
 **Linux and macOS are supported targets.** The package runtime validates the host platform and
 architecture against the bundled manifest, and the build produces the matching Bun runtime bundle.
-System Chrome paths are selected per platform by the vendored daemon configuration. Windows remains
+System Chrome paths are selected per platform by the Pi-owned daemon configuration. Windows remains
 out of scope.
 
 ---
@@ -208,7 +210,7 @@ Since then the following have been implemented and are now production scope:
 - **R4 — `internet_doctor`.** Bounded, cancellable `doctor --json` diagnostics with strict report
   validation.
 - **R4b — Full harness / local file access.** Account-scoped `internet_harness`; safe static `@file`
-  expansion in both modes; Full mode wires the vendored broker/MCP path with private runtime-key
+  expansion in both modes; Full mode wires the runtime broker/MCP path with private runtime-key
   storage.
 - **Account-scoped tools and stable provider names.** `chatgpt-web` for `default`, `chatgpt-web-<id>`
   for others; enabling/disabling unrelated accounts does not rename a provider.
@@ -218,8 +220,8 @@ Since then the following have been implemented and are now production scope:
 ### Remaining roadmap (from `plan/roi-roadmap.md`)
 - **R6 — Multi-provider seam + Fusion** (`internet_ask_all`): later, larger bet.
 
-Hybrid capture, Full-mode tool bridging, macOS support, and durable conversation continuity are
-implemented and verified in the current package.
+Authoritative wire capture, Full-mode tool bridging, macOS support, and durable conversation
+continuity are implemented and verified in the current package.
 
 ---
 
@@ -228,8 +230,8 @@ implemented and verified in the current package.
 The package is on the right track against all five principles:
 
 1. **Pi provider** — implemented and is the centerpiece.
-2. **Best of three repos** — the composition (daemon runtime + Prometheus `@file`/hybrid ideas +
-   Pi-native integration) is what makes it unique.
+2. **Best of three repos** — the composition (owned runtime + bounded `@file` expansion +
+   authoritative wire capture + Pi-native integration) is what makes it unique.
 3. **Runtime** — use the current runtime: vendor + embed Bun as an isolated child process over system
    Chrome. Electron is not an option (it fights the provider model and adds a second browser).
 4. **Council** — implemented as a bounded Pi-native workflow; keep Electron-specific orchestration separate.

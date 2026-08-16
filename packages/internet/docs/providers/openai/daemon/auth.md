@@ -24,8 +24,8 @@ The parsed daemon endpoint and admin control token.
 
 ## Helpers
 
-- `getDaemonConfigDir(env)` — resolves the daemon config dir from `CODEX_CHATGPT_WEB_HOME`, falling
-  back to `~/.codex-chatgpt-web`.
+- `getDaemonConfigDir(env)` — resolves the daemon config dir from `PI_INTERNET_RUNTIME_HOME`, falling
+  back to `~/.pi/agent/internet`.
 - `daemonBaseUrl(config, includeVersion?)` — builds `http://<host>:<port>` and appends `/v1` when
   `includeVersion` is true.
 - `controlHeaders(controlToken)` — returns `{ authorization: "Bearer <token>" }` for admin routes.

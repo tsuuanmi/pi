@@ -194,8 +194,10 @@ execution/malformed-report failures raise a typed, non-retryable error.
 contents. The daemon runs in `browser-only` mode, so the browser session has no local tool access.
 
 **Evidence.** [`daemon/harness`](../daemon/harness.md) and
-[`providers/openai/turn/files`](../providers/openai/turn/files.md); daemon `src/config.ts` (`RuntimeMode`,
-`localToolsEnabled`), `src/setup.ts` (`connectorSetupRequired`), `src/adapters/chatgpt-web/turn-broker.ts`
+[`providers/openai/turn/files`](../providers/openai/turn/files.md); runtime
+`src/adapters/chatgpt-web/config.ts` (`RuntimeMode`, `localToolsEnabled`),
+`src/adapters/chatgpt-web/setup.ts` (`connectorSetupRequired`), and
+`src/adapters/chatgpt-web/turn-broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).
 
@@ -214,23 +216,21 @@ in full mode, the model can read/edit a local file via bridged `codex_*` tools w
 
 ## Tier 3 — Robustness of the core path
 
-### R5. Hybrid capture (network interception primary + DOM fallback) — **Implemented**
+### R5. Authoritative authenticated-wire capture — **Implemented**
 
-**Problem.** DOM parsing is vulnerable to rendered UI changes. The wire (SSE/JSON) is richer and more
-stable for reasoning, tool calls, usage, and citations.
+**Problem.** DOM answer parsing is vulnerable to rendered UI changes and can silently lose reasoning,
+tool calls, usage, and citations.
 
-**Evidence.** The vendored `browser-worker.ts` and `wire-capture.ts` implement authenticated
-conversation wire capture with DOM extraction as the explicit compatibility fallback.
+**Evidence.** The Pi-owned `browser-worker.ts`, `wire-capture.ts`, and `wire-response.ts` capture and
+validate authenticated ChatGPT conversation payloads.
 
-**Implemented design.** Wire capture selects the latest conversation response without classifying model
-output by brittle payload shape. DOM extraction remains the single fallback when wire capture does not
-produce an answer.
+**Implemented design.** Wire capture selects and validates the current conversation response. Missing
+or invalid wire output fails the turn explicitly; no DOM answer fallback or duplicate parser remains.
 
-**Effort:** Medium–High. **Impact:** High (protects the core model path against ChatGPT UI churn).
-**Risk:** Medium (touches vendored daemon internals; endpoint obfuscation/auth).
+**Effort:** Medium–High. **Impact:** High. **Risk:** Medium (authenticated payload formats can change).
 
-**Acceptance:** interception is the primary path; DOM fallback preserves answers when interception
-fails; no double-parsing or duplicate parser.
+**Acceptance:** authenticated wire capture is authoritative; invalid payloads fail deterministically;
+there is one response parser and no DOM answer fallback.
 
 ---
 
