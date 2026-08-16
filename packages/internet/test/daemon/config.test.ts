@@ -47,7 +47,6 @@ describe("owned daemon config", () => {
 			mode: "browser-only",
 			host: "127.0.0.1",
 			port: 17841,
-			browserHost: "managed-chrome",
 			headed: true,
 			browserWindowWidth: 700,
 			browserWindowHeight: 500,
@@ -57,9 +56,32 @@ describe("owned daemon config", () => {
 			conversationStateDir: join(configDir, "conversations"),
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
+		expect(created).not.toHaveProperty("version");
+		expect(created).not.toHaveProperty("browserHost");
+		expect(created).not.toHaveProperty("browserHostDescriptorPath");
 		expect(created.storageStatePath).toBe(join(configDir, "browser", "storage-state.json"));
 		expect((await stat(join(configDir, "config.json"))).mode & 0o777).toBe(0o600);
 		expect(JSON.parse(await readFile(join(configDir, "config.json"), "utf8"))).toEqual(created);
+	});
+
+	it.each([
+		["version", 4],
+		["browserHost", "launcher"],
+		["browserHostDescriptorPath", "/tmp/browser-host.json"],
+	])("rejects the obsolete %s field", async (field, value) => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-obsolete-config-"));
+		const target = account(configDir);
+		const created = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "2.1.8",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		await writeFile(join(configDir, "config.json"), `${JSON.stringify({ ...created, [field]: value })}\n`);
+		await expect(
+			ensureOwnedDaemonConfig(target, {
+				releaseVersion: "2.1.8",
+				runtimeCommand: ["/runtime/bin/daemon"],
+			}),
+		).rejects.toThrow(`contains unsupported fields: ${field}`);
 	});
 
 	it("derives Full-mode tunnel settings from private harness state", async () => {

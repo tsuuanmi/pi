@@ -8,7 +8,6 @@ This is the config the package writes for the bundled daemon; it is distinct fro
 
 ## Constants
 
-- `CONFIG_VERSION` — `3`.
 - `APP_NAME` — `"Codex Native2"`.
 - `BROWSER_IDLE_SHUTDOWN_MS` — `5 * 60 * 1000`.
 - `BROWSER_WINDOW_WIDTH` / `BROWSER_WINDOW_HEIGHT` — `900` / `700`.
@@ -21,9 +20,9 @@ rejected.
 
 ## `OwnedDaemonConfig`
 
-The full owned config: version, release version, `mode` (`"browser-only"` or `"full"`), loopback
-host, the account's `port`, context window (`256_000`), app name, `managed-chrome` browser host,
-Chrome executable path, storage-state path, broker socket path, headed window, idle shutdown, the
+The full owned config: release version, `mode` (`"browser-only"` or `"full"`), loopback host, the
+account's `port`, context window (`256_000`), app name, Chrome executable path, storage-state path,
+broker socket path, headed window, idle shutdown, the
 `solAvailable`/`proAvailable` capability flags, `autoApproveToolCalls: false`, control token, runtime
 command, acknowledgement timestamp, and (in full mode) tunnel settings.
 
@@ -69,8 +68,10 @@ derived from the account, harness, and options. Requires a `runtimeCommand` and 
 a fresh write. Chrome uses the platform default above. In full mode it embeds the tunnel
 client path, tunnel id, runtime-key file, and a `pi-internet-<account.id>` profile/alias.
 
-`validateOwnedConfig` enforces the version, mode, loopback endpoint matching the account, and a
-control token matching `^[A-Za-z0-9_-]{40,}$`.
+`validateOwnedConfig` enforces the canonical field set, required values, mode, loopback endpoint
+matching the account, safe browser/approval settings, runtime command, tunnel shape, and a control
+token matching `^[A-Za-z0-9_-]{40,}$`. Obsolete or unknown fields are rejected; configuration has
+no schema version or browser-host selector.
 
 `writePrivateJson` writes via temp file + rename and verifies the final permissions are exactly
 `0600`.

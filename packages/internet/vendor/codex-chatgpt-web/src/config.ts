@@ -8,7 +8,6 @@ import type { CodexProviderConfig } from "./types";
 import { VERSION } from "./version";
 
 export type RuntimeMode = "browser-only" | "full";
-export type BrowserHostMode = "managed-chrome" | "launcher";
 
 /**
  * ChatGPT caches a connector's public MCP contract by connector identity. The direct turn-token
@@ -52,15 +51,12 @@ export interface TunnelConfig {
 }
 
 export interface AppConfig {
-  version: 4;
   releaseVersion: string;
   mode: RuntimeMode;
   host: "127.0.0.1";
   port: number;
   contextWindow: number;
   appName: string;
-  browserHost: BrowserHostMode;
-  browserHostDescriptorPath?: string;
   chromeExecutablePath: string;
   storageStatePath: string;
   brokerSocketPath: string;
@@ -79,6 +75,40 @@ export interface AppConfig {
   acknowledgedUnofficialAt?: string;
   tunnel?: TunnelConfig;
 }
+
+const APP_CONFIG_FIELDS = new Set([
+  "releaseVersion",
+  "mode",
+  "host",
+  "port",
+  "contextWindow",
+  "appName",
+  "chromeExecutablePath",
+  "storageStatePath",
+  "brokerSocketPath",
+  "headed",
+  "browserWindowWidth",
+  "browserWindowHeight",
+  "browserWindowPositionX",
+  "browserWindowPositionY",
+  "idleShutdownMs",
+  "conversationStateDir",
+  "solAvailable",
+  "proAvailable",
+  "autoApproveToolCalls",
+  "controlToken",
+  "runtimeCommand",
+  "acknowledgedUnofficialAt",
+  "tunnel",
+]);
+const TUNNEL_CONFIG_FIELDS = new Set([
+  "binaryPath",
+  "tunnelId",
+  "runtimeKeyFile",
+  "profileDir",
+  "profileName",
+  "alias",
+]);
 
 export function expandUserPath(value: string): string {
   if (value === "~") return homedir();
@@ -150,14 +180,12 @@ export function atomicWriteFile(path: string, data: string | Uint8Array): void {
 export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
   const home = getConfigDir();
   return {
-    version: 4,
     releaseVersion: VERSION,
     mode,
     host: "127.0.0.1",
     port: 17841,
     contextWindow: 256_000,
     appName: CHATGPT_CONNECTOR_NAME,
-    browserHost: "managed-chrome",
     chromeExecutablePath: defaultChromeExecutable(),
     storageStatePath: join(home, "browser", "storage-state.json"),
     brokerSocketPath: defaultBrokerEndpoint(home),
@@ -299,45 +327,40 @@ export function loadConfig(): AppConfig {
 }
 
 export function loadConfigForSetup(): AppConfig {
-  const path = getConfigPath();
-  if (!existsSync(path)) throw new Error(`Configuration is missing: ${path}. Run codex-chatgpt-web setup first.`);
-  const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
-  if (raw.version === 1 && raw.mode === "pro-only") {
-    raw.version = 2;
-    raw.mode = "browser-only";
-  }
-  if (raw.version === 2) {
-    raw.version = 3;
-    raw.browserHost = "managed-chrome";
-  }
-  return parseConfig(raw, path);
+  return loadConfig();
 }
 
 function parseConfig(value: unknown, path: string): AppConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid configuration object in ${path}`);
-  const parsed = value as Partial<AppConfig>;
-  if (parsed.version !== 3) throw new Error(`Unsupported configuration version in ${path}; rerun setup to migrate it`);
+  const parsed = value as Partial<AppConfig> & Record<string, unknown>;
+  assertSupportedFields(parsed, APP_CONFIG_FIELDS, path);
   if (typeof parsed.releaseVersion !== "string" || !parsed.releaseVersion.trim()) throw new Error(`Missing releaseVersion in ${path}`);
   if (parsed.mode !== "browser-only" && parsed.mode !== "full") throw new Error(`Invalid runtime mode in ${path}`);
   if (parsed.host !== "127.0.0.1") throw new Error("The Responses proxy must bind to 127.0.0.1");
-  if (parsed.browserHost !== "managed-chrome" && parsed.browserHost !== "launcher") {
-    throw new Error(`Invalid browserHost in ${path}`);
-  }
   if (!Number.isInteger(parsed.port) || parsed.port! < 1 || parsed.port! > 65_535) throw new Error(`Invalid port in ${path}`);
   if (!Number.isSafeInteger(parsed.contextWindow) || parsed.contextWindow! <= 0) {
     throw new Error(`Invalid contextWindow in ${path}`);
   }
   if (typeof parsed.headed !== "boolean") throw new Error(`Invalid headed in ${path}`);
-  if (!Number.isInteger(parsed.browserWindowWidth) || parsed.browserWindowWidth < 400 || parsed.browserWindowWidth > 3_840) {
+  if (typeof parsed.browserWindowWidth !== "number"
+    || !Number.isInteger(parsed.browserWindowWidth)
+    || parsed.browserWindowWidth < 400
+    || parsed.browserWindowWidth > 3_840) {
     throw new Error(`Invalid browserWindowWidth in ${path}`);
   }
-  if (!Number.isInteger(parsed.browserWindowHeight) || parsed.browserWindowHeight < 300 || parsed.browserWindowHeight > 2_160) {
+  if (typeof parsed.browserWindowHeight !== "number"
+    || !Number.isInteger(parsed.browserWindowHeight)
+    || parsed.browserWindowHeight < 300
+    || parsed.browserWindowHeight > 2_160) {
     throw new Error(`Invalid browserWindowHeight in ${path}`);
   }
   if (!Number.isInteger(parsed.browserWindowPositionX) || !Number.isInteger(parsed.browserWindowPositionY)) {
     throw new Error(`Invalid browserWindowPosition in ${path}`);
   }
-  if (!Number.isInteger(parsed.idleShutdownMs) || parsed.idleShutdownMs < 0 || parsed.idleShutdownMs > 24 * 60 * 60 * 1_000) {
+  if (typeof parsed.idleShutdownMs !== "number"
+    || !Number.isInteger(parsed.idleShutdownMs)
+    || parsed.idleShutdownMs < 0
+    || parsed.idleShutdownMs > 24 * 60 * 60 * 1_000) {
     throw new Error(`Invalid idleShutdownMs in ${path}`);
   }
   if (typeof parsed.conversationStateDir !== "string" || !isAbsolute(expandUserPath(parsed.conversationStateDir))) {
@@ -353,13 +376,8 @@ function parseConfig(value: unknown, path: string): AppConfig {
     if (typeof parsed[key] !== "string" || !(parsed[key] as string).trim()) throw new Error(`Missing ${key} in ${path}`);
   }
   if (parsed.appName!.length > 80) throw new Error(`appName is too long in ${path}`);
-  if (parsed.browserHost === "launcher"
-    && (typeof parsed.browserHostDescriptorPath !== "string" || !parsed.browserHostDescriptorPath.trim())) {
-    throw new Error(`Launcher browser host requires browserHostDescriptorPath in ${path}`);
-  }
-  if (parsed.browserHost === "launcher"
-    && !isAbsolute(expandUserPath(parsed.browserHostDescriptorPath!))) {
-    throw new Error(`Launcher browserHostDescriptorPath must be absolute in ${path}`);
+  for (const key of ["chromeExecutablePath", "storageStatePath"] as const) {
+    if (!isAbsolute(expandUserPath(parsed[key]!))) throw new Error(`${key} must be absolute in ${path}`);
   }
   const brokerEndpoint = expandUserPath(parsed.brokerSocketPath!);
   if (process.platform === "win32") {
@@ -372,6 +390,7 @@ function parseConfig(value: unknown, path: string): AppConfig {
   if (!/^[A-Za-z0-9_-]{40,}$/.test(parsed.controlToken!)) throw new Error(`Invalid controlToken in ${path}`);
   if (parsed.mode === "full") {
     if (!parsed.tunnel || typeof parsed.tunnel !== "object") throw new Error("Full mode requires tunnel configuration");
+    assertSupportedFields(parsed.tunnel as unknown as Record<string, unknown>, TUNNEL_CONFIG_FIELDS, `${path} tunnel`);
     for (const key of ["binaryPath", "tunnelId", "runtimeKeyFile", "profileDir", "profileName", "alias"] as const) {
       if (typeof parsed.tunnel[key] !== "string" || !parsed.tunnel[key].trim()) {
         throw new Error(`Missing tunnel.${key} in ${path}`);
@@ -390,12 +409,17 @@ function parseConfig(value: unknown, path: string): AppConfig {
         throw new Error(`tunnel.${key} must be absolute in ${path}`);
       }
     }
+  } else if (parsed.tunnel !== undefined) {
+    throw new Error(`Browser-only configuration contains tunnel settings in ${path}`);
   }
   if (!Array.isArray(parsed.runtimeCommand) || parsed.runtimeCommand.length === 0
     || parsed.runtimeCommand.some(part => typeof part !== "string" || !part.trim())) {
     throw new Error(`Invalid runtimeCommand in ${path}`);
   }
   assertDurableRuntimeCommand(parsed.runtimeCommand as string[]);
+  if (parsed.acknowledgedUnofficialAt !== undefined && typeof parsed.acknowledgedUnofficialAt !== "string") {
+    throw new Error(`Invalid acknowledgedUnofficialAt in ${path}`);
+  }
   if (parsed.proAvailable !== undefined && typeof parsed.proAvailable !== "boolean") {
     throw new Error(`Invalid proAvailable in ${path}`);
   }
@@ -408,6 +432,13 @@ function parseConfig(value: unknown, path: string): AppConfig {
     throw new Error(`Invalid ChatGPT account capabilities in ${path}: Pro requires Sol`);
   }
   return { ...parsed, solAvailable, proAvailable } as AppConfig;
+}
+
+function assertSupportedFields(value: Record<string, unknown>, fields: ReadonlySet<string>, label: string): void {
+  const unsupported = Object.keys(value).filter(field => !fields.has(field));
+  if (unsupported.length > 0) {
+    throw new Error(`${label} contains unsupported fields: ${unsupported.join(", ")}. Remove it and rerun setup.`);
+  }
 }
 
 export function saveConfig(config: AppConfig): void {
@@ -434,8 +465,6 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
     noReasoningModels: [],
     chatgptWeb: {
       appName: config.appName,
-      browserHost: config.browserHost,
-      browserHostDescriptorPath: config.browserHostDescriptorPath,
       storageStatePath: config.storageStatePath,
       chromeExecutablePath: config.chromeExecutablePath,
       brokerSocketPath: config.brokerSocketPath,
@@ -445,7 +474,6 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
       conversationRuntimeDigest: conversationRuntimeDigest({
         releaseVersion: config.releaseVersion,
         runtimeCommand: config.runtimeCommand,
-        browserHost: config.browserHost,
         window: [
           config.browserWindowWidth,
           config.browserWindowHeight,

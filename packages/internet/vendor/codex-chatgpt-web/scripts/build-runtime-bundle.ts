@@ -54,20 +54,6 @@ if (!build.success) {
   throw new Error(`Runtime bundle failed: ${build.logs.map(log => log.message).join("; ")}`);
 }
 
-const browserHelperBuild = await Bun.build({
-  entrypoints: [join(root, "src", "adapters", "chatgpt-web", "browser-helper-main.ts")],
-  target: "node",
-  format: "cjs",
-  minify: true,
-  external: ["playwright-core"],
-  packages: "external",
-  outdir: appDir,
-  naming: "browser-helper.cjs",
-});
-if (!browserHelperBuild.success) {
-  throw new Error(`Browser helper bundle failed: ${browserHelperBuild.logs.map(log => log.message).join("; ")}`);
-}
-
 copyFileSync(join(root, "package.json"), join(appDir, "package.json"));
 copyFileSync(join(root, "bun.lock"), join(appDir, "bun.lock"));
 const install = Bun.spawnSync([process.execPath, "install", "--production", "--frozen-lockfile", "--ignore-scripts"], {
@@ -114,7 +100,7 @@ if (process.platform !== "win32") chmodSync(join(binDir, launcherName), 0o755);
 
 const playwrightPackage = join(appDir, "node_modules", "playwright-core", "package.json");
 const bundleId = createHash("sha256");
-for (const relativePath of ["app/cli.js", "app/browser-helper.cjs", "app/package.json", "app/bun.lock"]) {
+for (const relativePath of ["app/cli.js", "app/package.json", "app/bun.lock"]) {
   bundleId.update(relativePath);
   bundleId.update("\0");
   bundleId.update(readFileSync(join(output, relativePath)));

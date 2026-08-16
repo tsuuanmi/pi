@@ -1,26 +1,13 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { OpenAiInternetAccount } from "#internet/core/types";
+import { ensureOwnedDaemonConfig } from "#internet/daemon/config";
 import { createOpenAiProviderConfig, providerName, registerOpenAiProviders } from "#internet/providers/openai/provider";
 
 async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-provider-"));
-	await mkdir(configDir, { recursive: true });
-	await writeFile(
-		join(configDir, "config.json"),
-		JSON.stringify({
-			version: 4,
-			mode: "browser-only",
-			host: "127.0.0.1",
-			port: 18001,
-			controlToken: "x".repeat(40),
-			solAvailable: false,
-			proAvailable: false,
-		}),
-		{ mode: 0o600 },
-	);
-	return {
+	const target: OpenAiInternetAccount = {
 		id: "work",
 		provider: "openai",
 		displayName: "Work ChatGPT",
@@ -29,6 +16,16 @@ async function account(): Promise<OpenAiInternetAccount> {
 		port: 18001,
 		enabled: true,
 	};
+	const config = await ensureOwnedDaemonConfig(target, {
+		releaseVersion: "2.1.8",
+		runtimeCommand: ["/runtime/bin/daemon"],
+	});
+	await writeFile(
+		join(configDir, "config.json"),
+		`${JSON.stringify({ ...config, solAvailable: false, proAvailable: false })}\n`,
+		{ mode: 0o600 },
+	);
+	return target;
 }
 
 describe("OpenAI provider registration", () => {

@@ -8,8 +8,8 @@ Status: **current implementation.**
 
 > **Source:** the browser behavior is implemented under
 > `vendor/codex-chatgpt-web/src/` in this package:
-> `adapters/chatgpt-web/browser-worker.ts`, `browser-login.ts`, `chatgpt-session.ts`,
-> `launcher-browser-host.ts`, and `adapters/chatgpt-web/concurrency.ts`.
+> `adapters/chatgpt-web/browser-worker.ts`, `browser-login.ts`, `chatgpt-session.ts`, and
+> `adapters/chatgpt-web/concurrency.ts`.
 
 ---
 
@@ -81,23 +81,17 @@ internet_turn (new Pi session ID)
 |---------|-----------|
 | Page leak | Conversation tabs remain bound to their durable session and close on idle (~1 min) or session teardown |
 | Browser leak | `close()` awaits all active runs + maintenance, then closes the browser |
-| CDP connection | `connectOverCDP` close releases the transport (does not kill the launcher process) |
 | Temp files | Login profile dir is removed after capture |
 | Session state | `storageState` written atomically, 0600, under a 0700 dir |
 
 ---
 
-## 3. Browser modes
+## 3. Canonical browser host
 
-The package supports two browser hosts, mirroring codex-chatgpt-web:
-
-| Mode | How | When |
-|------|-----|------|
-| **Managed Chrome** | Package launches Chrome via Playwright | Default; self-contained |
-| **Launcher** | Attach to an existing Electron/launcher browser via CDP descriptor | When the user already runs a launcher-owned ChatGPT surface |
-
-The launcher mode uses a **descriptor file** (loopback CDP endpoint + control token) that is
-validated strictly (ownership, permissions, shape) before connecting.
+Managed Chrome is the only browser host. The ChatGPT Web adapter launches system Chrome through
+Playwright and owns its lifecycle. Configuration contains no browser-host selector, descriptor, or
+external-browser attachment path. Browser hosting is an internal ChatGPT Web implementation detail,
+not part of the shared provider contract.
 
 ---
 
@@ -105,10 +99,10 @@ validated strictly (ownership, permissions, shape) before connecting.
 
 | Boundary | Enforcement |
 |-----------|------------|
-| Loopback only | CDP endpoint must be `127.0.0.1`; never a remote browser |
+| Loopback only | The daemon HTTP endpoint binds to `127.0.0.1`; never a remote service |
 | Session isolation | One ChatGPT conversation tab per Pi session; never share a transcript across sessions |
 | Storage | `storageState` 0600 under 0700 dir; login profile removed |
-| Descriptor trust | Launcher descriptor validated (owner, perms, shape, token) |
+| Browser ownership | The ChatGPT Web adapter launches and closes its managed Chrome process |
 | Untrusted model | The model's answer never grants browser authority; only the trusted environment does |
 | Concurrency cap | `MAX_CHATGPT_BROWSER_TABS = 5` prevents account-level spam |
 
@@ -151,7 +145,8 @@ the browser. This keeps the browser logic in one place (the daemon) and the pack
 
 ## 7. Bottom line
 
-- The browser is **system Chrome/Chromium via Playwright**, owned by the daemon, not the package.
+- The only browser host is **system Chrome/Chromium via Playwright**, owned by the ChatGPT Web
+  adapter inside the daemon.
 - It is **only required for ChatGPT Web model routing**; search/fetch and future API providers are
   browser-less.
 - Production-readiness comes from: explicit login + verified marker, durable per-session binding,

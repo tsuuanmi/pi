@@ -93,10 +93,7 @@ ${args.map(arg => `    <string>${xml(arg)}</string>`).join("\n")}
 
 function assertMacOs(): void {
   if (process.platform !== "darwin") {
-    throw new Error(
-      "Terminal-managed background services require macOS. "
-      + "Use the Codex Web GPT launcher on Windows or Linux.",
-    );
+    throw new Error("Managed background-service installation requires macOS; run `serve` manually on this platform.");
   }
 }
 

@@ -164,12 +164,14 @@ function durableConversationPlan(
   if (parsed.context.messages.some(message => Array.isArray(message.content) && message.content.some(part => part.type === "image"))) {
     throw new Error("Durable ChatGPT conversations do not support image attachments yet");
   }
-  const stateDir = provider.chatgptWeb.conversationStateDir;
-  const runtimeDigest = provider.chatgptWeb.conversationRuntimeDigest;
-  if (!stateDir || !provider.chatgptWeb.storageStatePath || !runtimeDigest) {
+  const web = provider.chatgptWeb;
+  if (!web) throw new Error("ChatGPT Web provider configuration is missing");
+  const stateDir = web.conversationStateDir;
+  const runtimeDigest = web.conversationRuntimeDigest;
+  if (!stateDir || !web.storageStatePath || !runtimeDigest) {
     throw new Error("Durable ChatGPT conversation state is not configured");
   }
-  const accountFingerprint = conversationAccountFingerprint(provider.chatgptWeb.storageStatePath);
+  const accountFingerprint = conversationAccountFingerprint(web.storageStatePath);
   assertDurableConversationAuthority(stateDir, accountFingerprint, runtimeDigest);
   const journal = new ConversationJournal(stateDir, accountFingerprint);
   const authorityDigest = createHash("sha256")

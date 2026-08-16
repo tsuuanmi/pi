@@ -9,6 +9,8 @@
   `registerInternetProviders`.
 - Remove the ChatGPT conversation-mode account field and require the durable conversation journal;
   existing mode-bearing account and daemon configuration must be recreated.
+- Remove daemon configuration versions and external browser-launcher/CDP host support; managed
+  Chrome is now the only browser host, and obsolete configurations must be recreated.
 
 ### Added
 
@@ -69,6 +71,8 @@
 
 ### Removed
 
+- Remove browser-host selectors, launcher descriptors, helper IPC, ownership handoff, and launcher
+  diagnostics from the ChatGPT Web runtime.
 - Remove the obsolete ChatGPT conversation-mode configuration and account tool.
 
 - Remove unused Anthropic/Google stubs and custom turn adapter/replay stubs that duplicated deferred

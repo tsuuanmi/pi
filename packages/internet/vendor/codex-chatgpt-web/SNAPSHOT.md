@@ -5,8 +5,13 @@ Targeted package patches:
 - `src/browser-login.ts` ports durable login capture from upstream v2.1.9 commit 7d4e08c and retains
   polling across navigation/page replacement so transient Cloudflare challenge surfaces are waited
   out instead of accepted or failed prematurely.
-- Config/browser/server patches add package-owned compact headed-window settings and bounded idle
-  shutdown. The daemon's existing singleton browser worker remains authoritative.
+- Config/browser/server patches use one versionless canonical schema, reject obsolete fields, and
+  keep package-owned compact headed-window settings with bounded idle shutdown.
+- Managed Chrome is the sole browser host. External launcher descriptors, CDP attachment, helper
+  IPC, ownership handoff, launcher diagnostics, and their build artifacts are removed; the ChatGPT
+  Web adapter's singleton browser worker remains authoritative.
+- A strict Bun/TypeScript configuration scopes `bun run typecheck` to this vendored runtime instead
+  of inheriting the monorepo root configuration.
 - Tunnel CLI/server patches expose direct Linux `connect`/`disconnect` actions and stop Full-mode
   tunnel runtime during daemon cleanup. The existing daemon broker/MCP implementation is unchanged.
 - Browser-only prompt patches omit the repeated local-computer warning while Full-mode adapter

@@ -166,7 +166,6 @@ function adaptDoctorReport(report: DaemonDoctorReport): DoctorReport {
 function doctorScope(id: string): DoctorCheck["scope"] {
 	switch (id) {
 		case "config":
-		case "browser-host":
 		case "chrome":
 		case "login":
 		case "proxy":

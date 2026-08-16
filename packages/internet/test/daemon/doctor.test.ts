@@ -109,7 +109,6 @@ describe("runDaemonDoctor", () => {
 	it("scopes every vendored check and fails readiness for Pi errors", async () => {
 		const checks = [
 			["config", "pi"],
-			["browser-host", "pi"],
 			["chrome", "pi"],
 			["login", "pi"],
 			["proxy", "pi"],

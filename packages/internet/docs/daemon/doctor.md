@@ -27,8 +27,8 @@ runDaemonDoctor(account, options?): Promise<DoctorReport>
    optional `detail`).
 4. Validates consistency: `ok` must equal whether any check is `error`, and `ok` must match the
    process exit code (`0`).
-5. Adapts the report, tagging each check with a `scope` — `pi` for `config`, `browser-host`,
-   `chrome`, `login`, `proxy`; `upstream` for `codex`, `service`, `tools`, `tunnel-binary`,
+5. Adapts the report, tagging each check with a `scope` — `pi` for `config`, `chrome`, `login`,
+   `proxy`; `upstream` for `codex`, `service`, `tools`, `tunnel-binary`,
    `tunnel-key`, `tunnel-service`, `tunnel-runtime`, `connector`. Unknown check ids throw.
 
 All failures raise `InternetError` with code `daemon_doctor_failed`.

@@ -37,7 +37,6 @@ All daemon table paths below are relative to `vendor/codex-chatgpt-web/`.
 | **Browser automation** | `src/adapters/chatgpt-web/browser-worker.ts` |
 | **Browser login** | `src/browser-login.ts` (vendored snapshot carries the documented targeted v2.1.9 durable-capture patch) |
 | **ChatGPT session selectors / account caps** | `src/chatgpt-session.ts` |
-| Launcher browser host (CDP descriptor) | `src/launcher-browser-host.ts` |
 | MCP server (codex_* tools) | `src/adapters/chatgpt-web/mcp-server.ts` |
 | Trusted environment extraction | `src/adapters/chatgpt-web/environment.ts` |
 | Prompt compilation (transport contract) | `src/adapters/chatgpt-web/prompt.ts` |

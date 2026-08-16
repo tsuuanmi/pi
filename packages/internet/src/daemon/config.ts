@@ -4,8 +4,40 @@ import { dirname, join } from "node:path";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import { readHarnessConfig } from "#internet/daemon/harness";
 
-const CONFIG_VERSION = 4;
 const APP_NAME = "Codex Native2";
+const OWNED_DAEMON_CONFIG_FIELDS = new Set([
+	"releaseVersion",
+	"mode",
+	"host",
+	"port",
+	"contextWindow",
+	"appName",
+	"chromeExecutablePath",
+	"storageStatePath",
+	"brokerSocketPath",
+	"headed",
+	"browserWindowWidth",
+	"browserWindowHeight",
+	"browserWindowPositionX",
+	"browserWindowPositionY",
+	"idleShutdownMs",
+	"conversationStateDir",
+	"solAvailable",
+	"proAvailable",
+	"autoApproveToolCalls",
+	"controlToken",
+	"runtimeCommand",
+	"acknowledgedUnofficialAt",
+	"tunnel",
+]);
+const OWNED_TUNNEL_CONFIG_FIELDS = new Set([
+	"binaryPath",
+	"tunnelId",
+	"runtimeKeyFile",
+	"profileDir",
+	"profileName",
+	"alias",
+]);
 const BROWSER_IDLE_SHUTDOWN_MS = 60 * 1_000;
 const BROWSER_WINDOW_WIDTH = 700;
 const BROWSER_WINDOW_HEIGHT = 500;
@@ -28,14 +60,12 @@ interface OwnedTunnelConfig {
 }
 
 export interface OwnedDaemonConfig {
-	version: 4;
 	releaseVersion: string;
 	mode: "browser-only" | "full";
 	host: "127.0.0.1";
 	port: number;
 	contextWindow: number;
 	appName: string;
-	browserHost: "managed-chrome";
 	chromeExecutablePath: string;
 	storageStatePath: string;
 	brokerSocketPath: string;
@@ -90,7 +120,7 @@ export async function daemonLoginExists(account: OpenAiInternetAccount): Promise
 
 export async function readOwnedDaemonCapabilities(account: OpenAiInternetAccount): Promise<DaemonCapabilities> {
 	try {
-		const config = JSON.parse(await readFile(daemonConfigPath(account), "utf8")) as OwnedDaemonConfig;
+		const config: unknown = JSON.parse(await readFile(daemonConfigPath(account), "utf8"));
 		validateOwnedConfig(config, account);
 		return { solAvailable: config.solAvailable, proAvailable: config.proAvailable };
 	} catch (error) {
@@ -101,7 +131,7 @@ export async function readOwnedDaemonCapabilities(account: OpenAiInternetAccount
 
 export async function syncOwnedDaemonCapabilities(account: OpenAiInternetAccount): Promise<void> {
 	const path = daemonConfigPath(account);
-	const config = JSON.parse(await readFile(path, "utf8")) as OwnedDaemonConfig;
+	const config: unknown = JSON.parse(await readFile(path, "utf8"));
 	validateOwnedConfig(config, account);
 	const marker = JSON.parse(await readFile(daemonLoginMarkerPath(account), "utf8")) as Record<string, unknown>;
 	const solAvailable = marker.solAvailable === true;
@@ -118,8 +148,9 @@ export async function ensureOwnedDaemonConfig(
 	const harness = await readHarnessConfig(account);
 	let existing: OwnedDaemonConfig | undefined;
 	try {
-		existing = JSON.parse(await readFile(path, "utf8")) as OwnedDaemonConfig;
-		validateOwnedConfig(existing, account);
+		const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
+		validateOwnedConfig(parsed, account);
+		existing = parsed;
 		const harnessMatches =
 			harness.mode === "browser-only"
 				? existing.mode === "browser-only" && existing.tunnel === undefined
@@ -149,14 +180,12 @@ export async function ensureOwnedDaemonConfig(
 	const chromeExecutablePath =
 		options.chromeExecutablePath ?? existing?.chromeExecutablePath ?? defaultChromeExecutable();
 	const config: OwnedDaemonConfig = {
-		version: CONFIG_VERSION,
 		releaseVersion,
 		mode: harness.mode,
 		host: "127.0.0.1",
 		port: account.port,
 		contextWindow: 256_000,
 		appName: APP_NAME,
-		browserHost: "managed-chrome",
 		chromeExecutablePath,
 		storageStatePath: join(account.configDir, "browser", "storage-state.json"),
 		brokerSocketPath: join(account.configDir, "runtime", "turn-broker.sock"),
@@ -190,19 +219,88 @@ export async function ensureOwnedDaemonConfig(
 	return config;
 }
 
-function validateOwnedConfig(config: OwnedDaemonConfig, account: OpenAiInternetAccount): void {
-	if (config.version !== CONFIG_VERSION || (config.mode !== "browser-only" && config.mode !== "full")) {
-		throw new Error(`Unsupported owned daemon configuration: ${daemonConfigPath(account)}`);
+function validateOwnedConfig(value: unknown, account: OpenAiInternetAccount): asserts value is OwnedDaemonConfig {
+	const path = daemonConfigPath(account);
+	if (!isRecord(value)) throw new Error(`Invalid owned daemon configuration: ${path}`);
+	assertSupportedFields(value, OWNED_DAEMON_CONFIG_FIELDS, path);
+	const config = value as Partial<OwnedDaemonConfig>;
+	if (typeof config.releaseVersion !== "string" || !config.releaseVersion.trim()) {
+		throw new Error(`Invalid owned daemon release version: ${path}`);
 	}
-	if (config.mode === "full" && !config.tunnel) {
-		throw new Error(`Full harness configuration is missing tunnel settings: ${daemonConfigPath(account)}`);
+	if (config.mode !== "browser-only" && config.mode !== "full") {
+		throw new Error(`Invalid owned daemon mode: ${path}`);
 	}
 	if (config.host !== "127.0.0.1" || config.port !== account.port) {
 		throw new Error(`Owned daemon endpoint does not match account ${account.id}.`);
 	}
-	if (!/^[A-Za-z0-9_-]{40,}$/.test(config.controlToken)) {
-		throw new Error(`Invalid owned daemon control token: ${daemonConfigPath(account)}`);
+	if (!/^[A-Za-z0-9_-]{40,}$/.test(config.controlToken ?? "")) {
+		throw new Error(`Invalid owned daemon control token: ${path}`);
 	}
+	const requiredStrings = [
+		config.appName,
+		config.chromeExecutablePath,
+		config.storageStatePath,
+		config.brokerSocketPath,
+		config.conversationStateDir,
+		config.acknowledgedUnofficialAt,
+	];
+	if (requiredStrings.some((field) => typeof field !== "string" || field.length === 0)) {
+		throw new Error(`Invalid owned daemon paths or metadata: ${path}`);
+	}
+	if (!Number.isSafeInteger(config.contextWindow) || (config.contextWindow ?? 0) <= 0) {
+		throw new Error(`Invalid owned daemon context window: ${path}`);
+	}
+	if (
+		!Number.isInteger(config.browserWindowWidth) ||
+		(config.browserWindowWidth ?? 0) < 400 ||
+		!Number.isInteger(config.browserWindowHeight) ||
+		(config.browserWindowHeight ?? 0) < 300 ||
+		!Number.isInteger(config.browserWindowPositionX) ||
+		!Number.isInteger(config.browserWindowPositionY) ||
+		!Number.isInteger(config.idleShutdownMs) ||
+		(config.idleShutdownMs ?? -1) < 0
+	) {
+		throw new Error(`Invalid owned daemon browser settings: ${path}`);
+	}
+	if (config.headed !== true || config.autoApproveToolCalls !== false) {
+		throw new Error(`Unsafe owned daemon browser or approval settings: ${path}`);
+	}
+	if (
+		!Array.isArray(config.runtimeCommand) ||
+		!config.runtimeCommand.length ||
+		!config.runtimeCommand.every((part) => typeof part === "string" && part.length > 0)
+	) {
+		throw new Error(`Invalid owned daemon runtime command: ${path}`);
+	}
+	if (typeof config.solAvailable !== "boolean" || typeof config.proAvailable !== "boolean") {
+		throw new Error(`Invalid owned daemon capabilities: ${path}`);
+	}
+	if (config.mode === "full") {
+		if (!isRecord(config.tunnel)) throw new Error(`Full harness configuration is missing tunnel settings: ${path}`);
+		assertSupportedFields(config.tunnel, OWNED_TUNNEL_CONFIG_FIELDS, `${path} tunnel`);
+		if (
+			[...OWNED_TUNNEL_CONFIG_FIELDS].some(
+				(field) =>
+					typeof config.tunnel?.[field as keyof OwnedTunnelConfig] !== "string" ||
+					!config.tunnel[field as keyof OwnedTunnelConfig],
+			)
+		) {
+			throw new Error(`Invalid full harness tunnel settings: ${path}`);
+		}
+	} else if (config.tunnel !== undefined) {
+		throw new Error(`Browser-only configuration contains tunnel settings: ${path}`);
+	}
+}
+
+function assertSupportedFields(value: Record<string, unknown>, fields: ReadonlySet<string>, label: string): void {
+	const unsupported = Object.keys(value).filter((field) => !fields.has(field));
+	if (unsupported.length > 0) {
+		throw new Error(`${label} contains unsupported fields: ${unsupported.join(", ")}. Remove it and rerun setup.`);
+	}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 async function writePrivateJson(path: string, value: unknown): Promise<void> {
