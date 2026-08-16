@@ -24,7 +24,7 @@ Coordinates ChatGPT Web turns, durable conversation replay, browser execution, t
 - `providers/chatgpt-web/turn/adapter.ts`
 - `providers/chatgpt-web/content/image.ts`
 - `providers/chatgpt-web/adapter-error.ts`
-- `providers/chatgpt-web/browser/worker.ts`
+- `browser/chatgpt-web/worker.ts`
 - `providers/chatgpt-web/conversation/journal.ts`
 - `providers/chatgpt-web/conversation/sync.ts`
 - `providers/chatgpt-web/turn/environment.ts`

@@ -17,7 +17,7 @@ The module is consumed as a command-line entrypoint and has no named runtime exp
 
 ## Related source modules
 
-- `providers/chatgpt-web/browser/login.ts`
+- `browser/chatgpt-web/login.ts`
 - `providers/chatgpt-web/lifecycle/control.ts`
 - `providers/chatgpt-web/lifecycle/config.ts`
 - `providers/chatgpt-web/lifecycle/doctor.ts`

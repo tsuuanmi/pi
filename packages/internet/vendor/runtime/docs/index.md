@@ -7,9 +7,9 @@ relationships. The TypeScript source remains authoritative for exact implementat
 ## Architecture at a glance
 
 - `core/` contains the HTTP host, process/service lifecycle, configuration, and event primitives.
-- `browser/` contains reusable browser session, turn, and response-capture mechanics.
+- `browser/` owns reusable browser mechanics and browser-backed provider implementations.
+- `browser/chatgpt-web/` owns ChatGPT selectors, login, interaction, completion, and diagnostics.
 - `providers/chatgpt-web/protocol/` translates OpenAI Responses requests and events.
-- `providers/chatgpt-web/browser/` drives the authenticated ChatGPT Web UI.
 - `providers/chatgpt-web/turn/` coordinates trusted task metadata, sessions, and tool brokering.
 - `providers/chatgpt-web/conversation/` protects durable continuation and replay semantics.
 - `providers/chatgpt-web/transport/` handles native forwarding, tunnel management, and wire capture.
@@ -21,10 +21,6 @@ relationships. The TypeScript source remains authoritative for exact implementat
 
 - [`providers/chatgpt-web/adapter-error.ts`](providers/chatgpt-web/adapter-error.md)
 - [`providers/chatgpt-web/adapter.ts`](providers/chatgpt-web/adapter.md)
-- [`providers/chatgpt-web/browser/login-state.ts`](providers/chatgpt-web/browser/login-state.md)
-- [`providers/chatgpt-web/browser/login.ts`](providers/chatgpt-web/browser/login.md)
-- [`providers/chatgpt-web/browser/session.ts`](providers/chatgpt-web/browser/session.md)
-- [`providers/chatgpt-web/browser/worker.ts`](providers/chatgpt-web/browser/worker.md)
 - [`providers/chatgpt-web/content/image.ts`](providers/chatgpt-web/content/image.md)
 - [`providers/chatgpt-web/content/markdown.ts`](providers/chatgpt-web/content/markdown.md)
 - [`providers/chatgpt-web/content/prompt.ts`](providers/chatgpt-web/content/prompt.md)
@@ -55,7 +51,6 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - [`providers/chatgpt-web/transport/native-passthrough.ts`](providers/chatgpt-web/transport/native-passthrough.md)
 - [`providers/chatgpt-web/transport/tunnel-service.ts`](providers/chatgpt-web/transport/tunnel-service.md)
 - [`providers/chatgpt-web/transport/tunnel.ts`](providers/chatgpt-web/transport/tunnel.md)
-- [`providers/chatgpt-web/transport/wire-capture.ts`](providers/chatgpt-web/transport/wire-capture.md)
 - [`providers/chatgpt-web/transport/wire-response.ts`](providers/chatgpt-web/transport/wire-response.md)
 - [`providers/chatgpt-web/turn/adapter.ts`](providers/chatgpt-web/turn/adapter.md)
 - [`providers/chatgpt-web/turn/broker.ts`](providers/chatgpt-web/turn/broker.md)
@@ -68,6 +63,15 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - [`browser/session.ts`](browser/session.md)
 - [`browser/response-capture.ts`](browser/response-capture.md)
 - [`browser/turn.ts`](browser/turn.md)
+- [`browser/chatgpt-web/completion.ts`](browser/chatgpt-web/completion.md)
+- [`browser/chatgpt-web/diagnostics.ts`](browser/chatgpt-web/diagnostics.md)
+- [`browser/chatgpt-web/interactions.ts`](browser/chatgpt-web/interactions.md)
+- [`browser/chatgpt-web/login-state.ts`](browser/chatgpt-web/login-state.md)
+- [`browser/chatgpt-web/login.ts`](browser/chatgpt-web/login.md)
+- [`browser/chatgpt-web/session.ts`](browser/chatgpt-web/session.md)
+- [`browser/chatgpt-web/turn-driver.ts`](browser/chatgpt-web/turn-driver.md)
+- [`browser/chatgpt-web/wire-capture.ts`](browser/chatgpt-web/wire-capture.md)
+- [`browser/chatgpt-web/worker.ts`](browser/chatgpt-web/worker.md)
 
 ### `core/`
 

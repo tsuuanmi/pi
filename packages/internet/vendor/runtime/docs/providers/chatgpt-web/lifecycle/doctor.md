@@ -27,7 +27,7 @@ Runs ChatGPT Web runtime diagnostics and reports actionable configuration/browse
 ## Related source modules
 
 - `providers/chatgpt-web/lifecycle/config.ts`
-- `providers/chatgpt-web/browser/login.ts`
+- `browser/chatgpt-web/login.ts`
 - `core/service.ts`
 - `providers/chatgpt-web/transport/tunnel.ts`
 - `providers/chatgpt-web/transport/tunnel-service.ts`

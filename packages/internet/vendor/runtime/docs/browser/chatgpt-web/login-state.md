@@ -1,6 +1,6 @@
-# providers/chatgpt-web/browser/login-state
+# browser/chatgpt-web/login-state
 
-Mirrors `src/providers/chatgpt-web/browser/login-state.ts`.
+Mirrors `src/browser/chatgpt-web/login-state.ts`.
 
 ## Role
 
@@ -26,4 +26,4 @@ Validates, sanitizes, and reads persisted ChatGPT/OpenAI browser storage state.
 
 ## Source of truth
 
-The implementation in `src/providers/chatgpt-web/browser/login-state.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.
+The implementation in `src/browser/chatgpt-web/login-state.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.

@@ -1,6 +1,6 @@
-# providers/chatgpt-web/browser/session
+# browser/chatgpt-web/session
 
-Mirrors `src/providers/chatgpt-web/browser/session.ts`.
+Mirrors `src/browser/chatgpt-web/session.ts`.
 
 ## Role
 
@@ -45,4 +45,4 @@ Defines ChatGPT browser selectors and session/authentication helpers used by the
 
 ## Source of truth
 
-The implementation in `src/providers/chatgpt-web/browser/session.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.
+The implementation in `src/browser/chatgpt-web/session.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.

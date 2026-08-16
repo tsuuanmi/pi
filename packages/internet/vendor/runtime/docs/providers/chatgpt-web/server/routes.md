@@ -29,7 +29,7 @@ Registers the ChatGPT Web loopback HTTP routes for Responses, models, health, co
 ## Related source modules
 
 - `providers/chatgpt-web/adapter.ts`
-- `providers/chatgpt-web/browser/worker.ts`
+- `browser/chatgpt-web/worker.ts`
 - `providers/chatgpt-web/conversation/journal.ts`
 - `providers/chatgpt-web/turn/broker.ts`
 - `providers/chatgpt-web/turn/execution.ts`

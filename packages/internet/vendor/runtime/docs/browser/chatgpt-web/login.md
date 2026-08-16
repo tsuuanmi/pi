@@ -1,6 +1,6 @@
-# providers/chatgpt-web/browser/login
+# browser/chatgpt-web/login
 
-Mirrors `src/providers/chatgpt-web/browser/login.ts`.
+Mirrors `src/browser/chatgpt-web/login.ts`.
 
 ## Role
 
@@ -28,10 +28,10 @@ Implements interactive login, storage-state import, login verification, and brow
 ## Related source modules
 
 - `providers/chatgpt-web/lifecycle/config.ts`
-- `providers/chatgpt-web/browser/session.ts`
+- `browser/chatgpt-web/session.ts`
 - `providers/chatgpt-web/models/models.ts`
-- `providers/chatgpt-web/browser/login-state.ts`
+- `browser/chatgpt-web/login-state.ts`
 
 ## Source of truth
 
-The implementation in `src/providers/chatgpt-web/browser/login.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.
+The implementation in `src/browser/chatgpt-web/login.ts` is authoritative. Update this page when its exported API, data flow, or safety behavior changes.

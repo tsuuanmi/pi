@@ -34,7 +34,7 @@ Tracks active ChatGPT turn sessions, trace/text feeds, execution keys, and brows
 - `providers/chatgpt-web/protocol/types.ts`
 - `providers/chatgpt-web/turn/broker.ts`
 - `providers/chatgpt-web/turn/environment.ts`
-- `providers/chatgpt-web/browser/session.ts`
+- `browser/chatgpt-web/session.ts`
 
 ## Source of truth
 
