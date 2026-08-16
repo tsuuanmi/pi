@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSettings, serializeSettings, SettingsFormatError } from "#pi/settings/codec";
+import { parseSettings, SettingsFormatError, serializeSettings } from "#pi/settings/codec";
 
 describe("settings codec", () => {
 	it("parses the current settings contract", () => {

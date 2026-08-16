@@ -1,8 +1,8 @@
+import type { AppMode } from "#pi/app/modes";
 import type { Args } from "#pi/cli/args";
 import { processFileArguments } from "#pi/cli/file-processor";
 import { buildInitialMessage } from "#pi/cli/initial-message";
 import { takeOverStdout } from "#pi/modes/output-guard";
-import type { AppMode } from "#pi/app/modes";
 
 export interface PreparedInput {
 	appMode: AppMode;

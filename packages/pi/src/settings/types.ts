@@ -123,4 +123,3 @@ export interface SettingsStorage {
 	read(scope: SettingsScope): string | undefined;
 	update(scope: SettingsScope, update: (current: string | undefined) => string): void;
 }
-

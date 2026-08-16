@@ -211,7 +211,8 @@ function statusLine(value: unknown, path: string): void {
 		exact(pathOptions, ["abbreviate", "maxLength", "stripWorkPrefix"], `${path}.segmentOptions.path`);
 		if ("abbreviate" in pathOptions) boolean(pathOptions.abbreviate, `${path}.segmentOptions.path.abbreviate`);
 		if ("maxLength" in pathOptions) number(pathOptions.maxLength, `${path}.segmentOptions.path.maxLength`, true);
-		if ("stripWorkPrefix" in pathOptions) boolean(pathOptions.stripWorkPrefix, `${path}.segmentOptions.path.stripWorkPrefix`);
+		if ("stripWorkPrefix" in pathOptions)
+			boolean(pathOptions.stripWorkPrefix, `${path}.segmentOptions.path.stripWorkPrefix`);
 	}
 	if ("git" in options) {
 		const git = object(options.git, `${path}.segmentOptions.git`);
@@ -225,7 +226,15 @@ function validate(settings: JsonObject, path: string): void {
 		if (!SETTINGS_KEYS.has(key)) fail(`${path}.${key}`, "is not supported");
 	}
 	if ("providers" in settings) providers(settings.providers, `${path}.providers`);
-	for (const key of ["defaultProvider", "defaultModel", "theme", "shellPath", "shellCommandPrefix", "sessionDir", "httpProxy"] as const) {
+	for (const key of [
+		"defaultProvider",
+		"defaultModel",
+		"theme",
+		"shellPath",
+		"shellCommandPrefix",
+		"sessionDir",
+		"httpProxy",
+	] as const) {
 		if (key in settings) string(settings[key], `${path}.${key}`);
 	}
 	if ("defaultThinkingLevel" in settings) {
@@ -239,12 +248,24 @@ function validate(settings: JsonObject, path: string): void {
 		fail(`${path}.transport`, "is not a transport");
 	}
 	for (const key of ["steeringMode", "followUpMode"] as const) {
-		if (key in settings && (typeof settings[key] !== "string" || !MODES.has(settings[key]))) fail(`${path}.${key}`, "is not a mode");
+		if (key in settings && (typeof settings[key] !== "string" || !MODES.has(settings[key])))
+			fail(`${path}.${key}`, "is not a mode");
 	}
 	for (const [key, allowed, numeric] of [
 		["compaction", ["enabled", "reserveTokens", "keepRecentTokens"], ["reserveTokens", "keepRecentTokens"]],
 		["branchSummary", ["reserveTokens", "skipPrompt"], ["reserveTokens"]],
-		["retainedContext", ["stripThinking", "compressBashOutput", "bashMaxBytes", "dedupeReadResults", "summarizeStaleToolResults", "toolResultMaxBytes"], ["bashMaxBytes", "toolResultMaxBytes"]],
+		[
+			"retainedContext",
+			[
+				"stripThinking",
+				"compressBashOutput",
+				"bashMaxBytes",
+				"dedupeReadResults",
+				"summarizeStaleToolResults",
+				"toolResultMaxBytes",
+			],
+			["bashMaxBytes", "toolResultMaxBytes"],
+		],
 	] as const) {
 		if (!(key in settings)) continue;
 		const value = object(settings[key], `${path}.${key}`);

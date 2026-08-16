@@ -1,6 +1,5 @@
 import type { Api, Model } from "@tsuuanmi/pi-agent";
 import {
-	PROVIDER_DISPLAY_NAMES,
 	consumeOpenAICodexResetCredit,
 	fetchOpenAICodexResetCredits,
 	fetchOpenAICodexUsageSummary,
@@ -8,6 +7,7 @@ import {
 	type OpenAICodexResetCredit,
 	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageSummary,
+	PROVIDER_DISPLAY_NAMES,
 } from "@tsuuanmi/pi-ai";
 import type { OAuthProviderId, OAuthSelectPrompt } from "@tsuuanmi/pi-ai/oauth";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";

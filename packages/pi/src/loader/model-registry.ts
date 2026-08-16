@@ -7,7 +7,6 @@ import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type AssistantMessageEventStream,
 	applyModelOverride,
-	PROVIDER_DISPLAY_NAMES,
 	type Context,
 	formatTypeBoxValidationPath,
 	getModelProviders,
@@ -16,6 +15,7 @@ import {
 	type ModelOverride,
 	type ModelsConfig,
 	mergeModelCompat,
+	PROVIDER_DISPLAY_NAMES,
 	type ProviderModelOverride,
 	registerProvider,
 	resetProviders,
