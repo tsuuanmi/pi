@@ -98,7 +98,7 @@ Remove the launcher-only paths from the vendored runtime:
 - launcher helper process coordination
 - launcher-specific setup flags and handoff logic
 - launcher-specific doctor checks
-- launcher branches in `browser-worker.ts`
+- launcher branches in `browser/worker.ts`
 - launcher-only fields in adapter/provider configuration
 
 The browser worker should always use the existing managed-Chrome launch path. It must preserve

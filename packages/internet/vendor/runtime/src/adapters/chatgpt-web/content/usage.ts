@@ -1,10 +1,9 @@
-import { estimateTokens } from "./token-estimate";
 import type { ParsedRequest, Usage } from "../protocol/types";
-import { estimateCompiledChatGptWebInputTokens } from "./input-tokens";
+import { estimateCompiledChatGptWebInputTokens, estimateTokens } from "./tokens";
 import { compileChatGptWebPrompt } from "./prompt";
 import { extractChatGptTurnIdentity } from "../turn/environment";
 import { CHATGPT_WEB_LUNA_MODEL_ID, resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "../models/model";
-import type { BrokerToolRequest } from "../turn/turn-broker";
+import type { BrokerToolRequest } from "../turn/broker";
 
 // The real capability has the same length. Keeping it out of usage accounting would make
 // estimates differ slightly between the prepared browser prompt and later Codex tool rounds.
@@ -14,6 +13,13 @@ export interface ChatGptWebRoundEvidence {
   answer?: string;
   reasoning?: string[];
   toolRequests?: BrokerToolRequest[];
+}
+
+export function usageDisplayTotalTokens(usage: Usage | undefined): number | undefined {
+  if (!usage) return undefined;
+  const baseTotal = usage.inputTokens + usage.outputTokens;
+  const explicitTotal = usage.totalTokens;
+  return typeof explicitTotal === "number" ? Math.max(explicitTotal, baseTotal) : baseTotal;
 }
 
 function conservativeTextTokens(text: string, modelId: string): number {

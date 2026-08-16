@@ -50,13 +50,13 @@ smokes pass for light/high routes, and two-turn continuity preserves browser-ses
 
 **Problem.** The original `src/providers/openai/models.ts` named the high and Luna routes "GPT-5.6
 Sol" and "GPT-5.6 Luna" with multi-level thinking maps. The vendored daemon catalog
-(`vendor/.../src/chatgpt-web-models.ts`) defines **one immutable effort per route**:
+(`vendor/.../src/models/models.ts`) defines **one immutable effort per route**:
 `chatgpt-web/high` → `codexEffort/adapterEffort: "high"`, `chatgpt-web/luna` → low effort, plus an
 `extra-high` route. Sending a different reasoning effort would be rejected or silently mis-tuned on
 every inference. This is a real correctness bug, not a naming nit.
 
 **Evidence.** `review/implementation-review.md` ("Resolved: fixed-effort model metadata"); daemon
-`chatgpt-web-models.ts:155-205` (route → immutable effort), `model-catalog.ts:28-42` (reasoning level
+`models/models.ts:155-205` (route → immutable effort), `models/catalog.ts:28-42` (reasoning level
 per effort).
 
 **Implemented design.**
@@ -111,7 +111,7 @@ so the daemon receives only the current message and cannot replay history. Withi
 daemon opened a fresh isolated conversation per turn, so continuity was not durable across browser turns.
 
 **Evidence.** `implementation-plan-conversation-continuity.md`; the vendored daemon
-`vendor/runtime/src/adapters/chatgpt-web/browser/browser-worker.ts` (conversation creation and
+`vendor/runtime/src/adapters/chatgpt-web/browser/worker.ts` (conversation creation and
 canonical URL continuation) and `vendor/runtime/src/adapters/chatgpt-web/content/prompt.ts`
 (suffix prompt compilation); Prometheus
 `electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
@@ -197,7 +197,7 @@ contents. The daemon runs in `browser-only` mode, so the browser session has no 
 [`providers/openai/turn/files`](../providers/openai/turn/files.md); runtime
 `src/adapters/chatgpt-web/lifecycle/config.ts` (`RuntimeMode`, `localToolsEnabled`),
 `src/adapters/chatgpt-web/lifecycle/setup.ts` (`connectorSetupRequired`), and
-`src/adapters/chatgpt-web/turn/turn-broker.ts`
+`src/adapters/chatgpt-web/turn/broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).
 
@@ -221,7 +221,7 @@ in full mode, the model can read/edit a local file via bridged `codex_*` tools w
 **Problem.** DOM answer parsing is vulnerable to rendered UI changes and can silently lose reasoning,
 tool calls, usage, and citations.
 
-**Evidence.** The Pi-owned `browser-worker.ts`, `wire-capture.ts`, and `wire-response.ts` capture and
+**Evidence.** The Pi-owned `browser/worker.ts`, `transport/wire-capture.ts`, and `transport/wire-response.ts` capture and
 validate authenticated ChatGPT conversation payloads.
 
 **Implemented design.** Wire capture selects and validates the current conversation response. Missing

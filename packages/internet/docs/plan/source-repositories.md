@@ -20,7 +20,7 @@ All daemon table paths below are relative to `vendor/runtime/`.
 | Runtime paths / durable commands | `src/core/config.ts` |
 | Process and service lifecycle | `src/core/process.ts`, `src/core/service.ts` |
 | HTTP body limits | `src/core/http-body.ts` |
-| ChatGPT loopback routes | `src/adapters/chatgpt-web/server/server.ts` |
+| ChatGPT loopback routes | `src/adapters/chatgpt-web/server/routes.ts` |
 | Responses SSE bridge + batch builder | `src/adapters/chatgpt-web/protocol/responses/bridge.ts` |
 | Request parsing (Responses → internal) | `src/adapters/chatgpt-web/protocol/responses/parser.ts` |
 | Responses schema / state / compaction | `src/adapters/chatgpt-web/protocol/responses/{schema,state,compaction}.ts` |

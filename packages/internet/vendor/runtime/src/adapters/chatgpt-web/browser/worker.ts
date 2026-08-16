@@ -9,9 +9,9 @@ import {
   getConfigDir,
 } from "../lifecycle/config";
 import type { ProviderConfig } from "../protocol/types";
-import { DEFAULT_CONNECTOR_NAME } from "../lifecycle/connector";
+import { DEFAULT_CONNECTOR_NAME } from "../lifecycle/config";
 import { parseDataUrl } from "../content/image";
-import { CONVERSATION_CANARY_PROMPT, validateConversationCanary } from "../conversation/conversation-canary";
+import { CONVERSATION_CANARY_PROMPT, validateConversationCanary } from "../conversation/canary";
 import { ChatGptMarkdownBuffer, type ChatGptMarkdownSegment } from "../content/markdown";
 import {
   CHATGPT_WEB_LUNA_MODEL_ID,
@@ -23,9 +23,9 @@ import {
 import {
   CHATGPT_LUNA_BROWSER_INPUT_TOKEN_BUDGET,
   estimateCompiledChatGptWebMessageTokens,
-} from "../content/input-tokens";
+} from "../content/tokens";
 import { CHATGPT_MAX_INPUT_IMAGES, type CompiledChatGptWebPrompt, type ChatGptWebPromptImage } from "../content/prompt";
-import { estimateCompiledChatGptWebInputTokens } from "../content/input-tokens";
+import { estimateCompiledChatGptWebInputTokens } from "../content/tokens";
 import {
   assertAuthenticatedChatGptPage,
   CHATGPT_ASSISTANT_TURN_SELECTOR,
@@ -38,23 +38,21 @@ import {
   CHATGPT_STOP_BUTTON_SELECTOR,
   CHATGPT_USER_TURN_SELECTOR,
   CHATGPT_HOME_URL,
+  MAX_CHATGPT_BROWSER_TABS,
   detectChatGptAccountCapabilities,
   parseChatGptEffortSliderState,
 } from "./session";
-import { loginVerificationMarkerPath } from "./browser-login";
+import { loginVerificationMarkerPath } from "./login";
 import {
   resolveChatGptWebContextLimits,
   resolveChatGptWebTransportLimits,
 } from "../models/models";
-import { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
 import { ChatGptWebAdapterError } from "../adapter-error";
 import {
   ChatGptLunaCheckpointStream,
   type CapturedChatGptLunaCheckpoint,
 } from "../conversation/rolling-checkpoint";
 import { ChatGptWireCapture } from "../transport/wire-capture";
-
-export { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
 
 const workers = new Map<string, ChatGptBrowserWorker>();
 

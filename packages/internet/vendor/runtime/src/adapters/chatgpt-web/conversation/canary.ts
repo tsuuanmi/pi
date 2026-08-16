@@ -1,4 +1,4 @@
-import { parseConversationUrl } from "./conversation-journal.js";
+import { parseConversationUrl } from "./journal.js";
 
 export const CONVERSATION_CANARY_PROMPT = "Reply briefly and include: PI_DURABLE_CONVERSATION_CANARY_OK";
 

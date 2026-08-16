@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import * as z from "zod/v4";
 import { namespacedToolName, type Tool } from "../protocol/types";
 import type { ChatGptTurnEnvironment } from "../turn/environment";
-import { callTurnBroker, type BrokerToolResult } from "../turn/turn-broker";
+import { callTurnBroker, type BrokerToolResult } from "../turn/broker";
 
 interface ClaimedTurn {
   bindingId: string;

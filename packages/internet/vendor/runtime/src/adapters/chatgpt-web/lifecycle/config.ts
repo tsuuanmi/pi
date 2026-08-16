@@ -8,10 +8,9 @@ import {
   expandUserPath,
   getConfigDir,
   getConfigPath,
+  VERSION,
 } from "../../../core/config";
-import { VERSION } from "../../../core/version";
-import { DEFAULT_CONNECTOR_NAME } from "./connector";
-import { conversationRuntimeDigest } from "../conversation/conversation-journal";
+import { conversationRuntimeDigest } from "../conversation/journal";
 import type { ProviderConfig } from "../protocol/types";
 
 export {
@@ -21,6 +20,9 @@ export {
   getConfigDir,
   getConfigPath,
 };
+
+/** Default connector identity used by the ChatGPT Web adapter. */
+export const DEFAULT_CONNECTOR_NAME = "Pi Internet";
 
 export type RuntimeMode = "browser-only" | "full";
 

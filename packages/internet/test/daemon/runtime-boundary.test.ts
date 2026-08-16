@@ -37,7 +37,7 @@ describe("runtime source boundary", () => {
 			"core/config.ts",
 			"core/server.ts",
 			"adapters/chatgpt-web/lifecycle/config.ts",
-			"adapters/chatgpt-web/server/server.ts",
+			"adapters/chatgpt-web/server/routes.ts",
 			"adapters/chatgpt-web/protocol/types.ts",
 			"adapters/chatgpt-web/protocol/responses/bridge.ts",
 			"adapters/chatgpt-web/browser/login-state.ts",

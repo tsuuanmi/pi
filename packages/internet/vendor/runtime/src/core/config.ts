@@ -2,6 +2,8 @@ import { closeSync, chmodSync, existsSync, mkdirSync, openSync, renameSync, rmSy
 import { homedir, tmpdir } from "node:os";
 import { basename, delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 
+export const VERSION = "0.1.0";
+
 export interface RuntimeServiceConfig {
   host: "127.0.0.1";
   port: number;

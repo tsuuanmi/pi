@@ -24,9 +24,9 @@ work retained them and closed only the verified architecture gaps.
 ### Tier 2 — hybrid capture and guided login import
 
 - ChatGPT browser turns attach a per-turn wire capture before submit, parse authenticated
-  conversation SSE/JSON, and use the final assistant payload as the primary answer.
-- The existing DOM extraction is the explicit compatibility fallback when wire capture is missing or
-  invalid; capture provenance is logged as `wire` or `dom-fallback`.
+  conversation SSE/JSON, and use the final assistant payload as the authoritative answer.
+- Missing or invalid authenticated wire payloads fail the turn explicitly; rendered DOM is not an
+  answer source or compatibility fallback.
 - Login accepts a Playwright storage-state path as an alternative to interactive capture.
 - Import rejects symlinks/non-files and files outside the 1-byte–10-MiB bound, removes every cookie
   and origin outside ChatGPT/OpenAI, validates field shapes, verifies the session in daemon-owned
@@ -38,7 +38,7 @@ work retained them and closed only the verified architecture gaps.
 The existing implementation remains authoritative:
 
 - `mode: "full"` config enables the vendored broker/MCP tunnel.
-- Browser-worker serialization and replay remain unchanged.
+- Browser worker serialization and replay remain unchanged.
 - Pi's `tool_call` hook validates the account bridge and requests approval; default behavior denies
   execution.
 - Doctor, harness lifecycle, durable conversation, and checkpoint tests remain in the package suite.

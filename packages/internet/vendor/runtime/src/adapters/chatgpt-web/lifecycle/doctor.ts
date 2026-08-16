@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import type { AppConfig } from "./config";
 import { getConfigPath, loadConfig } from "./config";
-import { browserLoginStateExists, loginVerificationMarkerPath } from "../browser/browser-login";
+import { browserLoginStateExists, loginVerificationMarkerPath } from "../browser/login";
 import { getServiceStatus } from "../../../core/service";
 import { tunnelStatus } from "../transport/tunnel";
 import { getTunnelServiceStatus } from "../transport/tunnel-service";

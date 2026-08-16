@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 import type { AdapterEvent, ParsedRequest } from "../protocol/types";
-import type { BrokerToolRequest } from "./turn-broker";
+import type { BrokerToolRequest } from "./broker";
 import {
   extractChatGptCompactionSourceRevision,
   extractChatGptTurnIdentity,
   extractChatGptTurnUserRevision,
 } from "./environment";
-import { MAX_CHATGPT_BROWSER_TABS } from "../browser/concurrency";
+import { MAX_CHATGPT_BROWSER_TABS } from "../browser/session";
 
 export type ChatGptBrowserOutcome =
   | { type: "final"; answer: string }

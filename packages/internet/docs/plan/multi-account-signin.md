@@ -27,7 +27,7 @@ instance.
 Today, sign-in is **interactive and manual** for each account:
 
 - `internet_daemon login` (or the first model request) launches the daemon's `login` command.
-- `loginToChatGpt()` (in the vendored `browser-login.ts`) opens a **normal Chrome window** with a
+- `loginToChatGpt()` (in the vendored `browser/login.ts`) opens a **normal Chrome window** with a
   dedicated profile, prints "Sign in to ChatGPT, confirm that the composer is visible, then quit
   this dedicated Chrome instance completely", and waits for the user to complete sign-in manually.
 - It then captures the storage state, verifies authentication, and writes a verification marker.

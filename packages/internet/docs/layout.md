@@ -20,7 +20,6 @@ packages/internet/
 │   ├── hooks.ts
 │   ├── index.ts
 │   ├── settings.ts
-│   └── version.ts
 ├── test/                    # mirrors changed src areas
 ├── docs/                    # mirrors src modules plus architecture/usage/review records
 ├── scripts/build-daemon.mjs
@@ -48,7 +47,6 @@ http-body.ts    # bounded request decoding
 process.ts      # process probing and command execution
 server.ts       # provider-neutral Bun HTTP host
 service.ts      # daemon process and drain lifecycle
-version.ts      # runtime version
 ```
 
 ### ChatGPT adapter (`vendor/runtime/src/adapters/chatgpt-web/`)
@@ -56,7 +54,7 @@ version.ts      # runtime version
 ```text
 adapter.ts                  # adapter entrypoint
 adapter-error.ts             # adapter error classification
-browser/                     # login, storage state, browser worker, session, concurrency
+browser/                     # login, storage state, browser worker, session
 conversation/                # durable conversation journal, sync, canary, checkpoints
 content/                     # prompts, markdown, images, token and usage accounting
 lifecycle/                   # provider config, setup, doctor, connector and control

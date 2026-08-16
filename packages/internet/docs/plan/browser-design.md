@@ -8,8 +8,7 @@ Status: **current implementation.**
 
 > **Source:** the browser behavior is implemented under
 > `vendor/runtime/src/adapters/chatgpt-web/` in this package:
-> `browser/browser-worker.ts`, `browser/browser-login.ts`, `browser/session.ts`, and
-> `browser/concurrency.ts`.
+> `browser/worker.ts`, `browser/login.ts`, and `browser/session.ts`.
 
 ---
 
@@ -104,7 +103,7 @@ not part of the shared provider contract.
 | Storage | `storageState` 0600 under 0700 dir; login profile removed |
 | Browser ownership | The ChatGPT Web adapter launches and closes its managed Chrome process |
 | Untrusted model | The model's answer never grants browser authority; only the trusted environment does |
-| Concurrency cap | `MAX_CHATGPT_BROWSER_TABS = 5` prevents account-level spam |
+| Concurrency cap | `MAX_CHATGPT_BROWSER_TABS = 5` in `browser/session.ts` prevents account-level spam |
 
 ---
 
@@ -133,7 +132,7 @@ src/providers/openai/
 └── turn/            # turn adapter (talks to the daemon)
 ```
 
-The browser itself is **inside the runtime** (`browser/browser-worker.ts`). The `internet` package
+The browser itself is **inside the runtime** (`browser/worker.ts`). The `internet` package
 does **not** re-implement browser automation — it drives the runtime, which owns the browser. This
 keeps browser logic in one place and the package clean.
 

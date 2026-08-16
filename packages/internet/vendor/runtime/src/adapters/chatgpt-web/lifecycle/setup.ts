@@ -16,7 +16,7 @@ import {
   inspectBrowserLoginCapabilities,
   loginToChatGpt,
   storedBrowserLoginCapabilities,
-} from "../browser/browser-login";
+} from "../browser/login";
 import {
   assertServiceIdle,
   getServiceStatus,
@@ -25,7 +25,7 @@ import {
 } from "../../../core/service";
 import { connectTunnel, createTunnelConfig, installRuntimeKey, installRuntimeKeyBytes, installTunnelClient, managedRuntimeKeyPath, stopTunnel, waitForTunnelReady } from "../transport/tunnel";
 import { getTunnelServiceStatus, installTunnelService, restartTunnelService, stopTunnelService, tunnelServiceDefinitionMatches, uninstallTunnelService } from "../transport/tunnel-service";
-import { VERSION } from "../../../core/version";
+import { VERSION } from "../../../core/config";
 
 export interface SetupOptions {
   mode: RuntimeMode;

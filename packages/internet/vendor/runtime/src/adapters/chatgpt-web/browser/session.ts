@@ -1,6 +1,9 @@
 import type { Locator, Page } from "playwright-core";
 import type { ChatGptWebAccountCapabilities } from "../models/models";
 
+/** Maximum concurrent browser turns for one signed-in ChatGPT account. */
+export const MAX_CHATGPT_BROWSER_TABS = 5;
+
 export const CHATGPT_HOME_URL = "https://chatgpt.com/";
 export const CHATGPT_COMPOSER_SELECTOR = [
   '[data-testid="prompt-textarea"]',

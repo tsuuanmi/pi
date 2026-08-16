@@ -56,7 +56,7 @@ it uses direct composition instead of a speculative registry.
 ```text
 HTTP POST /v1/responses
   -> core server.ts (Bun HTTP host)
-  -> adapters/chatgpt-web/server/server.ts (bounded body and route dispatch)
+  -> adapters/chatgpt-web/server/routes.ts (bounded body and route dispatch)
   -> adapters/chatgpt-web/protocol/responses/parser.ts
   -> adapters/chatgpt-web/adapter.ts (browser turn)
   -> adapters/chatgpt-web/protocol/responses/bridge.ts (Responses SSE)

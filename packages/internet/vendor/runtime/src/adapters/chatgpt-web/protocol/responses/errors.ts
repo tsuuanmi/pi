@@ -59,7 +59,7 @@ function isPermissionMessage(text: string): boolean {
 /**
  * Client cancelled / closed the turn. Matches ONLY abort phrases this codebase
  * produces — "client closed request during web-search" (tools/web-search/synthetic-tool.ts),
- * "Client cancelled request" (server/server.ts) — plus the explicit
+ * "Client cancelled request" (server/routes.ts) — plus the explicit
  * "request cancel(l)ed by client" forms. Deliberately narrow: bare "client closed"
  * would also swallow legitimate upstream failures like "upstream HTTP client
  * closed idle connection" and turn a real 502 into a 499.

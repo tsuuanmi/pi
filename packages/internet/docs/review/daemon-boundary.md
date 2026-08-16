@@ -25,8 +25,7 @@ packages/internet/vendor/runtime/
 │   │   ├── http-body.ts
 │   │   ├── process.ts
 │   │   ├── server.ts
-│   │   ├── service.ts
-│   │   └── version.ts
+│   │   └── service.ts
 │   └── adapters/chatgpt-web/
 │       ├── adapter.ts                 # adapter entrypoint
 │       ├── adapter-error.ts
@@ -54,9 +53,9 @@ conversation, OpenAI Responses, and Codex-native concept.
 
 | Area | Responsibility |
 | --- | --- |
-| `src/core/` | Neutral paths, process/service lifecycle, HTTP host, bounded I/O, version |
+| `src/core/` | Neutral paths, process/service lifecycle, HTTP host, bounded I/O, runtime version |
 | `adapter.ts` | ChatGPT adapter entrypoint and turn construction |
-| `browser/` | Login, browser worker, filtered storage state, session, concurrency |
+| `browser/` | Login, browser worker, filtered storage state, session, concurrency policy |
 | `conversation/` | Durable conversation journal, sync, canary, rolling checkpoints |
 | `content/` | Prompt, markdown, image, token, and usage conversion |
 | `lifecycle/` | ChatGPT config, setup, doctor, connector identity, control |

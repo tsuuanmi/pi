@@ -77,7 +77,7 @@ src/
 ├── tools/
 │   ├── status.ts      # internet_status
 │   └── compact.ts     # internet_compact
-└── version.ts
+└── core/config.ts       # runtime version and configuration
 ```
 - **Recommendation**: adopt this smaller layout for MVP; expand into the full tree only when the
   tool bridge lands.

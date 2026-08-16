@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
-import type { ConversationCheckpoint } from "./conversation-sync.js";
+import type { ConversationCheckpoint } from "./sync.js";
 
 const CHATGPT_ORIGIN = "https://chatgpt.com";
 const CONVERSATION_PATH = /^\/c\/([A-Za-z0-9_-]+)$/;

@@ -45,7 +45,7 @@ folder under the ChatGPT adapter, and core modules must not import provider-spec
 The following files are large because they coordinate multiple phases of an intentionally coupled
 runtime. They are the primary candidates for a future internal decomposition:
 
-- `src/adapters/chatgpt-web/browser/browser-worker.ts`: browser lifecycle, page interaction, wire capture,
+- `src/adapters/chatgpt-web/browser/worker.ts`: browser lifecycle, page interaction, wire capture,
   tool approval, and response recovery;
 - `src/adapters/chatgpt-web/protocol/responses/bridge.ts`: adapter events, Responses output, and continuation
   state;

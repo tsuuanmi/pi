@@ -2,8 +2,17 @@ import type { AdapterEvent, MessagePhase, ProviderContinuationState, Usage } fro
 import { adapterFailureFromMessage, classifyError, type RuntimeErrorPayload } from "./errors";
 import { encodeCompactionSummary } from "./compaction";
 import { encodeReasoningEnvelope, type ReasoningEnvelope } from "./reasoning-envelope";
-import { resolveStallTimeoutSec } from "./stall-timeout";
-import { usageDisplayTotalTokens } from "../../content/usage-totals";
+import { usageDisplayTotalTokens } from "../../content/usage";
+
+/** Seconds of silence before the Responses bridge reports an upstream stall. */
+const DEFAULT_STALL_TIMEOUT_SEC = 300;
+
+function resolveStallTimeoutSec(configuredSec: number | undefined): number {
+  if (typeof configuredSec === "number" && Number.isFinite(configuredSec)) {
+    return Math.max(1, Math.ceil(configuredSec));
+  }
+  return DEFAULT_STALL_TIMEOUT_SEC;
+}
 
 function uuid(): string {
   return crypto.randomUUID().replace(/-/g, "");

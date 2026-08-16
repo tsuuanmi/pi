@@ -4,19 +4,26 @@ import { Writable } from "node:stream";
 import { existsSync, rmSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { stdin, stdout } from "node:process";
-import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "./adapters/chatgpt-web/browser/browser-login";
-import { DEFAULT_CONNECTOR_NAME } from "./adapters/chatgpt-web/lifecycle/connector";
+import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "./adapters/chatgpt-web/browser/login";
 import { cancelBrowserTurns } from "./adapters/chatgpt-web/lifecycle/control";
-import { getConfigDir, getConfigPath, loadConfig, loadConfigForSetup } from "./adapters/chatgpt-web/lifecycle/config";
+import {
+  defaultBrokerEndpoint,
+  getConfigDir,
+  getConfigPath,
+  loadConfig,
+  loadConfigForSetup,
+  resolveBrokerEndpoint,
+  DEFAULT_CONNECTOR_NAME,
+} from "./adapters/chatgpt-web/lifecycle/config";
 import { formatDoctorReport, runDoctor } from "./adapters/chatgpt-web/lifecycle/doctor";
-import { runChatGptMcpMain } from "./adapters/chatgpt-web/tools/mcp-main";
+import { runChatGptMcpServer } from "./adapters/chatgpt-web/tools/mcp-server";
 import { runCommand } from "./core/process";
-import { startServer } from "./adapters/chatgpt-web/server/server";
+import { startServer } from "./adapters/chatgpt-web/server/routes";
 import { assertServiceIdle, getServiceStatus, installService, restartService, startService, stopService, uninstallService } from "./core/service";
 import { existingFullSetupCredentials, setup, type SetupOptions } from "./adapters/chatgpt-web/lifecycle/setup";
 import { connectTunnel, installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "./adapters/chatgpt-web/transport/tunnel";
 import { getTunnelServiceStatus, restartTunnelService, startTunnelService, stopTunnelService, uninstallTunnelService } from "./adapters/chatgpt-web/transport/tunnel-service";
-import { VERSION } from "./core/version";
+import { VERSION } from "./core/config";
 
 const HELP = `pi-internet-runtime ${VERSION}
 
@@ -191,6 +198,14 @@ async function doctorCommand(args: string[]): Promise<void> {
   if (!report.ok) process.exitCode = 1;
 }
 
+async function mcpCommand(args: string[]): Promise<void> {
+  const brokerSocketPath = resolveBrokerEndpoint(
+    takeOption(args, "--broker-socket") ?? defaultBrokerEndpoint(),
+  );
+  assertNoArgs(args);
+  await runChatGptMcpServer({ brokerSocketPath });
+}
+
 async function serviceCommand(args: string[]): Promise<void> {
   const action = args.shift() ?? "status";
   assertNoArgs(args);
@@ -323,7 +338,7 @@ async function main(): Promise<void> {
     const server = startServer(config, { onShutdown: resolveShutdown });
     stdout.write(`pi-internet-runtime ${VERSION} listening on http://${config.host}:${server.port}/v1 (${config.mode})\n`);
     await shutdown;
-  } else if (command === "mcp") await runChatGptMcpMain(args);
+  } else if (command === "mcp") await mcpCommand(args);
   else if (command === "service") await serviceCommand(args);
   else if (command === "tunnel") await tunnelCommand(args);
   else if (command === "open") await openCommand(args);

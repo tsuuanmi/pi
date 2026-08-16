@@ -50,7 +50,7 @@ completed turns update the same journal checkpoint.
 ## Verification
 
 - Build the package and embedded runtime.
-- Run focused journal, suffix, provider, browser-worker, and tool tests.
+- Run focused journal, suffix, provider, browser/worker, and tool tests.
 - Run the affected package test suite.
 - Live verify multiple turns, browser restart, Full-mode tool rounds, reset, and separate-session
   isolation.

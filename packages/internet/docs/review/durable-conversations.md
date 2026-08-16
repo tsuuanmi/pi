@@ -58,7 +58,7 @@ Live Sol replies contained the marker plus surrounding text (observed completed 
 75 characters). Those turns had valid canonical ChatGPT conversation URLs and completed reopen
 verification, but the strict wording assertion rejected them.
 
-**Resolution:** the browser canary protocol is isolated in `conversation-canary.ts`. It requires a
+**Resolution:** the browser canary protocol is isolated in `conversation/canary.ts`. It requires a
 non-empty completed reply and a canonical `https://chatgpt.com/c/<id>` URL. The existing close,
 reopen, and authenticated-surface preparation remains the authoritative durability check. Model
 wording is no longer treated as a storage invariant.

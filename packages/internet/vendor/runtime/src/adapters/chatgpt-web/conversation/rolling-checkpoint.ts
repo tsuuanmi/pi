@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { atomicWriteFile } from "../lifecycle/config";
-import { estimateTokens } from "../content/token-estimate";
+import { estimateTokens } from "../content/tokens";
 import { parseRequest } from "../protocol/responses/parser";
 import type { ParsedRequest } from "../protocol/types";
 import * as z from "zod/v4";

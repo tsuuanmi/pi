@@ -2,26 +2,26 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { defaultBrokerEndpoint, expandUserPath, resolveBrokerEndpoint } from "./lifecycle/config";
 import { namespacedToolName, type AdapterEvent, type ContentPart, type ParsedRequest, type ProviderConfig, type ToolResultMessage, type Usage } from "./protocol/types";
-import type { ProviderAdapter } from "./turn/turn-adapter";
+import type { ProviderAdapter } from "./turn/adapter";
 import { parseDataUrl } from "./content/image";
 import { ChatGptWebAdapterError } from "./adapter-error";
-import { ChatGptBrowserWorker, type BrowserConversationTurn } from "./browser/browser-worker";
+import { ChatGptBrowserWorker, type BrowserConversationTurn } from "./browser/worker";
 import {
   assertDurableConversationAuthority,
   ConversationJournal,
   conversationAccountFingerprint,
-} from "./conversation/conversation-journal";
+} from "./conversation/journal";
 import {
   acknowledgedConversationCheckpoint,
   canonicalConversationEvents,
   conversationSuffix,
   isGeneratedEnvironmentMessage,
-} from "./conversation/conversation-sync";
+} from "./conversation/sync";
 import { extractChatGptTurnEnvironment, extractChatGptTurnIdentity } from "./turn/environment";
 import { CHATGPT_WEB_LUNA_MODEL_ID, resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "./models/model";
 import { chatGptFullModeContextWarning, compileChatGptWebPrompt } from "./content/prompt";
-import { TurnBroker, type BrokerToolRequest, type BrokerToolResult } from "./turn/turn-broker";
-import { ChatGptTextFeed, ChatGptTraceFeed, chatGptCompactionSourceExecutionKey, chatGptTurnExecutionKey, chatGptTurnSessions, type ChatGptBrowserOutcome, type ChatGptTraceEvent, type ChatGptTurnRuntime, type ChatGptTurnSession } from "./turn/turn-execution";
+import { TurnBroker, type BrokerToolRequest, type BrokerToolResult } from "./turn/broker";
+import { ChatGptTextFeed, ChatGptTraceFeed, chatGptCompactionSourceExecutionKey, chatGptTurnExecutionKey, chatGptTurnSessions, type ChatGptBrowserOutcome, type ChatGptTraceEvent, type ChatGptTurnRuntime, type ChatGptTurnSession } from "./turn/execution";
 import { estimateChatGptWebUsage } from "./content/usage";
 import { ChatGptThreadEnvironmentStore } from "./turn/thread-environment";
 import {

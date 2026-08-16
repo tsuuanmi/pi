@@ -22,7 +22,7 @@ file/tool access). It is grounded in the actual vendored source.
 
 ## 2. The turn broker
 
-Source: `src/adapters/chatgpt-web/turn/turn-broker.ts`.
+Source: `src/adapters/chatgpt-web/turn/broker.ts`.
 
 The turn broker is a **local Unix socket** (default `$PI_INTERNET_RUNTIME_HOME/runtime/turn-broker.sock`)
 that decouples the browser turn from the HTTP server. It lets a separate process (the MCP server)
@@ -39,12 +39,12 @@ lower-level path used by the MCP server so a tool-capable client can drive the s
 
 ## 3. The MCP server
 
-Source: `src/adapters/chatgpt-web/tools/mcp-server.ts` and `tools/mcp-main.ts`.
+Source: `src/adapters/chatgpt-web/tools/mcp-server.ts` and `src/cli.ts`.
 
 The daemon ships an **MCP server** that exposes the ChatGPT Web browser turn as an MCP tool. It is
-launched via `pi-internet-runtime mcp --broker-socket <path>` (see `tools/mcp-main.ts`).
+launched via `pi-internet-runtime mcp --broker-socket <path>` (see `src/cli.ts`).
 
-- `runChatGptMcpMain(args)` parses `--broker-socket` and calls `runChatGptMcpServer({ brokerSocketPath })`.
+- The CLI's `mcpCommand` parses `--broker-socket` and calls `runChatGptMcpServer({ brokerSocketPath }).
 - The MCP server connects to the turn broker socket and serves the browser turn as an MCP tool.
 - This is what lets a **Codex runtime** (or a Full-mode harness) call the browser as a tool over MCP.
 

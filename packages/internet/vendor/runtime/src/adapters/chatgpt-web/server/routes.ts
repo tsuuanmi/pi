@@ -1,20 +1,20 @@
 import { createChatGptWebAdapter } from "../adapter";
-import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "../browser/browser-worker";
+import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "../browser/worker";
 import {
   beginDurableConversationAuthority,
   conversationAccountFingerprint,
   writeDurableConversationAuthority,
-} from "../conversation/conversation-journal";
-import { closeTurnBrokers, TurnBroker } from "../turn/turn-broker";
+} from "../conversation/journal";
+import { closeTurnBrokers, TurnBroker } from "../turn/broker";
 import { createHash, timingSafeEqual } from "node:crypto";
-import { chatGptTurnSessions } from "../turn/turn-execution";
+import { chatGptTurnSessions } from "../turn/execution";
 import { bridgeToResponsesSSE, buildResponseJSON, formatErrorResponse } from "../protocol/responses/bridge";
 import type { AppConfig } from "../lifecycle/config";
 import { providerConfig } from "../lifecycle/config";
 import { AsyncEventQueue } from "../../../core/event-queue";
 import { readJsonRequestBody } from "../../../core/http-body";
 import { httpStatusFromTerminalError } from "../protocol/responses/errors";
-import { augmentNativeModelCatalog } from "../models/model-catalog";
+import { augmentNativeModelCatalog } from "../models/catalog";
 import {
   CHATGPT_WEB_LUNA_BACKEND_MODEL,
   isChatGptWebModelSlug,
@@ -32,10 +32,10 @@ import { parseRequest } from "../protocol/responses/parser";
 import { expandPreviousResponseInput, flushResponseState, rememberResponseState } from "../protocol/responses/state";
 import { namespacedToolName, type AdapterEvent, type ParsedRequest } from "../protocol/types";
 import type { ProviderConfig } from "../protocol/types";
-import type { ProviderAdapter } from "../turn/turn-adapter";
+import type { ProviderAdapter } from "../turn/adapter";
 import { stopTunnel } from "../transport/tunnel";
 import { startHttpServer } from "../../../core/server";
-import { VERSION } from "../../../core/version";
+import { VERSION } from "../../../core/config";
 
 export class HttpTurnCounter {
   private active = 0;

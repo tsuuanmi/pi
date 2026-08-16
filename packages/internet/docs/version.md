@@ -1,9 +1,9 @@
 # version
 
-Mirrors `vendor/runtime/src/core/version.ts`.
+Mirrors `vendor/runtime/src/core/config.ts`.
 
 ```ts
 export const VERSION = "0.1.0";
 ```
 
-The package version constant, exported from `src/index.ts`.
+The runtime version constant is imported by the CLI, daemon routes, and runtime bundle builder.
