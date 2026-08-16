@@ -14,7 +14,7 @@ function isConversationResponse(response: Response): boolean {
   }
 }
 
-export class ChatGptWireCapture extends BrowserResponseCapture<string | undefined> {
+export class ChatGptWireCapture extends BrowserResponseCapture<string> {
   constructor(page: Page) {
     super(page, {
       matches: isConversationResponse,
@@ -22,7 +22,7 @@ export class ChatGptWireCapture extends BrowserResponseCapture<string | undefine
     });
   }
 
-  waitForText(timeoutMs = 1_500): Promise<string | undefined> {
-    return this.waitForValue(timeoutMs);
+  waitForText(timeoutMs = 1_500, signal?: AbortSignal): Promise<string | undefined> {
+    return this.waitForValue({ timeoutMs, signal });
   }
 }

@@ -21,7 +21,7 @@ Implements interactive login, storage-state import, login verification, and brow
 
 ## Behavior and invariants
 
-- This layer is the only module group that directly knows about ChatGPT Web DOM surfaces, selectors, tabs, and Playwright lifecycle.
+- Login owns ChatGPT authentication surfaces and storage verification; reusable browser lifecycle stays in direct `browser/*.ts` modules.
 - Browser state and UI evidence are validated before a turn is admitted; missing or contradictory evidence becomes a clear runtime failure.
 - The worker reports protocol-neutral trace and turn events to the adapter rather than exposing Playwright objects to the HTTP layer.
 

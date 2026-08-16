@@ -98,7 +98,7 @@ Remove the launcher-only paths from the vendored runtime:
 - launcher helper process coordination
 - launcher-specific setup flags and handoff logic
 - launcher-specific doctor checks
-- launcher branches in `browser/worker.ts`
+- launcher branches in `browser/chatgpt-web/worker.ts`
 - launcher-only fields in adapter/provider configuration
 
 The browser worker should always use the existing managed-Chrome launch path. It must preserve
@@ -193,9 +193,49 @@ supports two browser hosts.
 | Removing launcher code breaks managed Chrome | Run the full internet package suite and managed-Chrome runtime smoke checks. |
 | Documentation retains obsolete launcher instructions | Search all package docs and source references before finalizing. |
 
-## 8. Completion definition
+## 8. Browser-core hardening and decomposition
+
+The canonical-host migration and second-stage browser-runtime cleanup are complete. The resulting
+layout preserves the provider boundary described above.
+
+### Reusable browser mechanics
+
+`vendor/runtime/src/browser/` is the home for provider-neutral mechanics:
+
+- `session.ts`: browser/context/page ownership, capacity, eviction, and shutdown;
+- `turn.ts`: turn concurrency, exclusive maintenance, stage deadlines, and cancellation;
+- `response-capture.ts`: response listener lifecycle, bounded waiting, and parser coordination.
+
+The shared runtime now:
+
+1. invalidates and closes a browser whose launch completes during session shutdown;
+2. exposes typed stage timeout cancellation and quarantines timed-out pages;
+3. serializes page-capacity decisions and protects active page leases;
+4. waits for matching responses that arrive after response waiting begins;
+5. preserves response parser failures when no usable response is available.
+
+These are lifecycle guarantees, not ChatGPT behavior, so they belong in the shared browser runtime.
+
+### Provider-specific browser behavior
+
+`browser/chatgpt-web/worker.ts` owns lifecycle and maintenance composition. ChatGPT selectors, DOM
+interaction, attachments, model/effort selection, completion evidence, trace and DOM health
+tracking, and diagnostics are split into cohesive sibling modules:
+
+| Module | Responsibility |
+| --- | --- |
+| `turn-driver.ts` | Compose browser stages and map provider events to the adapter |
+| `interactions.ts` | Composer, model/effort, prompt, and file operations |
+| `completion.ts` | DOM snapshots, completion evidence, trace, and health trackers |
+| `diagnostics.ts` | ChatGPT-specific snapshot shaping and redaction |
+
+This is a provider-local refactor, not a new public browser abstraction. The reusable layer should
+remain small until a second browser-backed provider demonstrates a genuine shared contract.
+
+## 9. Completion definition
 
 The task is complete when managed Chrome is the only supported browser host, launcher configuration
 is rejected rather than migrated, shared provider APIs contain no browser-host concept, all current
-providers retain their existing behavior, documentation describes the new boundary, and the full
-internet package verification suite passes.
+providers retain their existing behavior, documentation describes the new boundary, the browser
+runtime hardening items have acceptance tests, and the full internet package verification suite
+passes.

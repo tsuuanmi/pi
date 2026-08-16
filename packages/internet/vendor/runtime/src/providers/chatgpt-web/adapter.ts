@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
-import { defaultBrokerEndpoint, expandUserPath, resolveBrokerEndpoint } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { expandUserPath } from "#runtime/core/config";
+import { defaultBrokerEndpoint, resolveBrokerEndpoint } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import { namespacedToolName, type AdapterEvent, type ContentPart, type ParsedRequest, type ProviderConfig, type ToolResultMessage, type Usage } from "#runtime/providers/chatgpt-web/protocol/types";
 import type { ProviderAdapter } from "#runtime/providers/chatgpt-web/turn/adapter";
 import { parseDataUrl } from "#runtime/providers/chatgpt-web/content/image";
 import { ChatGptWebAdapterError } from "#runtime/providers/chatgpt-web/adapter-error";
-import { ChatGptBrowserWorker, type BrowserConversationTurn } from "#runtime/providers/chatgpt-web/browser/worker";
+import type { BrowserConversationTurn } from "#runtime/browser/chatgpt-web/turn-driver";
+import { ChatGptBrowserWorker } from "#runtime/browser/chatgpt-web/worker";
 import {
   assertDurableConversationAuthority,
   ConversationJournal,

@@ -1,5 +1,5 @@
 import { createChatGptWebAdapter } from "#runtime/providers/chatgpt-web/adapter";
-import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "#runtime/providers/chatgpt-web/browser/worker";
+import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "#runtime/browser/chatgpt-web/worker";
 import {
   beginDurableConversationAuthority,
   conversationAccountFingerprint,

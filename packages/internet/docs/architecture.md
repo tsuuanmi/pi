@@ -27,27 +27,25 @@ validated before spawn.
 
 The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and a
 ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-neutral code is split between
-`vendor/runtime/src/core/` and the reusable browser runtime under `vendor/runtime/src/browser/`;
-provider-specific code is organized under `vendor/runtime/src/providers/chatgpt-web/`. See the canonical
-[provider-neutral runtime boundary](review/daemon-boundary.md) review for the full module map. The
-next boundary review proposes decomposing the current ChatGPT browser worker and extracting its
-reusable mechanics into a `vendor/runtime/src/browser/` layer between these core and provider
-directories: [Browser and provider boundary review](review/browser-provider-boundary.md).
+`vendor/runtime/src/core/` and the browser runtime under `vendor/runtime/src/browser/`.
+ChatGPT-specific browser code lives under `browser/chatgpt-web/`; non-browser provider code lives
+under `vendor/runtime/src/providers/chatgpt-web/`. See the canonical
+[provider-neutral runtime boundary](review/daemon-boundary.md) and
+[Browser and provider boundary review](review/browser-provider-boundary.md) for the module maps.
 
 **Core (provider-agnostic):** runtime-home and durable-command handling, atomic writes, bounded HTTP
 body/event primitives, process and service lifecycle, and the Bun HTTP host. Core modules never
 import browser or provider modules.
 
-**Browser runtime (provider-agnostic):** browser/context/page ownership, bounded page sessions,
-response-capture lifecycle, cancellation, and cleanup. Browser modules never import provider
-protocols or product selectors.
+**Browser runtime:** direct `browser/*.ts` modules own provider-neutral browser/context/page leases,
+response-capture lifecycle, cancellation, and cleanup. Named subdirectories such as
+`browser/chatgpt-web/` own provider-specific selectors and browser flows.
 
-**Provider layer (ChatGPT Web):** the OpenAI Responses routes and projection, turn/event types,
-health and control payloads, idle shutdown, browser automation against `chatgpt.com`, session,
-models, login, native backend passthrough, model catalog, tunnel, and web search. These live under
-`vendor/runtime/src/providers/chatgpt-web/`; reusable browser mechanics live under
-`vendor/runtime/src/browser/`, while hosting and lifecycle primitives live under
-`vendor/runtime/src/core/`.
+**Provider layer (ChatGPT Web):** OpenAI Responses routes and projection, turn/event types, health
+and control payloads, idle shutdown, models, native backend passthrough, catalog, tunnel, and web
+search live under `vendor/runtime/src/providers/chatgpt-web/`. Browser automation, login, selectors,
+and completion tracking live under `vendor/runtime/src/browser/chatgpt-web/`. Hosting and lifecycle
+primitives remain under `vendor/runtime/src/core/`.
 
 ### Two provider boundaries
 
@@ -67,7 +65,8 @@ HTTP POST /v1/responses
   -> core server.ts (Bun HTTP host)
   -> providers/chatgpt-web/server/routes.ts (bounded body and route dispatch)
   -> providers/chatgpt-web/protocol/responses/parser.ts
-  -> providers/chatgpt-web/adapter.ts (browser turn)
+  -> providers/chatgpt-web/adapter.ts
+  -> browser/chatgpt-web/worker.ts (browser turn)
   -> providers/chatgpt-web/protocol/responses/bridge.ts (Responses SSE)
   -> HTTP 200 text/event-stream
 ```

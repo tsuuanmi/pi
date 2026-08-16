@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
-import { atomicWriteFile } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { atomicWriteFile } from "#runtime/core/config";
 import type { ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import {
   extractChatGptTurnEnvironment,

@@ -112,7 +112,7 @@ so the daemon receives only the current message and cannot replay history. Withi
 daemon opened a fresh isolated conversation per turn, so continuity was not durable across browser turns.
 
 **Evidence.** `implementation-plan-conversation-continuity.md`; the vendored daemon
-`vendor/runtime/src/providers/chatgpt-web/browser/worker.ts` (conversation creation and
+`vendor/runtime/src/browser/chatgpt-web/worker.ts` (conversation creation and
 canonical URL continuation) and `vendor/runtime/src/providers/chatgpt-web/content/prompt.ts`
 (suffix prompt compilation); Prometheus
 `electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
@@ -222,7 +222,7 @@ in full mode, the model can read/edit a local file via bridged `codex_*` tools w
 **Problem.** DOM answer parsing is vulnerable to rendered UI changes and can silently lose reasoning,
 tool calls, usage, and citations.
 
-**Evidence.** The Pi-owned `browser/worker.ts`, `transport/wire-capture.ts`, and `transport/wire-response.ts` capture and
+**Evidence.** The Pi-owned `browser/chatgpt-web/worker.ts`, `browser/chatgpt-web/wire-capture.ts`, and `providers/chatgpt-web/transport/wire-response.ts` capture and
 validate authenticated ChatGPT conversation payloads.
 
 **Implemented design.** Wire capture selects and validates the current conversation response. Missing

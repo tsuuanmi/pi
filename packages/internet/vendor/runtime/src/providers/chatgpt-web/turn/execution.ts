@@ -6,7 +6,7 @@ import {
   extractChatGptTurnIdentity,
   extractChatGptTurnUserRevision,
 } from "#runtime/providers/chatgpt-web/turn/environment";
-import { MAX_CHATGPT_BROWSER_TABS } from "#runtime/providers/chatgpt-web/browser/session";
+import { MAX_CHATGPT_BROWSER_TABS } from "#runtime/browser/chatgpt-web/session";
 
 export type ChatGptBrowserOutcome =
   | { type: "final"; answer: string }

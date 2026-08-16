@@ -30,7 +30,7 @@ All daemon table paths below are relative to `vendor/runtime/`.
 | Native passthrough and wire transport | `src/providers/chatgpt-web/transport/` |
 | Model catalog and route resolution | `src/providers/chatgpt-web/models/` |
 | ChatGPT turn contract and execution | `src/providers/chatgpt-web/turn/` |
-| **Browser automation and login** | `src/providers/chatgpt-web/browser/` |
+| **Browser automation and login** | `src/browser/chatgpt-web/` |
 | **Durable conversation state** | `src/providers/chatgpt-web/conversation/` |
 | MCP and synthetic web-search tools | `src/providers/chatgpt-web/tools/` |
 | Prompt, content, token, and usage conversion | `src/providers/chatgpt-web/content/` |

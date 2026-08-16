@@ -1,7 +1,8 @@
 import { existsSync, statSync } from "node:fs";
+import { getConfigPath } from "#runtime/core/config";
 import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
-import { getConfigPath, loadConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
-import { browserLoginStateExists, loginVerificationMarkerPath } from "#runtime/providers/chatgpt-web/browser/login";
+import { loadConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { browserLoginStateExists, loginVerificationMarkerPath } from "#runtime/browser/chatgpt-web/login";
 import { getServiceStatus } from "#runtime/core/service";
 import { tunnelStatus } from "#runtime/providers/chatgpt-web/transport/tunnel";
 import { getTunnelServiceStatus } from "#runtime/providers/chatgpt-web/transport/tunnel-service";

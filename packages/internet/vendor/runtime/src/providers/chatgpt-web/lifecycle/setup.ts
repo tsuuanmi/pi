@@ -4,9 +4,7 @@ import { createServer } from "node:net";
 import { join } from "node:path";
 import type { AppConfig, RuntimeMode } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import {
-  currentRuntimeCommand,
   defaultConfig,
-  getConfigPath,
   loadConfigForSetup,
   resolveSetupConnectorName,
   saveConfig,
@@ -16,7 +14,7 @@ import {
   inspectBrowserLoginCapabilities,
   loginToChatGpt,
   storedBrowserLoginCapabilities,
-} from "#runtime/providers/chatgpt-web/browser/login";
+} from "#runtime/browser/chatgpt-web/login";
 import {
   assertServiceIdle,
   getServiceStatus,
@@ -25,7 +23,7 @@ import {
 } from "#runtime/core/service";
 import { connectTunnel, createTunnelConfig, installRuntimeKey, installRuntimeKeyBytes, installTunnelClient, managedRuntimeKeyPath, stopTunnel, waitForTunnelReady } from "#runtime/providers/chatgpt-web/transport/tunnel";
 import { getTunnelServiceStatus, installTunnelService, restartTunnelService, stopTunnelService, tunnelServiceDefinitionMatches, uninstallTunnelService } from "#runtime/providers/chatgpt-web/transport/tunnel-service";
-import { VERSION } from "#runtime/core/config";
+import { currentRuntimeCommand, getConfigPath, VERSION } from "#runtime/core/config";
 
 export interface SetupOptions {
   mode: RuntimeMode;

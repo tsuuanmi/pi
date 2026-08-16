@@ -52,6 +52,8 @@
 
 ### Changed
 
+- Move all browser-facing runtime code under `vendor/runtime/src/browser/`, keep reusable mechanics
+  in direct modules, and split ChatGPT automation into cohesive provider-specific browser modules.
 - Make durable ChatGPT conversations universal across browser-only and Full modes; each later turn
   reopens the saved conversation and sends only the current suffix.
 - Pin all direct vendored runtime dependencies to exact lockfile versions.
@@ -93,6 +95,8 @@
 
 ### Fixed
 
+- Harden browser lifecycle handling with one shared context, serialized page leases, active-page
+  protection, launch-safe shutdown, timeout quarantine, and abort-aware response capture.
 - Load account registries without rejecting older schema version values.
 - Capture every ChatGPT conversation response and select the latest message only after the browser turn completes, avoiding both premature intermediate results and brittle final-Markdown detection.
 - Allow the durable conversation canary enough time to complete its browser turn, accept non-empty

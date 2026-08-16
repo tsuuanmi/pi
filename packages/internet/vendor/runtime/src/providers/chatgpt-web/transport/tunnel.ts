@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { unzipSync } from "fflate";
+import { atomicWriteFile, getConfigDir } from "#runtime/core/config";
 import type { AppConfig, TunnelConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
-import { atomicWriteFile, getConfigDir } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import { runCommand, runChecked } from "#runtime/core/process";
 
 const TUNNEL_VERSION = "0.0.10";

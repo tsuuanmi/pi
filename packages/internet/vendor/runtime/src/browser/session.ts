@@ -1,139 +1,214 @@
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { chromium, type Browser, type BrowserContext, type LaunchOptions, type Page } from "playwright-core";
 
 export interface BrowserSessionOptions {
   executablePath: string;
   storageStatePath: string;
   viewport: { width: number; height: number };
   headless: boolean;
-  args?: string[];
+  args: string[];
   assertReady: () => void;
 }
 
-/** Owns browser processes, contexts, pages, and deterministic cleanup for one provider session. */
+export interface BrowserPageLease {
+  page: Page;
+  release(options?: { discard?: boolean }): Promise<void>;
+}
+
+interface ManagedPage {
+  page: Page;
+  leases: number;
+}
+
+/** Owns one provider-neutral browser process, context, maintenance page, and managed page pool. */
 export class BrowserSession {
-  private singleBrowser?: Browser;
-  private singleContext?: BrowserContext;
-  private singlePage?: Page;
-  private managedBrowser?: Browser;
-  private managedContext?: BrowserContext;
-  private managedBrowserReady?: Promise<{ browser: Browser; context: BrowserContext }>;
-  private readonly managedPages = new Map<string, Page>();
+  private browser?: Browser;
+  private context?: BrowserContext;
+  private maintenancePage?: Page;
+  private launchTask?: Promise<void>;
+  private readonly pages = new Map<string, ManagedPage>();
+  private operationTail: Promise<void> = Promise.resolve();
+  private closePromise?: Promise<void>;
+  private closing = false;
+  private readonly options: BrowserSessionOptions;
+  private readonly launch: (options: LaunchOptions) => Promise<Browser>;
 
-  constructor(private readonly options: BrowserSessionOptions) {}
-
-  async ensurePage(): Promise<Page> {
-    if (this.singlePage && !this.singlePage.isClosed()) return this.singlePage;
-
-    const { browser, context } = await this.launch();
-    const page = await context.newPage();
-    this.singleBrowser = browser;
-    this.singleContext = context;
-    this.singlePage = page;
-    this.watchBrowser(browser, () => {
-      if (this.singleBrowser !== browser) return;
-      this.singleBrowser = undefined;
-      this.singleContext = undefined;
-      this.singlePage = undefined;
-    });
-    return page;
+  constructor(
+    options: BrowserSessionOptions,
+    launch: (options: LaunchOptions) => Promise<Browser> = options => chromium.launch(options),
+  ) {
+    this.options = options;
+    this.launch = launch;
   }
 
-  async pageForKey(key: string, maxPages: number): Promise<Page> {
-    if (!Number.isInteger(maxPages) || maxPages < 1) {
-      throw new Error("Browser page capacity must be a positive integer");
-    }
-
-    const cached = this.managedPages.get(key);
-    if (cached && !cached.isClosed()) {
-      this.managedPages.delete(key);
-      this.managedPages.set(key, cached);
-      return cached;
-    }
-    this.managedPages.delete(key);
-
-    if (this.managedPages.size >= maxPages) {
-      const oldest = this.managedPages.entries().next().value as [string, Page] | undefined;
-      if (oldest) {
-        this.managedPages.delete(oldest[0]);
-        await oldest[1].close().catch(() => {});
+  ensurePage(): Promise<Page> {
+    return this.withLock(async () => {
+      this.assertOpen();
+      if (this.maintenancePage && !this.maintenancePage.isClosed()) return this.maintenancePage;
+      await this.ensureBrowser();
+      const page = await this.requiredContext().newPage();
+      if (this.closing) {
+        await page.close().catch(() => {});
+        throw new Error("Browser session is closing");
       }
+      this.maintenancePage = page;
+      return page;
+    });
+  }
+
+  acquirePage(key: string, maxPages: number): Promise<BrowserPageLease> {
+    if (!Number.isInteger(maxPages) || maxPages < 1) {
+      return Promise.reject(new Error("Browser page capacity must be a positive integer"));
     }
-
-    const { context } = await this.ensureManagedBrowser();
-    const page = await context.newPage();
-    this.managedPages.set(key, page);
-    return page;
+    return this.withLock(async () => {
+      this.assertOpen();
+      let managed = this.pages.get(key);
+      if (managed?.page.isClosed()) {
+        this.pages.delete(key);
+        managed = undefined;
+      }
+      if (!managed) {
+        if (this.pages.size >= maxPages) {
+          const inactive = [...this.pages.entries()].find(([, candidate]) => candidate.leases === 0);
+          if (!inactive) throw new Error(`Browser page capacity ${maxPages} is fully leased`);
+          const [oldestKey, oldest] = inactive;
+          this.pages.delete(oldestKey);
+          await oldest.page.close().catch(() => {});
+        }
+        await this.ensureBrowser();
+        const page = await this.requiredContext().newPage();
+        if (this.closing) {
+          await page.close().catch(() => {});
+          throw new Error("Browser session is closing");
+        }
+        managed = { page, leases: 0 };
+        this.pages.set(key, managed);
+      }
+      managed.leases += 1;
+      this.touch(key, managed);
+      return this.lease(key, managed);
+    });
   }
 
-  async closePage(key: string): Promise<void> {
-    const page = this.managedPages.get(key);
-    this.managedPages.delete(key);
-    if (page && !page.isClosed()) await page.close().catch(() => {});
+  closePage(key: string): Promise<void> {
+    return this.withLock(async () => {
+      const managed = this.pages.get(key);
+      if (!managed) return;
+      this.pages.delete(key);
+      await managed.page.close().catch(() => {});
+    });
   }
 
-  async storageState(): Promise<Awaited<ReturnType<BrowserContext["storageState"]>>> {
-    const { context } = await this.ensureManagedBrowser();
-    return context.storageState();
+  storageState(): Promise<Awaited<ReturnType<BrowserContext["storageState"]>>> {
+    return this.withLock(async () => {
+      this.assertOpen();
+      await this.ensureBrowser();
+      return this.requiredContext().storageState();
+    });
   }
 
-  async close(): Promise<void> {
-    const browsers = new Set<Browser>();
-    if (this.singleBrowser) browsers.add(this.singleBrowser);
-    if (this.managedBrowser) browsers.add(this.managedBrowser);
-    this.singleBrowser = undefined;
-    this.singleContext = undefined;
-    this.singlePage = undefined;
-    this.managedBrowser = undefined;
-    this.managedContext = undefined;
-    this.managedBrowserReady = undefined;
-    this.managedPages.clear();
-    await Promise.all([...browsers].map(browser => browser.close()));
+  close(): Promise<void> {
+    if (this.closePromise) return this.closePromise;
+    this.closing = true;
+    this.closePromise = this.withLock(async () => {
+      await this.launchTask?.catch(() => {});
+      const browser = this.browser;
+      this.browser = undefined;
+      this.context = undefined;
+      this.maintenancePage = undefined;
+      this.pages.clear();
+      if (browser) await browser.close();
+    });
+    return this.closePromise;
   }
 
-  private async ensureManagedBrowser(): Promise<{ browser: Browser; context: BrowserContext }> {
-    if (this.managedBrowserReady) {
-      const cached = await this.managedBrowserReady;
-      if (cached.browser.isConnected()) return cached;
-      this.managedBrowserReady = undefined;
-      this.managedBrowser = undefined;
-      this.managedContext = undefined;
-      this.managedPages.clear();
-    }
+  private lease(key: string, managed: ManagedPage): BrowserPageLease {
+    let released = false;
+    return {
+      page: managed.page,
+      release: async (options = {}) => {
+        if (released) return;
+        released = true;
+        await this.withLock(async () => {
+          const current = this.pages.get(key);
+          if (current !== managed) return;
+          current.leases = Math.max(0, current.leases - 1);
+          if (options.discard || current.page.isClosed()) {
+            this.pages.delete(key);
+            if (!current.page.isClosed()) await current.page.close().catch(() => {});
+            return;
+          }
+          this.touch(key, current);
+        });
+      },
+    };
+  }
 
-    const opening = this.launch();
-    this.managedBrowserReady = opening;
+  private touch(key: string, managed: ManagedPage): void {
+    this.pages.delete(key);
+    this.pages.set(key, managed);
+  }
+
+  private async ensureBrowser(): Promise<void> {
+    if (this.browser?.isConnected() && this.context) return;
+    this.assertOpen();
+    const launch = this.openBrowser();
+    this.launchTask = launch;
     try {
-      const managed = await opening;
-      this.managedBrowser = managed.browser;
-      this.managedContext = managed.context;
-      this.watchBrowser(managed.browser, () => {
-        if (this.managedBrowserReady === opening) this.managedBrowserReady = undefined;
-        if (this.managedBrowser === managed.browser) this.managedBrowser = undefined;
-        if (this.managedContext === managed.context) this.managedContext = undefined;
-        this.managedPages.clear();
-      });
-      return managed;
-    } catch (error) {
-      if (this.managedBrowserReady === opening) this.managedBrowserReady = undefined;
-      throw error;
+      await launch;
+    } finally {
+      if (this.launchTask === launch) this.launchTask = undefined;
     }
   }
 
-  private async launch(): Promise<{ browser: Browser; context: BrowserContext }> {
+  private async openBrowser(): Promise<void> {
     this.options.assertReady();
-    const browser = await chromium.launch({
+    const browser = await this.launch({
       executablePath: this.options.executablePath,
       headless: this.options.headless,
       args: this.options.args,
     });
-    const context = await browser.newContext({
-      storageState: this.options.storageStatePath,
-      viewport: this.options.viewport,
-    });
-    return { browser, context };
+    try {
+      if (this.closing) throw new Error("Browser session is closing");
+      const context = await browser.newContext({
+        storageState: this.options.storageStatePath,
+        viewport: this.options.viewport,
+      });
+      if (this.closing) throw new Error("Browser session is closing");
+      this.browser = browser;
+      this.context = context;
+      browser.on("disconnected", () => {
+        if (this.browser !== browser) return;
+        this.browser = undefined;
+        this.context = undefined;
+        this.maintenancePage = undefined;
+        this.pages.clear();
+      });
+    } catch (error) {
+      await browser.close().catch(() => {});
+      throw error;
+    }
   }
 
-  private watchBrowser(browser: Browser, onDisconnected: () => void): void {
-    browser.once("disconnected", onDisconnected);
+  private requiredContext(): BrowserContext {
+    if (!this.context) throw new Error("Browser context is unavailable");
+    return this.context;
+  }
+
+  private assertOpen(): void {
+    if (this.closing) throw new Error("Browser session is closing");
+  }
+
+  private async withLock<T>(action: () => Promise<T>): Promise<T> {
+    const previous = this.operationTail;
+    let unlock!: () => void;
+    this.operationTail = new Promise<void>(resolve => {
+      unlock = resolve;
+    });
+    await previous;
+    try {
+      return await action();
+    } finally {
+      unlock();
+    }
   }
 }

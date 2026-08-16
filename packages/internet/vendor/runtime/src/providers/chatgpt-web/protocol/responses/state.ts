@@ -1,6 +1,6 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { atomicWriteFile, getConfigDir } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { atomicWriteFile, getConfigDir } from "#runtime/core/config";
 
 const MAX_STORED_RESPONSES = 1_000;
 const RESPONSE_TTL_MS = 60 * 60 * 1_000;

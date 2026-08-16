@@ -12,7 +12,7 @@ architecture, scope, and integration surface.
 > - Pi-owned runtime: `vendor/runtime`
 >   (`src/providers/chatgpt-web/server/routes.ts`,
 >   `src/providers/chatgpt-web/protocol/responses/bridge.ts`,
->   `src/providers/chatgpt-web/browser/worker.ts`)
+>   `src/browser/chatgpt-web/worker.ts`)
 >
 > See [source-repositories.md](source-repositories.md) for the full file map.
 

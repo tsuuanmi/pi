@@ -4,11 +4,14 @@ This document details the **browser** the `internet` package uses, and how it st
 production-ready**. It is grounded in how codex-chatgpt-web already manages Chrome (the daemon the
 package wraps), and it defines the browser contract the package should own.
 
-Status: **current implementation.**
+Status: **implemented.**
 
-> **Source:** the browser behavior is implemented under
-> `vendor/runtime/src/providers/chatgpt-web/` in this package:
-> `browser/worker.ts`, `browser/login.ts`, and `browser/session.ts`.
+> **Source:** reusable browser mechanics are implemented under
+> `vendor/runtime/src/browser/`:
+> `session.ts`, `turn.ts`, and `response-capture.ts`.
+> ChatGPT-specific automation remains under
+> `vendor/runtime/src/browser/chatgpt-web/`:
+> `worker.ts`, `login.ts`, and `session.ts`.
 
 ---
 
@@ -63,6 +66,9 @@ internet_turn (new Pi session ID)
   → keep the tab open (idle ~1 min then close)
 ```
 
+`BrowserSession` owns one browser and context for both the maintenance page and leased conversation
+pages. Page acquisition and eviction are serialized, and a leased page cannot be evicted.
+
 - **One ChatGPT conversation tab per Pi session ID** — the same session reuses the same page so
   ChatGPT retains context in the chat; a new Pi session starts a separate conversation.
 - **Durable journal** — the private journal stores the canonical conversation URL and checkpoint;
@@ -71,15 +77,15 @@ internet_turn (new Pi session ID)
   constant). Unbounded fan-out would look like spam to the account.
 - **Idle cleanup** — a conversation tab stays open while the session is active; after ~1 minute
   without a new request/message, the daemon closes it and exits.
-- **Graceful close** — on Pi shutdown, drain and close all browser workers; never abandon an
-  in-flight turn.
+- **Graceful close** — on Pi shutdown, drain and close all browser workers; in-flight launches are
+  joined and timed-out pages are quarantined instead of returning to the page pool.
 
 ### 2.3 Cleanup guarantees
 
 | Concern | Guarantee |
 |---------|-----------|
 | Page leak | Conversation tabs remain bound to their durable session and close on idle (~1 min) or session teardown |
-| Browser leak | `close()` awaits all active runs + maintenance, then closes the browser |
+| Browser leak | Worker shutdown drains active runs and maintenance, then closes the single tracked browser, including launch/shutdown races |
 | Temp files | Login profile dir is removed after capture |
 | Session state | `storageState` written atomically, 0600, under a 0700 dir |
 
@@ -103,7 +109,7 @@ not part of the shared provider contract.
 | Storage | `storageState` 0600 under 0700 dir; login profile removed |
 | Browser ownership | The ChatGPT Web adapter launches and closes its managed Chrome process |
 | Untrusted model | The model's answer never grants browser authority; only the trusted environment does |
-| Concurrency cap | `MAX_CHATGPT_BROWSER_TABS = 5` in `browser/session.ts` prevents account-level spam |
+| Concurrency cap | `MAX_CHATGPT_BROWSER_TABS = 5` in `browser/chatgpt-web/session.ts` limits account-level fan-out |
 
 ---
 
@@ -132,9 +138,27 @@ src/providers/openai/
 └── turn/            # turn adapter (talks to the daemon)
 ```
 
-The browser itself is **inside the runtime** (`browser/worker.ts`). The `internet` package
-does **not** re-implement browser automation — it drives the runtime, which owns the browser. This
-keeps browser logic in one place and the package clean.
+The runtime owns the browser in two layers:
+
+```
+vendor/runtime/src/browser/
+├── session.ts              # Playwright process/context/page ownership
+├── turn.ts                 # concurrency, maintenance, and stage coordination
+└── response-capture.ts     # response listener and parser lifecycle
+
+vendor/runtime/src/browser/chatgpt-web/
+├── worker.ts               # worker lifecycle and maintenance composition
+├── turn-driver.ts          # ChatGPT turn-stage composition
+├── interactions.ts         # composer, model, prompt, and file operations
+├── completion.ts           # completion, trace, and DOM-health tracking
+├── diagnostics.ts          # ChatGPT diagnostic shaping and redaction
+├── wire-capture.ts         # ChatGPT response matching
+├── login.ts                # ChatGPT login and capability verification
+└── session.ts              # ChatGPT session policy and browser selectors
+```
+
+The `internet` package does **not** re-implement browser automation — it drives the runtime,
+which owns the browser. This keeps package integration separate from browser behavior.
 
 > **Key principle:** the package is a **thin client** over the runtime. The runtime owns the browser,
 > the login, authenticated wire capture, and concurrency. The package owns Pi integration and
@@ -142,7 +166,43 @@ keeps browser logic in one place and the package clean.
 
 ---
 
-## 7. Bottom line
+## 7. Implementation boundary
+
+Direct modules in `src/browser/` contain reusable mechanics; provider browser implementations use
+explicit subdirectories.
+
+### Reusable modules in `src/browser/`
+
+- browser/context/page lifecycle and deterministic shutdown;
+- page acquisition, capacity, eviction, and active-page protection;
+- turn concurrency, exclusive maintenance, cancellation, and stage deadlines;
+- response listener lifecycle, bounded waiting, abort handling, and parse-error reporting;
+- generic diagnostic artifact storage when the provider supplies the snapshot/redaction callback.
+
+### ChatGPT implementation in `src/browser/chatgpt-web/`
+
+- ChatGPT URLs, selectors, DOM interaction, composer/file attachment, and model/effort selection;
+- submission and completion evidence, response DOM snapshots, trace extraction, and DOM health;
+- ChatGPT login verification, account capability detection, and storage-state markers;
+- ChatGPT wire-response matching and parsing.
+
+The ChatGPT implementation is decomposed by responsibility:
+
+| Module | Responsibility |
+| --- | --- |
+| `turn-driver.ts` | Compose stages and map provider events to the adapter |
+| `interactions.ts` | Composer, model/effort, prompt, and file operations |
+| `completion.ts` | DOM snapshots, completion evidence, trace, and health trackers |
+| `diagnostics.ts` | ChatGPT-specific snapshot shaping and redaction |
+
+ChatGPT selectors and response semantics stay below `src/browser/chatgpt-web/`; the reusable root
+modules contain no provider URLs, selectors, protocols, or schemas. Shared primitives provide
+observable stage timeouts, page quarantine, launch-safe close, serialized capacity, active leases,
+and response waiting for events that arrive after `waitForValue()` begins.
+
+---
+
+## 8. Bottom line
 
 - The only browser host is **system Chrome/Chromium via Playwright**, owned by the ChatGPT Web
   adapter inside the daemon.

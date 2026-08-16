@@ -4,12 +4,11 @@ import { Writable } from "node:stream";
 import { existsSync, rmSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { stdin, stdout } from "node:process";
-import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "#runtime/providers/chatgpt-web/browser/login";
+import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "#runtime/browser/chatgpt-web/login";
+import { getConfigDir, getConfigPath } from "#runtime/core/config";
 import { cancelBrowserTurns } from "#runtime/providers/chatgpt-web/lifecycle/control";
 import {
   defaultBrokerEndpoint,
-  getConfigDir,
-  getConfigPath,
   loadConfig,
   loadConfigForSetup,
   resolveBrokerEndpoint,

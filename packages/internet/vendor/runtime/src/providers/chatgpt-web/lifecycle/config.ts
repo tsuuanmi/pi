@@ -13,14 +13,6 @@ import {
 import { conversationRuntimeDigest } from "#runtime/providers/chatgpt-web/conversation/journal";
 import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
 
-export {
-  atomicWriteFile,
-  currentRuntimeCommand,
-  expandUserPath,
-  getConfigDir,
-  getConfigPath,
-};
-
 /** Default connector identity used by the ChatGPT Web adapter. */
 export const DEFAULT_CONNECTOR_NAME = "Pi Internet";
 

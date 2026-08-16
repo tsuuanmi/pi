@@ -31,16 +31,27 @@ describe("runtime source boundary", () => {
 		}
 	});
 
-	it("keeps providers out of the reusable browser runtime", async () => {
-		const files = await sourceFiles(join(runtimeSource, "browser"));
+	it("keeps provider details out of reusable browser modules", async () => {
+		const files = ["session.ts", "turn.ts", "response-capture.ts"].map((file) =>
+			join(runtimeSource, "browser", file),
+		);
 		const sources = await Promise.all(files.map((file) => readFile(file, "utf8")));
 		for (const source of sources) {
-			expect(source).not.toMatch(/(?:from|import\s*\()\s*["'][^"']*providers\/chatgpt-web/);
+			expect(source).not.toMatch(/providers\/chatgpt-web|chatgpt|openai|backend-api|data-testid/i);
 		}
 	});
 
 	it("keeps provider protocol modules inside the ChatGPT provider", async () => {
-		for (const removed of ["bridge.ts", "login-state.ts", "types.ts", "responses", "config.ts", "server.ts"]) {
+		for (const removed of [
+			"bridge.ts",
+			"login-state.ts",
+			"types.ts",
+			"responses",
+			"config.ts",
+			"server.ts",
+			"providers/chatgpt-web/browser",
+			"providers/chatgpt-web/transport/wire-capture.ts",
+		]) {
 			expect(await exists(join(runtimeSource, removed))).toBe(false);
 		}
 		for (const current of [
@@ -52,7 +63,9 @@ describe("runtime source boundary", () => {
 			"providers/chatgpt-web/server/routes.ts",
 			"providers/chatgpt-web/protocol/types.ts",
 			"providers/chatgpt-web/protocol/responses/bridge.ts",
-			"providers/chatgpt-web/browser/login-state.ts",
+			"browser/chatgpt-web/login-state.ts",
+			"browser/chatgpt-web/worker.ts",
+			"browser/chatgpt-web/wire-capture.ts",
 			"providers/chatgpt-web/transport/wire-response.ts",
 		]) {
 			expect(await exists(join(runtimeSource, current))).toBe(true);

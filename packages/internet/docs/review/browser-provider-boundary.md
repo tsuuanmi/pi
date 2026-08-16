@@ -1,47 +1,35 @@
 # Browser and Provider Boundary Review
 
-Status: **implemented boundary extraction with a documented follow-up seam for additional providers**.
+Status: **implemented browser ownership and provider-neutral mechanics**.
 
-This review examines `packages/internet/vendor/runtime/src/` and defines the next boundary: a
-provider-agnostic browser runtime that can be reused by ChatGPT Web and later browser-backed
-providers.
+This review records the implemented boundary in `packages/internet/vendor/runtime/src/`: reusable
+browser mechanics support ChatGPT Web and later browser-backed providers without moving provider
+meaning into direct shared modules.
 
 ## Executive finding
 
-The current `core/` boundary is sound, and the provider now lives under
-`providers/chatgpt-web/`. Its remaining `browser/` directory is provider-specific by design. The
-shared session, turn, and response-capture mechanics have been extracted into `src/browser/`.
+The `core/` boundary is sound. All Playwright and browser-facing implementation lives under
+`src/browser/`: direct child modules are provider-neutral mechanics, while
+`src/browser/chatgpt-web/` is the explicit ChatGPT browser implementation. Non-browser ChatGPT
+protocol, model, content, conversation, tool, and transport logic remains under
+`src/providers/chatgpt-web/`.
 
-The intended change is decomposition, not renaming:
-
-- extract the reusable Playwright/session/turn/capture mechanics from the current ChatGPT worker;
-- place those mechanics in a provider-agnostic `browser/` runtime;
-- keep ChatGPT selectors, login policy, prompt submission, response parsing, model behavior, and
-  conversation state in the ChatGPT provider;
-- let each provider supply its own browser flow to the shared runtime.
-
-The target should have three inward dependency layers:
+The implemented dependency boundaries are:
 
 ```text
-cli.ts                         composition root
-  ├── providers/chatgpt-web/   provider contract and product behavior
-  ├── browser/                 reusable Playwright/session/turn runtime
-  └── core/                    process, service, HTTP, and bounded-I/O primitives
+cli.ts                              composition root
+  ├── browser/chatgpt-web/          ChatGPT browser implementation
+  │     ├── browser/*.ts            reusable browser mechanics
+  │     ├── providers/chatgpt-web/  non-browser provider policy and schemas
+  │     └── core/                   shared runtime primitives
+  ├── providers/chatgpt-web/        protocol and product behavior
+  └── core/                         process, service, HTTP, and bounded-I/O primitives
 ```
 
-Dependency direction:
-
-```text
-providers/chatgpt-web/ ──┐
-                         ├──> browser/ ───> core/
-cli.ts ──────────────────┘          └──────> core/
-```
-
-`core/` must not import `browser/` or a provider. `browser/` must not import
-`providers/chatgpt-web/` or any provider protocol, model, URL, selector, prompt, or state schema.
-The composition root supplies a provider browser flow to the browser runtime; no registry is needed
-while ChatGPT Web is the only implementation. The current ChatGPT browser directory was the
-extraction source, not the shared-browser boundary.
+`core/` imports neither browser nor provider modules. Direct modules in `browser/` import no
+provider modules, URLs, selectors, protocols, or schemas. Provider-specific browser subdirectories
+may depend on their provider's non-browser contracts while keeping those details out of reusable
+mechanics.
 
 ## Review of the current tree
 
@@ -70,9 +58,9 @@ The current core import rule is correct and should become a permanent boundary t
 The ChatGPT provider supplies the readiness policy, page keys, concurrency value, response matcher,
 and response parser. It does not copy the browser lifecycle implementation.
 
-### Provider-specific despite the `browser/` name
+### Provider-specific browser implementation
 
-The current ChatGPT browser modules directly reference product behavior:
+`src/browser/chatgpt-web/` directly references product behavior:
 
 - `browser/login.ts` uses ChatGPT login flow and storage-state rules;
 - `browser/login-state.ts` identifies ChatGPT account state;
@@ -81,8 +69,8 @@ The current ChatGPT browser modules directly reference product behavior:
 - `browser/worker.ts` coordinates ChatGPT prompts, model modes, token budgets, conversation canary,
   ChatGPT markdown/image handling, wire capture, and adapter errors.
 
-These files are browser-facing, but they are not generic browser infrastructure. Moving them as-is
-under a new `src/browser/` directory would only rename the coupling.
+These files are browser-facing but not generic infrastructure, so their provider-specific
+subdirectory is an explicit dependency boundary rather than a claim of reuse.
 
 ### Provider-specific outside `browser/`
 
@@ -103,11 +91,11 @@ The following areas should remain in the ChatGPT provider boundary:
 - `transport/wire-response.ts`: ChatGPT conversation payload recognition and projection;
 - `transport/tunnel*.ts`: currently coupled to ChatGPT runtime configuration and tunnel lifecycle.
 
-`transport/wire-capture.ts` is the likely first extraction candidate. Its page event subscription,
-request correlation, timeout, and cleanup mechanics can become generic if the provider-specific
-response matcher remains injected. The current wire-response parser must stay with ChatGPT.
+`browser/chatgpt-web/wire-capture.ts` now supplies ChatGPT response matching to the generic
+`browser/response-capture.ts` listener and waiting lifecycle. The wire-response parser remains in
+the non-browser ChatGPT transport layer.
 
-## Proposed target layout
+## Implemented source layout
 
 ```text
 vendor/runtime/src/
@@ -119,18 +107,23 @@ vendor/runtime/src/
 │   ├── process.ts
 │   ├── server.ts
 │   └── service.ts
-├── browser/                       # provider-agnostic browser runtime
-│   ├── session.ts                  # browser/context/page ownership and cleanup
-│   ├── turn.ts                     # bounded turns, maintenance, stages, and cancellation
-│   └── response-capture.ts         # provider-selected response capture lifecycle
+├── browser/                       # all browser-facing implementation
+│   ├── session.ts                 # browser/context/page ownership and leases
+│   ├── turn.ts                    # bounded turns, maintenance, stages, and cancellation
+│   ├── response-capture.ts        # provider-selected response capture lifecycle
+│   └── chatgpt-web/               # ChatGPT browser implementation
+│       ├── completion.ts
+│       ├── diagnostics.ts
+│       ├── interactions.ts
+│       ├── login-state.ts
+│       ├── login.ts
+│       ├── session.ts
+│       ├── turn-driver.ts
+│       ├── wire-capture.ts
+│       └── worker.ts
 └── providers/
-    └── chatgpt-web/                # one complete provider implementation
+    └── chatgpt-web/                # non-browser provider implementation
         ├── adapter.ts
-        ├── browser/
-        │   ├── login-state.ts
-        │   ├── login.ts
-        │   ├── selectors.ts
-        │   └── session.ts
         ├── conversation/
         ├── content/
         ├── lifecycle/
@@ -146,9 +139,8 @@ vendor/runtime/src/
         └── turn/
 ```
 
-These browser modules are implemented and used by the ChatGPT provider. Do not create empty
-feature directories or move a file merely because its current name contains `browser`. Introduce a
-formal provider definition only when a second provider makes the shared contract concrete.
+All browser-facing modules now have one authoritative location. A formal provider definition should
+still wait until a second browser-backed provider makes a shared contract concrete.
 
 ## Browser boundary contract
 
@@ -231,7 +223,7 @@ The browser layer must not provide:
 - conversation URL parsing, journal formats, or provider-native tool payloads;
 - provider login UI assumptions beyond strategy hooks.
 
-## Decomposition map
+## Implemented decomposition
 
 The extraction splits the current ChatGPT worker by responsibility rather than moving the file
 intact:
@@ -241,7 +233,7 @@ intact:
 | page/context ownership, close, abort, timeout, and page capacity | `browser/session.ts` | reusable browser lifecycle |
 | bounded turns, exclusive maintenance, cancellation, and stage timeout handling | `browser/turn.ts` | reusable turn lifecycle |
 | Playwright page/network listener registration and cleanup | `browser/response-capture.ts` | reusable capture lifecycle |
-| ChatGPT selectors, URL, effort controls, DOM health, completion evidence | `providers/chatgpt-web/browser/*` | ChatGPT UI contract |
+| ChatGPT selectors, URL, effort controls, DOM health, completion evidence | `browser/chatgpt-web/*` | ChatGPT UI contract |
 | prompt compilation, image limits, token budgets, markdown conversion | `providers/chatgpt-web/content/*` | ChatGPT input contract |
 | ChatGPT wire response recognition and event projection | `providers/chatgpt-web/transport/*` and `protocol/*` | ChatGPT response contract |
 | conversation URL/journal/checkpoint handling | `providers/chatgpt-web/conversation/*` | ChatGPT state contract |
@@ -258,8 +250,8 @@ ChatGPT modules to invoke them.
 | worker lifecycle and cleanup | `browser/*` | Reusable browser mechanics |
 | generic network event capture | `browser/response-capture.ts` | Reusable when matcher/parser are injected |
 | ChatGPT wire payload parsing | `providers/chatgpt-web/transport/wire-response.ts` | Provider response schema |
-| ChatGPT selectors and account state | `providers/chatgpt-web/browser/*` | Product-specific browser contract |
-| ChatGPT login and storage filtering | `providers/chatgpt-web/browser/*` | Provider authentication policy |
+| ChatGPT selectors and account state | `browser/chatgpt-web/*` | Product-specific browser contract |
+| ChatGPT login and storage filtering | `browser/chatgpt-web/*` | Provider authentication policy |
 | ChatGPT prompt/content/token logic | `providers/chatgpt-web/content/*` | Provider model and UI constraints |
 | ChatGPT conversation continuity | `providers/chatgpt-web/conversation/*` | Provider URL/state schema |
 | Responses/Codex protocol | `providers/chatgpt-web/protocol/*` | Not a browser-neutral protocol |
@@ -267,19 +259,19 @@ ChatGPT modules to invoke them.
 | tunnel lifecycle | `providers/chatgpt-web/transport/*` initially | Current config and service names are provider-specific |
 | concurrency limit | provider definition | Different providers/accounts may have different limits |
 
-## Migration sequence
+## Completed migration sequence
 
-1. **Freeze the contract.** Implemented boundary tests reject provider imports from `browser/`
-   and reject browser/provider imports from `core/`.
-2. **Extract browser session mechanics.** Implemented in `browser/session.ts`, including page/context
-   ownership, cleanup, storage-state access, and bounded page capacity.
-3. **Extract browser turn mechanics.** Implemented in `browser/turn.ts`, including bounded turns,
-   exclusive maintenance, cancellation, and stage timeouts.
-4. **Extract response capture.** Implemented in `browser/response-capture.ts`; ChatGPT retains only
-   its response matcher and parser.
-5. **Move provider ownership.** The ChatGPT implementation now lives under
-   `providers/chatgpt-web/`; its selectors, login, state, models, content, protocol, tools, and
-   conversation behavior remain provider-owned.
+1. **Freeze the contract.** Boundary tests reject browser/provider imports from `core/` and reject
+   provider details from direct reusable `browser/*.ts` modules.
+2. **Extract browser session mechanics.** `browser/session.ts` owns one browser/context, serialized
+   acquisition, active page leases, bounded LRU eviction, launch-safe close, and quarantine.
+3. **Extract browser turn mechanics.** `browser/turn.ts` owns bounded turns, draining maintenance,
+   typed stage timeouts, abort signaling, and timeout-containment callbacks.
+4. **Extract response capture.** `browser/response-capture.ts` owns listener lifecycle, future
+   response waiting, cancellation, and parser-failure propagation.
+5. **Move browser ownership.** ChatGPT selectors, login, interaction, completion, diagnostics,
+   turn composition, and wire matching live under `browser/chatgpt-web/`; non-browser provider
+   contracts remain under `providers/chatgpt-web/`.
 6. **Remove transitional paths.** No old provider-adapter alias, re-export wrapper, compatibility
    folder, or second worker implementation remains.
 7. **Verify behavior.** Run runtime typecheck/build, package build, root typecheck, focused browser and
@@ -288,12 +280,18 @@ ChatGPT modules to invoke them.
 Each step should be behavior-preserving. A provider-specific behavior should move once to its final
 owner rather than pass through a temporary adapter facade.
 
+## Implemented lifecycle hardening
+
+Focused provider-neutral tests cover close racing with launch, active page-capacity protection,
+non-cooperative stage timeout containment, future response arrival, cancellation, and parser-failure
+reporting. ChatGPT-specific selectors, completion evidence, and wire parsing remain provider-owned.
+
 ## Boundary tests and acceptance criteria
 
 Static and runtime checks should assert:
 
 - `core/` imports neither `browser/` nor `providers/`;
-- `browser/` imports neither `providers/chatgpt-web/` nor ChatGPT/OpenAI/Codex identifiers;
+- direct reusable `browser/*.ts` modules import no provider modules or product identifiers;
 - `providers/chatgpt-web/` may import `browser/` and `core/`, but not the reverse;
 - only `cli.ts` composes the browser runtime and ChatGPT provider;
 - every source module is reachable from `cli.ts` or an explicit provider entrypoint;
@@ -303,8 +301,7 @@ Static and runtime checks should assert:
 
 ## Recommendation
 
-Keep `src/browser/` plus `src/providers/chatgpt-web/` as the source topology. The shared browser
-runtime now owns session, turn, timeout, cleanup, and response-capture mechanics; the ChatGPT
-provider owns product policy and parsing. When a second provider is added, introduce only the
-smallest provider flow contract required by both implementations rather than a speculative
-registry or framework.
+Keep all browser-facing implementation under `src/browser/`, with reusable mechanics as direct
+modules and provider-specific implementations in named subdirectories. Keep non-browser ChatGPT
+policy and parsing under `src/providers/chatgpt-web/`. When a second browser provider is added,
+introduce only the smallest contract required by both implementations.
