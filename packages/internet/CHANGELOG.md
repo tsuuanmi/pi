@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+- Remove account registry schema-version metadata and compatibility; registries now contain only
+  the `accounts` list.
 - Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
 - Replace the package-root `registerOpenAiProviders` export with generic
   `registerInternetProviders`.
@@ -97,7 +99,6 @@
 
 - Harden browser lifecycle handling with one shared context, serialized page leases, active-page
   protection, launch-safe shutdown, timeout quarantine, and abort-aware response capture.
-- Load account registries without rejecting older schema version values.
 - Capture every ChatGPT conversation response and select the latest message only after the browser turn completes, avoiding both premature intermediate results and brittle final-Markdown detection.
 - Allow the durable conversation canary enough time to complete its browser turn, accept non-empty
   model reply variance after validating and reopening the canonical conversation URL, exclude

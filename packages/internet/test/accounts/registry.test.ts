@@ -23,7 +23,7 @@ describe("AccountRegistry", () => {
 			{ id: "work", provider: "openai", port: 18001 },
 			{ id: "research", provider: "anthropic", apiKeyEnv: "ANTHROPIC_RESEARCH_KEY" },
 		]);
-		expect(JSON.parse(await readFile(target.path, "utf8"))).toMatchObject({ schemaVersion: 4 });
+		expect(JSON.parse(await readFile(target.path, "utf8"))).not.toHaveProperty("schemaVersion");
 		expect((await stat(target.path)).mode & 0o777).toBe(0o600);
 	});
 
@@ -33,10 +33,10 @@ describe("AccountRegistry", () => {
 		await expect(target.list()).resolves.toEqual([]);
 	});
 
-	it("loads legacy schemas and rejects duplicate daemon endpoints", async () => {
+	it("rejects versioned registries and duplicate daemon endpoints", async () => {
 		const target = await registry();
 		await writeFile(target.path, JSON.stringify({ schemaVersion: 2, accounts: [] }));
-		await expect(target.list()).resolves.toEqual([]);
+		await expect(target.list()).rejects.toThrow("unsupported fields");
 
 		const next = await registry();
 		await expect(next.add({ id: "collision", provider: "openai", port: 17841 })).rejects.toThrow(

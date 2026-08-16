@@ -11,13 +11,11 @@ import {
 	type OpenAiInternetAccount,
 } from "#internet/core/types";
 
-const registryVersion = 4;
 const defaultPort = 17841;
 const accountIdPattern = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const environmentNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 interface AccountRegistryFile {
-	schemaVersion: typeof registryVersion;
 	accounts: InternetAccount[];
 }
 
@@ -142,11 +140,11 @@ function parseRegistry(raw: string, registryPath: string): AccountRegistryFile {
 		throw new InternetError("Account registry is not valid JSON.", { code: "config_invalid", cause });
 	}
 	const file = record(parsed, "Account registry");
-	assertKnownKeys(file, ["schemaVersion", "accounts"], "Account registry");
+	assertKnownKeys(file, ["accounts"], "Account registry");
 	if (!Array.isArray(file.accounts)) throw configError("Account registry accounts must be an array.");
 	const accounts = file.accounts.map((account) => normalizeAccount(account, registryPath));
 	validateAccounts(accounts);
-	return { schemaVersion: registryVersion, accounts };
+	return { accounts };
 }
 
 export class AccountRegistry {
@@ -220,7 +218,7 @@ export class AccountRegistry {
 		const temporary = `${this.path}.${process.pid}.${randomUUID()}.tmp`;
 		await mkdir(directory, { recursive: true, mode: 0o700 });
 		await chmod(directory, 0o700);
-		await writeFile(temporary, `${JSON.stringify({ schemaVersion: registryVersion, accounts }, null, 2)}\n`, {
+		await writeFile(temporary, `${JSON.stringify({ accounts }, null, 2)}\n`, {
 			mode: 0o600,
 		});
 		await chmod(temporary, 0o600);
