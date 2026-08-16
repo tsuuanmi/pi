@@ -118,7 +118,7 @@ one place and the package clean.
 - Build the runtime on macOS (or cross-build) so `dist/daemon/runtime/` contains the right artifact
   per host.
 - Confirm **system Chrome via Playwright** works on macOS (darwin Chrome path is already in
-  `src/config.ts` `defaultChromeExecutable()`).
+  `src/adapters/chatgpt-web/lifecycle/config.ts` `defaultChromeExecutable()`).
 - Add a macOS CI build/smoke lane so the darwin artifact is verified, not just produced.
 - Update docs from "Linux-first" to "Linux and macOS" once darwin artifacts are produced and tested.
 

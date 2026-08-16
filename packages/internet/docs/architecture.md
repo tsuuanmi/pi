@@ -26,7 +26,8 @@ downloaded at runtime. Runtime manifests and launcher containment/executable per
 validated before spawn.
 
 The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and a
-ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-specific code is confined to
+ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-neutral code is confined to
+`vendor/runtime/src/core/`, while provider-specific code is organized under
 `vendor/runtime/src/adapters/chatgpt-web/`. See the canonical
 [provider-neutral runtime boundary](review/daemon-boundary.md) review for the full module map.
 
@@ -37,7 +38,7 @@ import an adapter.
 **Provider layer (ChatGPT Web):** the OpenAI Responses routes and projection, turn/event types,
 health and control payloads, idle shutdown, browser automation against `chatgpt.com`, session,
 models, login, native backend passthrough, model catalog, tunnel, and web search. These live under
-`vendor/runtime/src/adapters/chatgpt-web/`.
+`vendor/runtime/src/core/` and `vendor/runtime/src/adapters/chatgpt-web/`.
 
 ### Two provider boundaries
 
@@ -55,14 +56,14 @@ it uses direct composition instead of a speculative registry.
 ```text
 HTTP POST /v1/responses
   -> core server.ts (Bun HTTP host)
-  -> adapters/chatgpt-web/server.ts (bounded body and route dispatch)
-  -> adapters/chatgpt-web/responses/parser.ts
+  -> adapters/chatgpt-web/server/server.ts (bounded body and route dispatch)
+  -> adapters/chatgpt-web/protocol/responses/parser.ts
   -> adapters/chatgpt-web/adapter.ts (browser turn)
-  -> adapters/chatgpt-web/responses/bridge.ts (Responses SSE)
+  -> adapters/chatgpt-web/protocol/responses/bridge.ts (Responses SSE)
   -> HTTP 200 text/event-stream
 ```
 
-The core owns reusable hosting and lifecycle primitives. The adapter owns the complete external
+The `core/` modules own reusable hosting and lifecycle primitives. The adapter owns the complete external
 protocol and browser-turn semantics. This keeps OpenAI/Codex wire concepts out of neutral modules
 and gives a future adapter an explicit inward-only dependency on the core.
 

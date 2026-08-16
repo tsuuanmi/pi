@@ -1,7 +1,7 @@
 # Internet — MCP, Tunnel, and the Turn Broker (Full Mode)
 
-This document explains the **MCP**, **Tunnel**, and **turn broker** machinery that the vendored
-`codex-chatgpt-web` daemon ships, and how the `internet` package uses it for **Full mode** (local
+This document explains the **MCP**, **Tunnel**, and **turn broker** machinery that the Pi-owned
+`vendor/runtime` ships, and how the `internet` package uses it for **Full mode** (local
 file/tool access). It is grounded in the actual vendored source.
 
 > Status: **current implementation reference.** Full harness is a first-class, opt-in capability
@@ -22,13 +22,13 @@ file/tool access). It is grounded in the actual vendored source.
 
 ## 2. The turn broker
 
-Source: `src/adapters/chatgpt-web/turn-broker.ts`.
+Source: `src/adapters/chatgpt-web/turn/turn-broker.ts`.
 
-The turn broker is a **local Unix socket** (default `$CODEX_CHATGPT_WEB_HOME/runtime/turn-broker.sock`)
+The turn broker is a **local Unix socket** (default `$PI_INTERNET_RUNTIME_HOME/runtime/turn-broker.sock`)
 that decouples the browser turn from the HTTP server. It lets a separate process (the MCP server)
 submit a turn and receive the result without going through the daemon's HTTP `/v1/responses` path.
 
-- `defaultBrokerEndpoint()` / `resolveBrokerEndpoint()` (in `src/config.ts`) compute the socket path.
+- `defaultBrokerEndpoint()` / `resolveBrokerEndpoint()` (in `src/adapters/chatgpt-web/lifecycle/config.ts`) compute the socket path.
 - The broker is how the **MCP server** talks to the daemon: the MCP server connects to the broker
   socket, sends a turn, and gets the browser result.
 
@@ -39,10 +39,10 @@ lower-level path used by the MCP server so a tool-capable client can drive the s
 
 ## 3. The MCP server
 
-Source: `src/adapters/chatgpt-web/mcp-server.ts` and `mcp-main.ts`.
+Source: `src/adapters/chatgpt-web/tools/mcp-server.ts` and `tools/mcp-main.ts`.
 
 The daemon ships an **MCP server** that exposes the ChatGPT Web browser turn as an MCP tool. It is
-launched via `codex-chatgpt-web mcp --broker-socket <path>` (see `mcp-main.ts`).
+launched via `pi-internet-runtime mcp --broker-socket <path>` (see `tools/mcp-main.ts`).
 
 - `runChatGptMcpMain(args)` parses `--broker-socket` and calls `runChatGptMcpServer({ brokerSocketPath })`.
 - The MCP server connects to the turn broker socket and serves the browser turn as an MCP tool.
@@ -55,7 +55,7 @@ The MCP server is the bridge between the **MCP protocol** (client ↔ server) an
 
 ## 4. The tunnel
 
-Source: `src/tunnel.ts` and `src/tunnel-service.ts`.
+Source: `src/adapters/chatgpt-web/transport/tunnel.ts` and `transport/tunnel-service.ts`.
 
 The tunnel is a **remote bridge** that connects a local daemon to a remote Codex runtime. It uses a
 downloaded `tunnel-client` binary (from a release asset, checksum-verified) and a **runtime key**.
@@ -63,9 +63,9 @@ downloaded `tunnel-client` binary (from a release asset, checksum-verified) and 
 ### 4.1 The tunnel client
 
 - `installTunnelClient()` downloads `tunnel-client` from a release, verifies its SHA-256 against
-  `SHA256SUMS.txt`, and installs it under `$CODEX_CHATGPT_WEB_HOME/bin/`.
+  `SHA256SUMS.txt`, and installs it under `$PI_INTERNET_RUNTIME_HOME/bin/`.
 - `installRuntimeKey()` / `installRuntimeKeyBytes()` store the runtime key under
-  `$CODEX_CHATGPT_WEB_HOME/secrets/tunnel-runtime.key` (0600).
+  `$PI_INTERNET_RUNTIME_HOME/secrets/tunnel-runtime.key` (0600).
 - `createTunnelConfig()` builds a `TunnelConfig` with `tunnelId` (must match
   `^tunnel_[a-f0-9]{32}$`), `profileName`, `alias`, and `profileDir`.
 
@@ -75,7 +75,7 @@ downloaded `tunnel-client` binary (from a release asset, checksum-verified) and 
   - `--tunnel-id <id>`
   - `--runtime-api-key file:<runtimeKeyFile>`
   - `--mcp-command <mcpCommand>` — the command that starts the MCP server
-    (`codex-chatgpt-web mcp --broker-socket <path>`).
+    (`pi-internet-runtime mcp --broker-socket <path>`).
 - `mcpCommand(config)` builds that command, quoting it for the platform.
 
 So the tunnel connects a **remote Codex runtime** to the **local daemon's MCP server**, which in

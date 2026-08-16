@@ -38,9 +38,9 @@ This is the single most important finding and it shapes every option below.
 
 - The daemon's `package.json` declares `packageManager: "bun@1.3.14"` and a `bun` devDependency.
 - The daemon source uses **Bun-specific APIs** that do not exist in Node:
-  - `Bun.serve(...)` — the HTTP server (`src/server.ts`).
-  - `Bun.zstdDecompress(...)` — request-body decompression (`src/http-body.ts`).
-  - `Bun.main` and `Bun.which(...)` — process/executable resolution (`src/config.ts`).
+  - `Bun.serve(...)` — the HTTP server (`src/core/server.ts`).
+  - `Bun.zstdDecompress(...)` — request-body decompression (`src/core/http-body.ts`).
+  - `Bun.main` and `Bun.which(...)` — process/executable resolution (`src/core/config.ts`).
 - The daemon's own runtime bundle (`scripts/build-runtime-bundle.ts`) targets `bun` and embeds a
   Bun executable (`target: "bun"`, `embeddedBunExecutable()`).
 - The daemon is large: **53 source files / ~15,640 lines**, a 39-file Electron launcher, and
@@ -72,10 +72,10 @@ a major footprint and portability tradeoff that must be accepted explicitly.
 
 ### 2.1 The macOS gate is narrow
 
-The macOS-only error came from a check in `src/adapters/chatgpt-web/setup.ts`, which blocked
+The macOS-only error came from a check in `src/adapters/chatgpt-web/lifecycle/setup.ts`, which blocked
 **terminal-only managed Chrome setup** on non-macOS. It is **not** a general platform restriction:
 
-- `loginToChatGpt` (`src/adapters/chatgpt-web/browser-login.ts`) — the `login` subcommand — was not
+- `loginToChatGpt` (`src/adapters/chatgpt-web/browser/browser-login.ts`) — the `login` subcommand — was not
   macOS-gated.
 - `serve` (`src/cli.ts`) — the daemon HTTP server — is **not** macOS-gated.
 
@@ -96,13 +96,13 @@ process the package can spawn, health-gate, and stop.
 
 ### 2.4 The daemon is a separate Bun project
 
-The daemon has a `bin` entry (`codex-chatgpt-web` → `./src/cli.ts`) and loads its config through
-`$CODEX_CHATGPT_WEB_HOME`. The implemented package vendors the daemon and resolves its embedded-Bun
-launcher from `dist/daemon/runtime`, then passes the private account directory explicitly.
+The runtime has a `bin` entry (`pi-internet-runtime` → `./src/cli.ts`) and loads its config through
+`$PI_INTERNET_RUNTIME_HOME`. The implemented package builds its embedded-Bun launcher into
+`dist/daemon/runtime`, then passes the private account directory explicitly.
 
 ### 2.5 Default Linux Chrome
 
-`src/config.ts:279` defaults to `/usr/bin/google-chrome`. The daemon already resolves a Chrome
+`src/adapters/chatgpt-web/lifecycle/config.ts` defaults to `/usr/bin/google-chrome`. The daemon already resolves a Chrome
 executable for the isolated profile.
 
 ---

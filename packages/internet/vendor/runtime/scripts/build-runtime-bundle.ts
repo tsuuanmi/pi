@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { chmodSync, copyFileSync, cpSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { VERSION } from "../src/version";
+import { VERSION } from "../src/core/version";
 
 const root = resolve(import.meta.dir, "..");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {

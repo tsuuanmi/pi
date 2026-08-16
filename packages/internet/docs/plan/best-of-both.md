@@ -3,16 +3,16 @@
 This document brainstorms two ideas that combine the strengths of Prometheus (network interception,
 multi-provider) with the strengths of `internet` (Pi-native, browser-optional, DOM resilience):
 
-1. **Hybrid capture** — use network interception as the primary model-output capture method, with
-   DOM parsing as a resilient fallback.
+1. **Authoritative wire capture** — use authenticated network interception as the sole model-output
+   capture method and fail explicitly when the payload is unavailable.
 2. **Fusion "ask all"** — fan a query across all enabled providers and synthesize one coherent
    answer (not just a side-by-side comparison).
 
-Status: **historical design record.** Hybrid capture is implemented in the vendored browser
-runtime; Fusion remains a proposal.
+Status: **historical design record.** Authoritative wire capture is implemented in the Pi-owned
+browser runtime; Fusion remains a proposal.
 
 > **Source:** current capture implementation is under
-> `vendor/codex-chatgpt-web/src/adapters/chatgpt-web/`; current provider orchestration is under
+> `vendor/runtime/src/adapters/chatgpt-web/transport/`; current provider orchestration is under
 > `src/council/`. See [source-repositories.md](source-repositories.md).
 
 ---

@@ -16,38 +16,26 @@ All daemon table paths below are relative to `vendor/runtime/`.
 
 | Concept | Source file |
 |---------|-------------|
-| Provider-neutral Bun HTTP host | `src/server.ts` |
-| ChatGPT loopback routes | `src/adapters/chatgpt-web/server.ts` |
-| Responses SSE bridge + batch builder | `src/adapters/chatgpt-web/responses/bridge.ts` |
-| Request parsing (Responses → internal) | `src/adapters/chatgpt-web/responses/parser.ts` |
-| Responses schema | `src/adapters/chatgpt-web/responses/schema.ts` |
-| Replay / continuation state | `src/adapters/chatgpt-web/responses/state.ts` |
-| Compaction | `src/adapters/chatgpt-web/responses/compaction.ts` |
-| Reasoning envelope (`ocxr1`) | `src/adapters/chatgpt-web/responses/reasoning-envelope.ts` |
-| Neutral runtime paths / durable commands | `src/config.ts` |
-| ChatGPT config / defaults / validation | `src/adapters/chatgpt-web/config.ts` |
-| Adapter types (`ParsedRequest`, `AdapterEvent`, `Usage`) | `src/adapters/chatgpt-web/types.ts` |
-| Native passthrough (models/search → provider backend) | `src/adapters/chatgpt-web/native-passthrough.ts` |
-| Model catalog augmentation | `src/adapters/chatgpt-web/model-catalog.ts`, `src/adapters/chatgpt-web/models.ts` |
+| Provider-neutral Bun HTTP host | `src/core/server.ts` |
+| Runtime paths / durable commands | `src/core/config.ts` |
+| Process and service lifecycle | `src/core/process.ts`, `src/core/service.ts` |
+| HTTP body limits | `src/core/http-body.ts` |
+| ChatGPT loopback routes | `src/adapters/chatgpt-web/server/server.ts` |
+| Responses SSE bridge + batch builder | `src/adapters/chatgpt-web/protocol/responses/bridge.ts` |
+| Request parsing (Responses → internal) | `src/adapters/chatgpt-web/protocol/responses/parser.ts` |
+| Responses schema / state / compaction | `src/adapters/chatgpt-web/protocol/responses/{schema,state,compaction}.ts` |
+| Reasoning envelope and error classification | `src/adapters/chatgpt-web/protocol/responses/{reasoning-envelope,errors}.ts` |
+| ChatGPT config / defaults / validation | `src/adapters/chatgpt-web/lifecycle/config.ts` |
+| Adapter types (`ParsedRequest`, `AdapterEvent`, `Usage`) | `src/adapters/chatgpt-web/protocol/types.ts` |
+| Native passthrough and wire transport | `src/adapters/chatgpt-web/transport/` |
+| Model catalog and route resolution | `src/adapters/chatgpt-web/models/` |
+| ChatGPT turn contract and execution | `src/adapters/chatgpt-web/turn/` |
+| **Browser automation and login** | `src/adapters/chatgpt-web/browser/` |
+| **Durable conversation state** | `src/adapters/chatgpt-web/conversation/` |
+| MCP and synthetic web-search tools | `src/adapters/chatgpt-web/tools/` |
+| Prompt, content, token, and usage conversion | `src/adapters/chatgpt-web/content/` |
+| Setup, doctor, connector, and control | `src/adapters/chatgpt-web/lifecycle/` |
 | Upstream Codex `config.toml` edits | Removed; Pi owns route and account configuration |
-| HTTP body limits | `src/http-body.ts` |
-| Adapter error classification | `src/adapters/chatgpt-web/responses/errors.ts` |
-| ChatGPT turn contract | `src/adapters/chatgpt-web/turn-adapter.ts` |
-| ChatGPT Web adapter (runTurn) | `src/adapters/chatgpt-web/adapter.ts` |
-| Turn execution / sessions | `src/adapters/chatgpt-web/turn-execution.ts` |
-| Turn broker (token/binding/revoke) | `src/adapters/chatgpt-web/turn-broker.ts` |
-| **Browser automation** | `src/adapters/chatgpt-web/browser-worker.ts` |
-| **Browser login** | `src/adapters/chatgpt-web/browser-login.ts` |
-| **ChatGPT session selectors / account caps** | `src/adapters/chatgpt-web/session.ts` |
-| MCP server (adapter tools) | `src/adapters/chatgpt-web/mcp-server.ts` |
-| Trusted environment extraction | `src/adapters/chatgpt-web/environment.ts` |
-| Prompt compilation (transport contract) | `src/adapters/chatgpt-web/prompt.ts` |
-| Model/effort resolution | `src/adapters/chatgpt-web/model.ts` |
-| Rolling checkpoint (Luna) | `src/adapters/chatgpt-web/rolling-checkpoint.ts` |
-| Concurrency cap (`MAX_CHATGPT_BROWSER_TABS`) | `src/adapters/chatgpt-web/concurrency.ts` |
-| Tunnel client (supply-chain) | `src/adapters/chatgpt-web/tunnel.ts`, `src/adapters/chatgpt-web/tunnel-service.ts` |
-| Doctor checks | `src/adapters/chatgpt-web/doctor.ts` |
-| Setup flow | `src/adapters/chatgpt-web/setup.ts` |
 | CLI entry | `src/cli.ts` |
 
 ## Repository 2 — Prometheus (a sibling to learn from)

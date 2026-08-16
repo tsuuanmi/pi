@@ -6,7 +6,7 @@ tradeoffs.
 
 > **Source:** the account = daemon-instance model is implemented by `src/accounts/registry.ts` and
 > `src/daemon/config.ts`; the vendored daemon configuration is under
-> `vendor/codex-chatgpt-web/src/config.ts`. See [source-repositories.md](source-repositories.md).
+> `vendor/runtime/src/adapters/chatgpt-web/lifecycle/config.ts`. See [source-repositories.md](source-repositories.md).
 
 - **Implemented:** ChatGPT Web via one account-scoped daemon per configured account.
 - **Implemented:** multiple ChatGPT accounts plus Anthropic and Gemini API providers.
@@ -19,8 +19,9 @@ Status: **historical design record.** See current source and `docs/architecture.
 
 ## 1. The core model: account = daemon instance
 
-The decisive fact (confirmed in `codex-chatgpt-web/src/config.ts`): a codex-chatgpt-web daemon is a
-**single account/session**. Its identity is its config dir, chosen by `CODEX_CHATGPT_WEB_HOME`, and
+The decisive fact (confirmed in `vendor/runtime/src/adapters/chatgpt-web/lifecycle/config.ts`): a
+runtime instance is a **single account/session**. Its identity is its config dir, chosen by
+`PI_INTERNET_RUNTIME_HOME`, and
 it owns its own:
 
 - `port` (default `17841`)
@@ -123,7 +124,7 @@ A small config file under `<internet-config>/accounts.json`:
       "provider": "openai",
       "displayName": "Personal",
       "port": 17841,
-      "configDir": "~/.codex-chatgpt-web",   // CODEX_CHATGPT_WEB_HOME
+      "configDir": "~/.pi-internet-runtime",   // PI_INTERNET_RUNTIME_HOME
       "enabled": true
     },
     {
@@ -144,7 +145,7 @@ The `provider` field selects the adapter (`openai` / `anthropic` / `google`). Ea
 ### 3.2 Package tools
 
 - `internet_accounts` — list configured accounts and their daemon status.
-- `internet_account_add` — register a new account (choose a free port, set `CODEX_CHATGPT_WEB_HOME`,
+- `internet_account_add` — register a new account (choose a free port, set `PI_INTERNET_RUNTIME_HOME`,
   point at a config dir). It **does not** manage the daemon's login (that is the daemon's setup),
   it just records the mapping.
 - `internet_account_enable` / `internet_account_disable` — toggle which accounts register providers.

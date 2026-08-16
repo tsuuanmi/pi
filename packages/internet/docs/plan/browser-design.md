@@ -7,9 +7,9 @@ package wraps), and it defines the browser contract the package should own.
 Status: **current implementation.**
 
 > **Source:** the browser behavior is implemented under
-> `vendor/codex-chatgpt-web/src/` in this package:
-> `adapters/chatgpt-web/browser-worker.ts`, `browser-login.ts`, `chatgpt-session.ts`, and
-> `adapters/chatgpt-web/concurrency.ts`.
+> `vendor/runtime/src/adapters/chatgpt-web/` in this package:
+> `browser/browser-worker.ts`, `browser/browser-login.ts`, `browser/session.ts`, and
+> `browser/concurrency.ts`.
 
 ---
 
@@ -133,13 +133,13 @@ src/providers/openai/
 └── turn/            # turn adapter (talks to the daemon)
 ```
 
-The browser itself is **inside the daemon** (codex-chatgpt-web's `browser-worker.ts`). The
-`internet` package does **not** re-implement browser automation — it drives the daemon, which owns
-the browser. This keeps the browser logic in one place (the daemon) and the package clean.
+The browser itself is **inside the runtime** (`browser/browser-worker.ts`). The `internet` package
+does **not** re-implement browser automation — it drives the runtime, which owns the browser. This
+keeps browser logic in one place and the package clean.
 
-> **Key principle:** the package is a **thin client** over the daemon. The daemon owns the browser,
-> the login, the DOM parsing, and the concurrency. The package owns the Pi integration (provider,
-> tools, hooks) and the cross-provider orchestration (fusion, search).
+> **Key principle:** the package is a **thin client** over the runtime. The runtime owns the browser,
+> the login, authenticated wire capture, and concurrency. The package owns Pi integration and
+> cross-provider orchestration.
 
 ---
 

@@ -5,8 +5,8 @@ Status: **implemented; breaking migration complete**.
 ## Decision
 
 The former `codex-chatgpt-web` source is now the neutral `packages/internet/vendor/runtime/`
-package. Its `src/` root contains provider-agnostic runtime code, while Codex- and ChatGPT-specific
-behavior lives under `src/adapters/chatgpt-web/`. The existing daemon process boundary remains, but
+package. Its `src/core/` contains provider-agnostic runtime code, while Codex- and ChatGPT-specific
+behavior is organized by feature under `src/adapters/chatgpt-web/`. The existing daemon process boundary remains, but
 Pi owns the source, configuration, lifecycle, build, tests, and public contract.
 
 The migration is intentionally breaking. Existing `codex-chatgpt-web` state is not migrated.
@@ -20,10 +20,10 @@ new Pi account and daemon.
 | --- | --- |
 | Account identity and paths | Parent Pi account registry and neutral runtime config contract |
 | Provider registration | `src/providers/openai/provider.ts` and model routes |
-| Generic daemon lifecycle | `vendor/runtime/src/` core modules and daemon manager |
+| Generic daemon lifecycle | `vendor/runtime/src/core/` modules and daemon manager |
 | ChatGPT browser sessions and turns | `vendor/runtime/src/adapters/chatgpt-web/` |
-| OpenAI/Codex Responses translation | ChatGPT adapter `responses/` modules |
-| Generic HTTP hosting, events, process, and bounded body I/O | `vendor/runtime/src/` |
+| OpenAI/Codex Responses translation | ChatGPT adapter `protocol/responses/` modules |
+| Generic HTTP hosting, events, process, and bounded body I/O | `vendor/runtime/src/core/` |
 | MCP/tool execution | ChatGPT adapter modules |
 | Process/service lifecycle | Neutral runtime; ChatGPT health/control routes remain adapter-owned |
 | Runtime packaging | `scripts/build-daemon.mjs` and package build output |
@@ -40,8 +40,9 @@ vendor alias or an upstream package-private module.
 - Keep browser page selectors and wire details behind browser-facing interfaces.
 - Keep Responses event projection independent from HTTP server lifecycle.
 - Keep the provider registration surface thin and model-oriented.
-- Use explicit domain names such as `daemon`, `browser`, `responses`, `tools`, `state`, and
-  `control`; do not retain upstream names that describe obsolete package boundaries.
+- Use explicit feature directories such as `core`, `browser`, `conversation`, `content`,
+  `lifecycle`, `models`, `protocol`, `tools`, `transport`, and `turn`; do not retain upstream names
+  that describe obsolete package boundaries.
 - Prefer the existing Pi error, account, daemon, and route types over duplicate vendor types.
 
 ## Removal policy

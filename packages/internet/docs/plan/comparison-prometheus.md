@@ -10,8 +10,9 @@ architecture, scope, and integration surface.
 > - Prometheus: `/home/superman/workspaces/prometheus` (`src/mcp-server.js`, `src/provider-catalog.cjs`,
 >   `electron/rest-api.cjs`, `src/automation/*.cjs`)
 > - Pi-owned runtime: `vendor/runtime`
->   (`src/adapters/chatgpt-web/server.ts`, `src/adapters/chatgpt-web/responses/bridge.ts`,
->   `src/adapters/chatgpt-web/browser-worker.ts`)
+>   (`src/adapters/chatgpt-web/server/server.ts`,
+>   `src/adapters/chatgpt-web/protocol/responses/bridge.ts`,
+>   `src/adapters/chatgpt-web/browser/browser-worker.ts`)
 >
 > See [source-repositories.md](source-repositories.md) for the full file map.
 

@@ -9,17 +9,16 @@ removed; the runtime source and build output are now Pi-owned.
 ## Boundary
 
 The current snapshot is a self-contained Bun runtime, but that is not the target ownership model.
-The target is a neutral runtime package under `packages/internet/vendor/runtime/`. Its `src/`
-root contains provider-agnostic runtime code. Codex- and ChatGPT-specific behavior is confined to
-`src/adapters/chatgpt-web/`, behind explicit adapter interfaces.
+The target is a neutral runtime package under `packages/internet/vendor/runtime/`. Its `src/core/`
+contains provider-agnostic runtime code. Codex- and ChatGPT-specific behavior is organized by feature
+under `src/adapters/chatgpt-web/`, behind explicit adapter interfaces.
 
 The neutral runtime owns:
 
-- account-scoped configuration and state contracts;
-- daemon lifecycle and process control;
-- HTTP and Responses-runtime plumbing;
-- generic event, process, body, usage, and error utilities;
-- runtime packaging and health boundaries.
+- runtime paths and durable command validation;
+- process/service lifecycle and HTTP hosting;
+- bounded event, body, and process primitives;
+- runtime packaging boundaries.
 
 The ChatGPT adapter owns browser sessions, turns, wire capture, tool execution, login, model
 capabilities, ChatGPT conversation state, and any Codex-specific translation required by that
@@ -32,32 +31,29 @@ process isolation is an implementation boundary, not a provider identity.
 
 The snapshot separates several domains, but it still exposes an upstream-shaped runtime package:
 
-- `src/adapters/chatgpt-web/` already contains the main provider-specific behavior, but should be
-  split further by browser, conversation, wire, tools, login, and model capability;
-- `src/responses/` contains Codex/Responses-specific translation and should be classified before
-  being retained in neutral core or moved under the adapter;
-- `src/lib/` contains mostly reusable low-level utilities and is the strongest neutral-core seam;
-- top-level modules mix runtime, configuration, service, tunnel, CLI, and upstream Codex/ChatGPT
-  concerns and require explicit classification.
+- `src/adapters/chatgpt-web/` contains provider behavior organized by browser, conversation, content,
+  lifecycle, models, protocol, tools, transport, and turn;
+- `src/core/` contains only reusable runtime primitives;
+- `cli.ts` is the sole composition root;
+- core modules do not import provider-specific names.
 
-The target is not merely a directory rename. Every module must be classified as neutral runtime or
-ChatGPT adapter code, and neutral modules must not import provider-specific names.
+The target is not merely a directory rename. Every module is classified into `core/` or a feature
+folder under the ChatGPT adapter, and core modules must not import provider-specific names.
 
 ### 2. A few files are coordination hotspots
 
 The following files are large because they coordinate multiple phases of an intentionally coupled
 runtime. They are the primary candidates for a future internal decomposition:
 
-- `src/adapters/chatgpt-web/browser-worker.ts`: browser lifecycle, page interaction, wire capture,
+- `src/adapters/chatgpt-web/browser/browser-worker.ts`: browser lifecycle, page interaction, wire capture,
   tool approval, and response recovery;
-- `src/adapters/chatgpt-web/responses/bridge.ts`: adapter events, Responses output, and continuation
+- `src/adapters/chatgpt-web/protocol/responses/bridge.ts`: adapter events, Responses output, and continuation
   state;
-- `src/adapters/chatgpt-web/config.ts`: ChatGPT configuration, setup defaults, and validation;
-- `src/adapters/chatgpt-web/types.ts`: adapter protocol/domain types and tool helpers.
+- `src/adapters/chatgpt-web/lifecycle/config.ts`: ChatGPT configuration, setup defaults, and validation;
+- `src/adapters/chatgpt-web/protocol/types.ts`: adapter protocol/domain types and tool helpers.
 
-These are maintainability hotspots and extraction seams. The split should produce one authoritative
-implementation behind the neutral runtime contract and the ChatGPT adapter contract, without
-preserving the upstream package's public entry points.
+These are maintainability hotspots and extraction seams. The split produces one authoritative implementation behind the neutral runtime and ChatGPT adapter
+contracts, without preserving upstream package entry points.
 
 ### 3. Compatibility paths are explicitly out of scope for the new implementation
 

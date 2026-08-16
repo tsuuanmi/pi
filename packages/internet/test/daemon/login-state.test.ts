@@ -1,4 +1,4 @@
-import { sanitizeChatGptStorageState } from "../../vendor/runtime/src/adapters/chatgpt-web/login-state.js";
+import { sanitizeChatGptStorageState } from "../../vendor/runtime/src/adapters/chatgpt-web/browser/login-state.js";
 
 const cookie = {
 	name: "session",

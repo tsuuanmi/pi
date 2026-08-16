@@ -111,8 +111,8 @@ so the daemon receives only the current message and cannot replay history. Withi
 daemon opened a fresh isolated conversation per turn, so continuity was not durable across browser turns.
 
 **Evidence.** `implementation-plan-conversation-continuity.md`; the vendored daemon
-`vendor/codex-chatgpt-web/src/adapters/chatgpt-web/browser-worker.ts` (conversation creation and
-canonical URL continuation) and `vendor/codex-chatgpt-web/src/adapters/chatgpt-web/prompt.ts`
+`vendor/runtime/src/adapters/chatgpt-web/browser/browser-worker.ts` (conversation creation and
+canonical URL continuation) and `vendor/runtime/src/adapters/chatgpt-web/content/prompt.ts`
 (suffix prompt compilation); Prometheus
 `electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
 
@@ -195,9 +195,9 @@ contents. The daemon runs in `browser-only` mode, so the browser session has no 
 
 **Evidence.** [`daemon/harness`](../daemon/harness.md) and
 [`providers/openai/turn/files`](../providers/openai/turn/files.md); runtime
-`src/adapters/chatgpt-web/config.ts` (`RuntimeMode`, `localToolsEnabled`),
-`src/adapters/chatgpt-web/setup.ts` (`connectorSetupRequired`), and
-`src/adapters/chatgpt-web/turn-broker.ts`
+`src/adapters/chatgpt-web/lifecycle/config.ts` (`RuntimeMode`, `localToolsEnabled`),
+`src/adapters/chatgpt-web/lifecycle/setup.ts` (`connectorSetupRequired`), and
+`src/adapters/chatgpt-web/turn/turn-broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).
 
