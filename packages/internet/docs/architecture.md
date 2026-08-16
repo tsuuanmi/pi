@@ -1,5 +1,8 @@
 # Internet Architecture
 
+This document and the module references linked from `index.md` describe implemented behavior. Unimplemented
+proposals are kept exclusively in [Future work](future-work.md).
+
 ## Boundaries
 
 Pi owns provider registration, request transport, model selection, tool approval, session model
@@ -29,9 +32,8 @@ The private daemon is a **browser-backed inference daemon** with a provider-agno
 ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-neutral code is split between
 `vendor/runtime/src/core/` and the browser runtime under `vendor/runtime/src/browser/`.
 ChatGPT-specific browser code lives under `browser/chatgpt-web/`; non-browser provider code lives
-under `vendor/runtime/src/providers/chatgpt-web/`. See the canonical
-[provider-neutral runtime boundary](review/daemon-boundary.md) and
-[Browser and provider boundary review](review/browser-provider-boundary.md) for the module maps.
+under `vendor/runtime/src/providers/chatgpt-web/`. See the [implemented layout](layout.md) for the
+module maps.
 
 **Core (provider-agnostic):** runtime-home and durable-command handling, atomic writes, bounded HTTP
 body/event primitives, process and service lifecycle, and the Bun HTTP host. Core modules never
@@ -84,6 +86,30 @@ adapter fails clearly when no valid conversation payload is available; it does n
 legacy DOM extraction. The daemon remains authoritative for replay, durable conversation IDs, rolling
 checkpoints, browser health, and Full-mode broker operation.
 
+### Durable conversation lifecycle
+
+Each Pi session maps to one stable ChatGPT conversation. The private conversation journal persists
+the canonical conversation id/URL and the last acknowledged history checkpoint; the browser is an
+ephemeral access mechanism, not the durable identity. Idle shutdown closes only the browser process
+and tab, never the conversation or the session-to-conversation mapping. A later turn restarts the
+browser, opens the saved URL, validates the checkpoint, and appends the new suffix.
+
+- Conversation ids are immutable after the first successful turn; a later identity change fails the
+turn rather than silently rebinding the session.
+- Replay distinguishes acknowledged history, new suffixes, compaction boundaries, and divergence so
+retries do not duplicate user turns. Rewinds, edited prefixes, changed authority, and changed
+conversation ids fail closed.
+- Generated `<environment_context>` messages are excluded from the persistent history prefix while
+retaining original source indexes.
+- Consecutive assistant phases (commentary, reasoning-only, final answer) are acknowledged as one
+browser response.
+
+**Implemented boundary.** The invariants above are live behavior. The following is **proposed, not
+implemented**: a completed browser response that Pi did not persist requires explicit
+acknowledgement/replay recovery so a retry replays the stored response instead of resubmitting and
+never silently creates a second conversation or submits a duplicate turn. This recovery is tracked
+in [Future work](future-work.md).
+
 ## API providers
 
 Anthropic and Google providers are pure registration adapters. They do not own processes or browser
@@ -110,3 +136,56 @@ per response, and a ten-minute run limit.
   DNS results, including redirect revalidation.
 - Full-mode local tools remain account-scoped and approval-gated by Pi.
 - Council members receive no tools and cannot select models outside enabled internet providers.
+
+## Design lineage
+
+The package is a deliberate composition of three prior repos, not a copy of any one. The
+composition is what makes it unique.
+
+| Concern | codexweb (Council 3.x) | pi-internet-runtime (daemon) | Prometheus | internet takes |
+|---|---|---|---|---|
+| Browser runtime / Responses surface | Electron + Playwright Council | Bun daemon, `/v1/responses`, isolated login, replay, compaction, broker, MCP | Electron + Playwright, 11 providers | **Pi-owned runtime daemon** |
+| Model-output capture | DOM (Council turns) | Authenticated conversation wire payload | Network interception (SSE/JSON) | **Authoritative wire capture** for the runtime adapter |
+| Multi-agent Council | core feature | — | — | **`internet_council` bounded workflow** |
+| Multi-provider breadth | — | single ChatGPT path | 11-provider catalog | **Provider seam** — Anthropic/Google API providers; future browser-backed adapters |
+| Web search / fetch | — | removed | browser-based | **Keyless RSS + bounded SSRF-safe fetch** |
+| `@file` / local tools | Council MCP | Full-mode broker/MCP | inline `@file` expansion | **Bounded workspace-local `@file`** |
+| Integration surface | Electron app | HTTP daemon | MCP + REST | **Pi provider + tools** |
+| Platform | 4-platform Electron | Bun runtime (platform-agnostic build) | Linux | **Linux and macOS** |
+
+What makes internet unique:
+
+1. **Pi-native provider registration** — neither codexweb nor Prometheus registers as a Pi provider.
+2. **Browser-optional** — only ChatGPT Web model routing needs the daemon's Chrome; search/fetch and
+   Anthropic/Google API providers are browser-less.
+3. **Self-contained** — vendors the daemon and embeds Bun; no other repo at runtime.
+4. **Keyless, SSRF-safe web access** — `internet_search`/`internet_fetch` are not browser-driven and
+   never forward daemon credentials.
+5. **Owned lifecycle** — the package owns login/start/stop/restart and health-gated auto-start.
+
+## Landed features
+
+The original MVP was "provider + thin tools + HUD + one hook". Since then the following are
+implemented and production scope:
+
+- **R1 — Fixed-effort model metadata.** Models mirror the daemon's single-immutable-effort routes
+  (`light`/`medium`/`high`/`extra-high`/`pro`), capability-gated for Pro, with a conservative 16,384
+  output ceiling. Provider-local ids render as `chatgpt-web/high` instead of a doubled prefix.
+- **R2 — `autoLogin` opt-out flag.** Lazy login is opt-out via `internet_settings`; headless users
+  are not surprised by a Chrome window.
+- **R2b — Conversation continuity + unobtrusive headed browser.** See the durable conversation
+  lifecycle above.
+- **R3 — `internet_search` + `internet_fetch`.** Keyless RSS search plus bounded, SSRF-aware page
+  fetching. Read-only, no interactive approval.
+- **R4 — `internet_doctor`.** Bounded, cancellable `doctor --json` diagnostics with strict report
+  validation.
+- **R4b — Full harness / local file access.** Account-scoped `internet_harness`; safe static `@file`
+  expansion in both modes; Full mode wires the runtime broker/MCP path with private runtime-key
+  storage.
+- **Account-scoped tools and stable provider names.** `chatgpt-web` for `default`, `chatgpt-web-<id>`
+  for others; enabling/disabling unrelated accounts does not rename a provider.
+- **Owned daemon lifecycle.** Package-owned private config, isolated Chrome login, health-gated
+  auto-start, serialized lifecycle, graceful shutdown, and the `internet_daemon` tool.
+
+Remaining roadmap: **Fusion** (`internet_ask_all`), a later, larger bet on top of the implemented
+multi-provider seam. See [Future work](future-work.md).

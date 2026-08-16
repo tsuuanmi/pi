@@ -29,6 +29,9 @@ Constructed privately; use the static factories.
   `InternetError` (`config_invalid`).
 - `baseUrl(includeVersion?)` — the endpoint URL, optionally with `/v1`.
 - `health(signal?)` — `GET /healthz`, returns `DaemonHealth`.
+- `conversationCanary(signal?)` — `POST /admin/conversation-canary` with the bearer control token;
+  returns `{ status: "passed" }`. Uses a dedicated 120-second timeout because it drives a complete
+  browser turn and reopen verification; ordinary daemon requests retain the 5-second default.
 - `compact(input, signal?)` — `POST /v1/responses/compact`, returns `CompactResponse`.
 - `control(action, signal?)` — `POST /admin/<action>` with the bearer control token; returns the
   (possibly undefined) admin result.

@@ -66,10 +66,34 @@ native image/text support and do not use the browser replay adapter.
 
 ## Durable conversations
 
-Each Pi session binds to one canonical ChatGPT conversation after a live canary. Browser and daemon
-idle shutdown do not remove the binding; the next ChatGPT turn reopens the saved conversation URL.
+Each Pi session binds to one canonical ChatGPT conversation after a live canary. The browser is an
+access mechanism, not the durable identity: browser and daemon idle shutdown close only the
+ephemeral process and tab, never the conversation or the session-to-conversation mapping. The next
+ChatGPT turn restarts the browser, opens the saved canonical conversation URL, validates the
+checkpoint, and appends the new suffix.
+
+```text
+Pi session S -> private conversation journal -> ChatGPT conversation C
+                                      |
+                              ephemeral browser process
+```
+
+- The first ChatGPT turn in a Pi session creates conversation C and persists the mapping.
+- Later ChatGPT turns append to C rather than creating another conversation.
+- Switching models does not remove the mapping; other-model turns stay in Pi history and are
+  synchronized when ChatGPT is selected again.
+- A new Pi session receives a separate ChatGPT conversation.
+
 The adapter rejects attachments, ambiguous/diverged replay, and conversation-id changes rather than
-silently forking state.
+silently forking state. Conversation ids are immutable after the first successful turn; a later
+identity change marks the turn as failed instead of rebinding the session. Generated
+`<environment_context>` messages are excluded from the persistent history prefix, and consecutive
+assistant phases (commentary, reasoning-only, final answer) are acknowledged as one response.
+
+**Not implemented.** A completed browser response that Pi did not persist (for example, Pi was
+interrupted before writing the assistant response) is a known gap. The durable protocol needs an
+explicit client-acknowledgement/replay state so a retry replays the stored response instead of
+resubmitting; see [Future work](future-work.md).
 
 ## Full local-tool mode
 

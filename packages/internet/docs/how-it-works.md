@@ -56,7 +56,7 @@ HTTP POST /v1/responses
 
 A future runtime adapter may reuse the core host and lifecycle primitives without inheriting
 ChatGPT, OpenAI Responses, browser-state, or connector semantics. See the
-[provider-neutral runtime boundary](review/daemon-boundary.md) review.
+[implemented layout](layout.md) for the module maps.
 
 ## Full mode
 

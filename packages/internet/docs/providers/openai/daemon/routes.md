@@ -10,6 +10,7 @@ Daemon route constants and request/response payload shapes.
 const DAEMON_ROUTES = {
   health: "/healthz",
   compact: "/v1/responses/compact",
+  conversationCanary: "/admin/conversation-canary",
   control: {
     drain: "/admin/drain",
     resume: "/admin/resume",

@@ -15,6 +15,7 @@ bridging, and safe public web access.
 - [Hooks](hooks.md)
 - [Extension composition](extension.md)
 - [Version](version.md)
+- [Future work](future-work.md)
 
 ## Source-mirrored reference
 
@@ -56,21 +57,5 @@ bridging, and safe public web access.
   [`status`](tools/status.md), and [`web`](tools/web.md)
 - Public web [`fetch`](web/fetch.md) and [`search`](web/search.md)
 
-## Implementation and review records
-
-- [Completed implementation plan](plan/implementation-plan.md)
-- [Runtime architecture analysis](plan/runtime-architecture-brainstorm.md)
-- [MCP/tunnel broker analysis](plan/mcp-tunnel-broker.md)
-- [Multi-account sign-in analysis](plan/multi-account-signin.md)
-- [Council design](plan/council-via-orchestrator.md)
-- [Multi-account/provider design](plan/multi-account-and-providers.md)
-- [Pi-owned provider runtime](plan/codex-chatgpt-web-pi-owned.md)
-- [Architecture review](review/architecture-review.md)
-- [Implementation review](review/implementation-review.md)
-- [Durable conversation lifecycle and recovery](review/durable-conversations.md)
-- [Provider-neutral runtime boundary](review/daemon-boundary.md)
-- [Browser and provider boundary brainstorm](review/browser-provider-boundary.md)
-- [Former `codex-chatgpt-web` runtime review](review/codex-chatgpt-web-review.md)
-
-The brainstorm/review files preserve design history. Source and the mirrored references above are the
-authoritative current behavior.
+The source and the mirrored references above are the authoritative current behavior. Features that
+were designed but are not yet implemented are tracked in [Future work](future-work.md).

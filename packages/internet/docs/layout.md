@@ -21,7 +21,7 @@ packages/internet/
 │   ├── index.ts
 │   ├── settings.ts
 ├── test/                    # mirrors changed src areas
-├── docs/                    # mirrors src modules plus architecture/usage/review records
+├── docs/                    # mirrors src modules plus architecture, usage, and future-work docs
 ├── scripts/build-daemon.mjs
 └── vendor/runtime/
 ```
@@ -38,8 +38,6 @@ only provider-neutral process, configuration-path, service, HTTP-hosting, and bo
 The ChatGPT Web provider is organized by feature and owns the OpenAI Responses protocol plus
 provider policy. All browser-facing code lives under `vendor/runtime/src/browser/`; reusable
 mechanics are direct modules and ChatGPT browser behavior has its own subdirectory.
-See the canonical [provider-neutral runtime boundary review](review/daemon-boundary.md) and the
-[Browser and provider boundary review](review/browser-provider-boundary.md).
 
 ### Core (`vendor/runtime/src/core/`)
 
@@ -83,5 +81,4 @@ modules under `core/` do not import adapter modules. Upstream Codex route mutati
 migration, and legacy route CLI commands were removed.
 
 `browser/chatgpt-web/` is the explicit provider-specific browser boundary. Direct modules in
-`browser/` remain provider-neutral. See the
-[Browser and provider boundary review](review/browser-provider-boundary.md).
+`browser/` remain provider-neutral.
