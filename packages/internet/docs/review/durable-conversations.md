@@ -117,7 +117,7 @@ The provider name is already `chatgpt-web`, but exposed model ids were `chatgpt-
 as `chatgpt-web/chatgpt-web/high`.
 
 **Resolution:** provider metadata now exposes local ids (`light`, `medium`, `high`, `extra-high`,
-`pro`, `luna`). Request adaptation maps each local id to the daemon's canonical
+`pro`). Request adaptation maps each local id to the daemon's canonical
 `chatgpt-web/<id>` route. The display is now `chatgpt-web/high`; no legacy provider-model aliases are
 published.
 

@@ -6,10 +6,10 @@ describe("internet council tool", () => {
 		const run = vi.fn(async () => ({
 			answer: "synthesis",
 			members: [
-				{ model: "chatgpt-web/luna", response: "first" },
+				{ model: "chatgpt-web/high", response: "first" },
 				{ model: "chatgpt-web/sol", response: "second" },
 			],
-			chair: "chatgpt-web/luna",
+			chair: "chatgpt-web/high",
 			preset: "quick" as const,
 		}));
 		const tool = captureTools((host) => registerCouncilTool(host, { run })).get("internet_council");

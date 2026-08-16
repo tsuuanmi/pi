@@ -11,6 +11,8 @@
   existing mode-bearing account and daemon configuration must be recreated.
 - Remove daemon configuration versions and external browser-launcher/CDP host support; managed
   Chrome is now the only browser host, and obsolete configurations must be recreated.
+- Require canonical Sol ChatGPT Web accounts; Luna routes, rolling checkpoint state, and Luna-only
+  persisted login/configuration metadata are removed and must be recreated.
 - Replace the `codex-chatgpt-web` runtime identity with the Pi-owned provider-neutral `vendor/runtime`
   package; existing runtime state, journals, browser state, and old environment variables must be
   recreated.
@@ -34,7 +36,7 @@
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
   lifecycle management, graceful shutdown, and the `internet_daemon` tool.
 - Implement ChatGPT Web provider registration through Pi's native `openai-responses` transport,
-  including canonical Sol/Luna model metadata and multiple local daemon accounts.
+  including canonical Sol and capability-gated Pro model metadata and multiple local daemon accounts.
 - Add secure daemon configuration, health, compaction, and admin control clients; account registry
   persistence; status, compact, control, and account tools; HUD status; and lifecycle hooks.
 - Add focused tests for provider composition, daemon boundaries, account persistence, tools, hooks,
@@ -63,8 +65,8 @@
   Responses streaming while the daemon owns browser automation and replay.
 - Update package dependencies, exports, README, and architecture/runtime/integration documentation
   to match current public APIs and implemented behavior.
-- Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
-  conservative documented output ceiling.
+- Mirror the daemon's fixed-effort model routes, gate Pro availability, and use a conservative
+  documented output ceiling.
 - Publish concise provider-local model ids so model selection renders as `chatgpt-web/high` instead
   of `chatgpt-web/chatgpt-web/high`; map them to canonical daemon routes at the request boundary.
 - Keep the headed daemon/browser reusable for 60 quiet seconds, use a 700×500 window at `(0,0)`, and
@@ -72,13 +74,14 @@
 - Use one durable ChatGPT conversation for browser-only and Full harness turns; reject attachments and ambiguous, replayed, or diverged turns before another browser submit.
 - Enforce the provider-neutral runtime boundary: configuration paths, process/service lifecycle,
   bounded I/O, and HTTP hosting remain in core; ChatGPT configuration, routes, Responses protocol,
-  login state, setup, and diagnostics live under `vendor/runtime/src/adapters/chatgpt-web/`.
+  login state, setup, and diagnostics live under `vendor/runtime/src/providers/chatgpt-web/`.
 - Use `Pi Internet` as the fresh connector identity.
 
 ### Removed
 
 - Remove browser-host selectors, launcher descriptors, helper IPC, ownership handoff, and launcher
   diagnostics from the ChatGPT Web runtime.
+- Remove Luna routing, rolling checkpoints, and Luna-specific context/compaction paths.
 - Remove upstream Codex route mutation, route CLI commands, journal migration, and legacy connector
   compatibility paths.
 - Remove the obsolete ChatGPT conversation-mode configuration and account tool.

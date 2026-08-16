@@ -7,61 +7,67 @@ relationships. The TypeScript source remains authoritative for exact implementat
 ## Architecture at a glance
 
 - `core/` contains the HTTP host, process/service lifecycle, configuration, and event primitives.
-- `adapters/chatgpt-web/protocol/` translates OpenAI Responses requests and events.
-- `adapters/chatgpt-web/browser/` drives the authenticated ChatGPT Web UI.
-- `adapters/chatgpt-web/turn/` coordinates trusted task metadata, sessions, and tool brokering.
-- `adapters/chatgpt-web/conversation/` protects durable continuation and replay semantics.
-- `adapters/chatgpt-web/transport/` handles native forwarding, tunnel management, and wire capture.
-- `adapters/chatgpt-web/lifecycle/` owns setup, diagnostics, and administrative control.
+- `browser/` contains reusable browser session, turn, and response-capture mechanics.
+- `providers/chatgpt-web/protocol/` translates OpenAI Responses requests and events.
+- `providers/chatgpt-web/browser/` drives the authenticated ChatGPT Web UI.
+- `providers/chatgpt-web/turn/` coordinates trusted task metadata, sessions, and tool brokering.
+- `providers/chatgpt-web/conversation/` protects durable continuation and replay semantics.
+- `providers/chatgpt-web/transport/` handles native forwarding, tunnel management, and wire capture.
+- `providers/chatgpt-web/lifecycle/` owns setup, diagnostics, and administrative control.
 
 ## Source-mirrored reference
 
-### `adapters/`
+### `providers/chatgpt-web/`
 
-- [`adapters/chatgpt-web/adapter-error.ts`](adapters/chatgpt-web/adapter-error.md)
-- [`adapters/chatgpt-web/adapter.ts`](adapters/chatgpt-web/adapter.md)
-- [`adapters/chatgpt-web/browser/login-state.ts`](adapters/chatgpt-web/browser/login-state.md)
-- [`adapters/chatgpt-web/browser/login.ts`](adapters/chatgpt-web/browser/login.md)
-- [`adapters/chatgpt-web/browser/session.ts`](adapters/chatgpt-web/browser/session.md)
-- [`adapters/chatgpt-web/browser/worker.ts`](adapters/chatgpt-web/browser/worker.md)
-- [`adapters/chatgpt-web/content/image.ts`](adapters/chatgpt-web/content/image.md)
-- [`adapters/chatgpt-web/content/markdown.ts`](adapters/chatgpt-web/content/markdown.md)
-- [`adapters/chatgpt-web/content/prompt.ts`](adapters/chatgpt-web/content/prompt.md)
-- [`adapters/chatgpt-web/content/tokens.ts`](adapters/chatgpt-web/content/tokens.md)
-- [`adapters/chatgpt-web/content/turndown-plugin-gfm.d.ts`](adapters/chatgpt-web/content/turndown-plugin-gfm.d.md)
-- [`adapters/chatgpt-web/content/usage.ts`](adapters/chatgpt-web/content/usage.md)
-- [`adapters/chatgpt-web/conversation/canary.ts`](adapters/chatgpt-web/conversation/canary.md)
-- [`adapters/chatgpt-web/conversation/journal.ts`](adapters/chatgpt-web/conversation/journal.md)
-- [`adapters/chatgpt-web/conversation/rolling-checkpoint.ts`](adapters/chatgpt-web/conversation/rolling-checkpoint.md)
-- [`adapters/chatgpt-web/conversation/sync.ts`](adapters/chatgpt-web/conversation/sync.md)
-- [`adapters/chatgpt-web/lifecycle/config.ts`](adapters/chatgpt-web/lifecycle/config.md)
-- [`adapters/chatgpt-web/lifecycle/control.ts`](adapters/chatgpt-web/lifecycle/control.md)
-- [`adapters/chatgpt-web/lifecycle/doctor.ts`](adapters/chatgpt-web/lifecycle/doctor.md)
-- [`adapters/chatgpt-web/lifecycle/setup.ts`](adapters/chatgpt-web/lifecycle/setup.md)
-- [`adapters/chatgpt-web/models/catalog.ts`](adapters/chatgpt-web/models/catalog.md)
-- [`adapters/chatgpt-web/models/model.ts`](adapters/chatgpt-web/models/model.md)
-- [`adapters/chatgpt-web/models/models.ts`](adapters/chatgpt-web/models/models.md)
-- [`adapters/chatgpt-web/protocol/responses/bridge.ts`](adapters/chatgpt-web/protocol/responses/bridge.md)
-- [`adapters/chatgpt-web/protocol/responses/compaction.ts`](adapters/chatgpt-web/protocol/responses/compaction.md)
-- [`adapters/chatgpt-web/protocol/responses/errors.ts`](adapters/chatgpt-web/protocol/responses/errors.md)
-- [`adapters/chatgpt-web/protocol/responses/parser.ts`](adapters/chatgpt-web/protocol/responses/parser.md)
-- [`adapters/chatgpt-web/protocol/responses/reasoning-envelope.ts`](adapters/chatgpt-web/protocol/responses/reasoning-envelope.md)
-- [`adapters/chatgpt-web/protocol/responses/schema.ts`](adapters/chatgpt-web/protocol/responses/schema.md)
-- [`adapters/chatgpt-web/protocol/responses/state.ts`](adapters/chatgpt-web/protocol/responses/state.md)
-- [`adapters/chatgpt-web/protocol/types.ts`](adapters/chatgpt-web/protocol/types.md)
-- [`adapters/chatgpt-web/server/routes.ts`](adapters/chatgpt-web/server/routes.md)
-- [`adapters/chatgpt-web/tools/mcp-server.ts`](adapters/chatgpt-web/tools/mcp-server.md)
-- [`adapters/chatgpt-web/tools/web-search/synthetic-tool.ts`](adapters/chatgpt-web/tools/web-search/synthetic-tool.md)
-- [`adapters/chatgpt-web/transport/native-passthrough.ts`](adapters/chatgpt-web/transport/native-passthrough.md)
-- [`adapters/chatgpt-web/transport/tunnel-service.ts`](adapters/chatgpt-web/transport/tunnel-service.md)
-- [`adapters/chatgpt-web/transport/tunnel.ts`](adapters/chatgpt-web/transport/tunnel.md)
-- [`adapters/chatgpt-web/transport/wire-capture.ts`](adapters/chatgpt-web/transport/wire-capture.md)
-- [`adapters/chatgpt-web/transport/wire-response.ts`](adapters/chatgpt-web/transport/wire-response.md)
-- [`adapters/chatgpt-web/turn/adapter.ts`](adapters/chatgpt-web/turn/adapter.md)
-- [`adapters/chatgpt-web/turn/broker.ts`](adapters/chatgpt-web/turn/broker.md)
-- [`adapters/chatgpt-web/turn/environment.ts`](adapters/chatgpt-web/turn/environment.md)
-- [`adapters/chatgpt-web/turn/execution.ts`](adapters/chatgpt-web/turn/execution.md)
-- [`adapters/chatgpt-web/turn/thread-environment.ts`](adapters/chatgpt-web/turn/thread-environment.md)
+- [`providers/chatgpt-web/adapter-error.ts`](providers/chatgpt-web/adapter-error.md)
+- [`providers/chatgpt-web/adapter.ts`](providers/chatgpt-web/adapter.md)
+- [`providers/chatgpt-web/browser/login-state.ts`](providers/chatgpt-web/browser/login-state.md)
+- [`providers/chatgpt-web/browser/login.ts`](providers/chatgpt-web/browser/login.md)
+- [`providers/chatgpt-web/browser/session.ts`](providers/chatgpt-web/browser/session.md)
+- [`providers/chatgpt-web/browser/worker.ts`](providers/chatgpt-web/browser/worker.md)
+- [`providers/chatgpt-web/content/image.ts`](providers/chatgpt-web/content/image.md)
+- [`providers/chatgpt-web/content/markdown.ts`](providers/chatgpt-web/content/markdown.md)
+- [`providers/chatgpt-web/content/prompt.ts`](providers/chatgpt-web/content/prompt.md)
+- [`providers/chatgpt-web/content/tokens.ts`](providers/chatgpt-web/content/tokens.md)
+- [`providers/chatgpt-web/content/turndown-plugin-gfm.d.ts`](providers/chatgpt-web/content/turndown-plugin-gfm.d.md)
+- [`providers/chatgpt-web/content/usage.ts`](providers/chatgpt-web/content/usage.md)
+- [`providers/chatgpt-web/conversation/canary.ts`](providers/chatgpt-web/conversation/canary.md)
+- [`providers/chatgpt-web/conversation/journal.ts`](providers/chatgpt-web/conversation/journal.md)
+- [`providers/chatgpt-web/conversation/sync.ts`](providers/chatgpt-web/conversation/sync.md)
+- [`providers/chatgpt-web/lifecycle/config.ts`](providers/chatgpt-web/lifecycle/config.md)
+- [`providers/chatgpt-web/lifecycle/control.ts`](providers/chatgpt-web/lifecycle/control.md)
+- [`providers/chatgpt-web/lifecycle/doctor.ts`](providers/chatgpt-web/lifecycle/doctor.md)
+- [`providers/chatgpt-web/lifecycle/setup.ts`](providers/chatgpt-web/lifecycle/setup.md)
+- [`providers/chatgpt-web/models/catalog.ts`](providers/chatgpt-web/models/catalog.md)
+- [`providers/chatgpt-web/models/model.ts`](providers/chatgpt-web/models/model.md)
+- [`providers/chatgpt-web/models/models.ts`](providers/chatgpt-web/models/models.md)
+- [`providers/chatgpt-web/protocol/responses/bridge.ts`](providers/chatgpt-web/protocol/responses/bridge.md)
+- [`providers/chatgpt-web/protocol/responses/compaction.ts`](providers/chatgpt-web/protocol/responses/compaction.md)
+- [`providers/chatgpt-web/protocol/responses/errors.ts`](providers/chatgpt-web/protocol/responses/errors.md)
+- [`providers/chatgpt-web/protocol/responses/parser.ts`](providers/chatgpt-web/protocol/responses/parser.md)
+- [`providers/chatgpt-web/protocol/responses/reasoning-envelope.ts`](providers/chatgpt-web/protocol/responses/reasoning-envelope.md)
+- [`providers/chatgpt-web/protocol/responses/schema.ts`](providers/chatgpt-web/protocol/responses/schema.md)
+- [`providers/chatgpt-web/protocol/responses/state.ts`](providers/chatgpt-web/protocol/responses/state.md)
+- [`providers/chatgpt-web/protocol/types.ts`](providers/chatgpt-web/protocol/types.md)
+- [`providers/chatgpt-web/server/routes.ts`](providers/chatgpt-web/server/routes.md)
+- [`providers/chatgpt-web/tools/mcp-server.ts`](providers/chatgpt-web/tools/mcp-server.md)
+- [`providers/chatgpt-web/tools/web-search/synthetic-tool.ts`](providers/chatgpt-web/tools/web-search/synthetic-tool.md)
+- [`providers/chatgpt-web/transport/native-passthrough.ts`](providers/chatgpt-web/transport/native-passthrough.md)
+- [`providers/chatgpt-web/transport/tunnel-service.ts`](providers/chatgpt-web/transport/tunnel-service.md)
+- [`providers/chatgpt-web/transport/tunnel.ts`](providers/chatgpt-web/transport/tunnel.md)
+- [`providers/chatgpt-web/transport/wire-capture.ts`](providers/chatgpt-web/transport/wire-capture.md)
+- [`providers/chatgpt-web/transport/wire-response.ts`](providers/chatgpt-web/transport/wire-response.md)
+- [`providers/chatgpt-web/turn/adapter.ts`](providers/chatgpt-web/turn/adapter.md)
+- [`providers/chatgpt-web/turn/broker.ts`](providers/chatgpt-web/turn/broker.md)
+- [`providers/chatgpt-web/turn/environment.ts`](providers/chatgpt-web/turn/environment.md)
+- [`providers/chatgpt-web/turn/execution.ts`](providers/chatgpt-web/turn/execution.md)
+- [`providers/chatgpt-web/turn/thread-environment.ts`](providers/chatgpt-web/turn/thread-environment.md)
+
+### `browser/`
+
+- [`browser/session.ts`](browser/session.md)
+- [`browser/response-capture.ts`](browser/response-capture.md)
+- [`browser/turn.ts`](browser/turn.md)
 
 ### `core/`
 

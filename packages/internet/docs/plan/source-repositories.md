@@ -20,21 +20,21 @@ All daemon table paths below are relative to `vendor/runtime/`.
 | Runtime paths / durable commands | `src/core/config.ts` |
 | Process and service lifecycle | `src/core/process.ts`, `src/core/service.ts` |
 | HTTP body limits | `src/core/http-body.ts` |
-| ChatGPT loopback routes | `src/adapters/chatgpt-web/server/routes.ts` |
-| Responses SSE bridge + batch builder | `src/adapters/chatgpt-web/protocol/responses/bridge.ts` |
-| Request parsing (Responses → internal) | `src/adapters/chatgpt-web/protocol/responses/parser.ts` |
-| Responses schema / state / compaction | `src/adapters/chatgpt-web/protocol/responses/{schema,state,compaction}.ts` |
-| Reasoning envelope and error classification | `src/adapters/chatgpt-web/protocol/responses/{reasoning-envelope,errors}.ts` |
-| ChatGPT config / defaults / validation | `src/adapters/chatgpt-web/lifecycle/config.ts` |
-| Adapter types (`ParsedRequest`, `AdapterEvent`, `Usage`) | `src/adapters/chatgpt-web/protocol/types.ts` |
-| Native passthrough and wire transport | `src/adapters/chatgpt-web/transport/` |
-| Model catalog and route resolution | `src/adapters/chatgpt-web/models/` |
-| ChatGPT turn contract and execution | `src/adapters/chatgpt-web/turn/` |
-| **Browser automation and login** | `src/adapters/chatgpt-web/browser/` |
-| **Durable conversation state** | `src/adapters/chatgpt-web/conversation/` |
-| MCP and synthetic web-search tools | `src/adapters/chatgpt-web/tools/` |
-| Prompt, content, token, and usage conversion | `src/adapters/chatgpt-web/content/` |
-| Setup, doctor, connector, and control | `src/adapters/chatgpt-web/lifecycle/` |
+| ChatGPT loopback routes | `src/providers/chatgpt-web/server/routes.ts` |
+| Responses SSE bridge + batch builder | `src/providers/chatgpt-web/protocol/responses/bridge.ts` |
+| Request parsing (Responses → internal) | `src/providers/chatgpt-web/protocol/responses/parser.ts` |
+| Responses schema / state / compaction | `src/providers/chatgpt-web/protocol/responses/{schema,state,compaction}.ts` |
+| Reasoning envelope and error classification | `src/providers/chatgpt-web/protocol/responses/{reasoning-envelope,errors}.ts` |
+| ChatGPT config / defaults / validation | `src/providers/chatgpt-web/lifecycle/config.ts` |
+| Adapter types (`ParsedRequest`, `AdapterEvent`, `Usage`) | `src/providers/chatgpt-web/protocol/types.ts` |
+| Native passthrough and wire transport | `src/providers/chatgpt-web/transport/` |
+| Model catalog and route resolution | `src/providers/chatgpt-web/models/` |
+| ChatGPT turn contract and execution | `src/providers/chatgpt-web/turn/` |
+| **Browser automation and login** | `src/providers/chatgpt-web/browser/` |
+| **Durable conversation state** | `src/providers/chatgpt-web/conversation/` |
+| MCP and synthetic web-search tools | `src/providers/chatgpt-web/tools/` |
+| Prompt, content, token, and usage conversion | `src/providers/chatgpt-web/content/` |
+| Setup, doctor, connector, and control | `src/providers/chatgpt-web/lifecycle/` |
 | Upstream Codex `config.toml` edits | Removed; Pi owns route and account configuration |
 | CLI entry | `src/cli.ts` |
 

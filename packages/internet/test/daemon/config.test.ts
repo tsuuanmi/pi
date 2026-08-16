@@ -29,10 +29,9 @@ describe("owned daemon config", () => {
 		expect(defaultChromeExecutable("darwin")).toBe("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
 	});
 
-	it("uses the daemon's default Sol capability before config exists", async () => {
+	it("uses the standard account capability before config exists", async () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-capabilities-missing-"));
 		await expect(readOwnedDaemonCapabilities(account(configDir))).resolves.toEqual({
-			solAvailable: true,
 			proAvailable: false,
 		});
 	});
@@ -131,7 +130,6 @@ describe("owned daemon config", () => {
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		await expect(readOwnedDaemonCapabilities(target)).resolves.toEqual({
-			solAvailable: true,
 			proAvailable: false,
 		});
 	});
@@ -155,7 +153,7 @@ describe("owned daemon config", () => {
 		await expect(daemonLoginExists(target)).resolves.toBe(false);
 		await writeFile(
 			daemonLoginMarkerPath(target),
-			JSON.stringify({ version: 1, authenticated: true, verifiedAt: new Date().toISOString() }),
+			JSON.stringify({ version: 2, authenticated: true, verifiedAt: new Date().toISOString(), proAvailable: false }),
 		);
 		await expect(daemonLoginExists(target)).resolves.toBe(true);
 	});

@@ -22,7 +22,6 @@ const OWNED_DAEMON_CONFIG_FIELDS = new Set([
 	"browserWindowPositionY",
 	"idleShutdownMs",
 	"conversationStateDir",
-	"solAvailable",
 	"proAvailable",
 	"autoApproveToolCalls",
 	"controlToken",
@@ -76,7 +75,6 @@ export interface OwnedDaemonConfig {
 	browserWindowPositionY: number;
 	idleShutdownMs: number;
 	conversationStateDir: string;
-	solAvailable: boolean;
 	proAvailable: boolean;
 	autoApproveToolCalls: false;
 	controlToken: string;
@@ -92,7 +90,6 @@ export interface OwnedDaemonConfigOptions {
 }
 
 export interface DaemonCapabilities {
-	solAvailable: boolean;
 	proAvailable: boolean;
 }
 
@@ -112,7 +109,12 @@ export async function daemonLoginExists(account: OpenAiInternetAccount): Promise
 	try {
 		await stat(join(account.configDir, "browser", "storage-state.json"));
 		const marker = JSON.parse(await readFile(daemonLoginMarkerPath(account), "utf8")) as Record<string, unknown>;
-		return marker.version === 1 && marker.authenticated === true && typeof marker.verifiedAt === "string";
+		return (
+			marker.version === 2 &&
+			marker.authenticated === true &&
+			typeof marker.verifiedAt === "string" &&
+			typeof marker.proAvailable === "boolean"
+		);
 	} catch {
 		return false;
 	}
@@ -122,9 +124,9 @@ export async function readOwnedDaemonCapabilities(account: OpenAiInternetAccount
 	try {
 		const config: unknown = JSON.parse(await readFile(daemonConfigPath(account), "utf8"));
 		validateOwnedConfig(config, account);
-		return { solAvailable: config.solAvailable, proAvailable: config.proAvailable };
+		return { proAvailable: config.proAvailable };
 	} catch (error) {
-		if ((error as NodeJS.ErrnoException).code === "ENOENT") return { solAvailable: true, proAvailable: false };
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return { proAvailable: false };
 		throw error;
 	}
 }
@@ -134,10 +136,9 @@ export async function syncOwnedDaemonCapabilities(account: OpenAiInternetAccount
 	const config: unknown = JSON.parse(await readFile(path, "utf8"));
 	validateOwnedConfig(config, account);
 	const marker = JSON.parse(await readFile(daemonLoginMarkerPath(account), "utf8")) as Record<string, unknown>;
-	const solAvailable = marker.solAvailable === true;
-	const proAvailable = solAvailable && marker.proAvailable === true;
-	if (config.solAvailable === solAvailable && config.proAvailable === proAvailable) return;
-	await writePrivateJson(path, { ...config, solAvailable, proAvailable });
+	const proAvailable = marker.proAvailable === true;
+	if (config.proAvailable === proAvailable) return;
+	await writePrivateJson(path, { ...config, proAvailable });
 }
 
 export async function ensureOwnedDaemonConfig(
@@ -196,7 +197,6 @@ export async function ensureOwnedDaemonConfig(
 		browserWindowPositionY: BROWSER_WINDOW_POSITION_Y,
 		idleShutdownMs: BROWSER_IDLE_SHUTDOWN_MS,
 		conversationStateDir: join(account.configDir, "conversations"),
-		solAvailable: existing?.solAvailable ?? true,
 		proAvailable: existing?.proAvailable ?? false,
 		autoApproveToolCalls: false,
 		controlToken: existing?.controlToken ?? randomBytes(32).toString("base64url"),
@@ -274,7 +274,7 @@ function validateOwnedConfig(value: unknown, account: OpenAiInternetAccount): as
 	) {
 		throw new Error(`Invalid owned daemon runtime command: ${path}`);
 	}
-	if (typeof config.solAvailable !== "boolean" || typeof config.proAvailable !== "boolean") {
+	if (typeof config.proAvailable !== "boolean") {
 		throw new Error(`Invalid owned daemon capabilities: ${path}`);
 	}
 	if (config.mode === "full") {

@@ -199,7 +199,7 @@ The original `review-and-brainstorm.md` framed the MVP as "provider + thin tools
 Since then the following have been implemented and are now production scope:
 
 - **R1 — Fixed-effort model metadata.** Models mirror the daemon's single-immutable-effort routes
-  (`light`/`medium`/`high`/`extra-high`/`pro`/`luna`), capability-gated, with a conservative 16,384
+  (`light`/`medium`/`high`/`extra-high`/`pro`), capability-gated for Pro, with a conservative 16,384
   output ceiling. Provider-local ids render as `chatgpt-web/high` instead of a doubled prefix.
 - **R2 — `autoLogin` opt-out flag.** Lazy login is opt-out via `internet_settings`; headless users
   are not surprised by a Chrome window.

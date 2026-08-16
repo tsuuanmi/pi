@@ -7,7 +7,7 @@ package wraps), and it defines the browser contract the package should own.
 Status: **current implementation.**
 
 > **Source:** the browser behavior is implemented under
-> `vendor/runtime/src/adapters/chatgpt-web/` in this package:
+> `vendor/runtime/src/providers/chatgpt-web/` in this package:
 > `browser/worker.ts`, `browser/login.ts`, and `browser/session.ts`.
 
 ---

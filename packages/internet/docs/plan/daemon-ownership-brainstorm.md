@@ -72,10 +72,10 @@ a major footprint and portability tradeoff that must be accepted explicitly.
 
 ### 2.1 The macOS gate is narrow
 
-The macOS-only error came from a check in `src/adapters/chatgpt-web/lifecycle/setup.ts`, which blocked
+The macOS-only error came from a check in `src/providers/chatgpt-web/lifecycle/setup.ts`, which blocked
 **terminal-only managed Chrome setup** on non-macOS. It is **not** a general platform restriction:
 
-- `loginToChatGpt` (`src/adapters/chatgpt-web/browser/login.ts`) — the `login` subcommand — was not
+- `loginToChatGpt` (`src/providers/chatgpt-web/browser/login.ts`) — the `login` subcommand — was not
   macOS-gated.
 - `serve` (`src/cli.ts`) — the daemon HTTP server — is **not** macOS-gated.
 
@@ -84,7 +84,7 @@ So the daemon can run and log in on Linux; only the `setup` convenience flow is 
 ### 2.2 The isolated browser already exists
 
 `loginToChatGpt` launches Chrome with a **dedicated `--user-data-dir` profile**
-(`src/adapters/chatgpt-web/browser/login.ts:332-342`) and stores the authenticated session in a private
+(`src/providers/chatgpt-web/browser/login.ts:332-342`) and stores the authenticated session in a private
 `storageStatePath`. This is exactly the "isolated browser so it doesn't break my working browser"
 requirement — it is the daemon's `managed-chrome` mode. The user's normal Chrome profile is never
 touched.
@@ -102,7 +102,7 @@ The runtime has a `bin` entry (`pi-internet-runtime` → `./src/cli.ts`) and loa
 
 ### 2.5 Default Linux Chrome
 
-`src/adapters/chatgpt-web/lifecycle/config.ts` defaults to `/usr/bin/google-chrome`. The daemon already resolves a Chrome
+`src/providers/chatgpt-web/lifecycle/config.ts` defaults to `/usr/bin/google-chrome`. The daemon already resolves a Chrome
 executable for the isolated profile.
 
 ---

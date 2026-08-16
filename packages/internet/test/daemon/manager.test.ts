@@ -23,10 +23,9 @@ async function account(): Promise<OpenAiInternetAccount> {
 
 function authenticatedMarker() {
 	return {
-		version: 1,
+		version: 2,
 		authenticated: true,
 		verifiedAt: new Date().toISOString(),
-		solAvailable: true,
 		proAvailable: false,
 	};
 }

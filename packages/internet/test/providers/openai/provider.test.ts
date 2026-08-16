@@ -20,11 +20,9 @@ async function account(): Promise<OpenAiInternetAccount> {
 		releaseVersion: "0.1.0",
 		runtimeCommand: ["/runtime/bin/daemon"],
 	});
-	await writeFile(
-		join(configDir, "config.json"),
-		`${JSON.stringify({ ...config, solAvailable: false, proAvailable: false })}\n`,
-		{ mode: 0o600 },
-	);
+	await writeFile(join(configDir, "config.json"), `${JSON.stringify({ ...config, proAvailable: false })}\n`, {
+		mode: 0o600,
+	});
 	return target;
 }
 
@@ -37,7 +35,7 @@ describe("OpenAI provider registration", () => {
 			baseUrl: "http://127.0.0.1:18001/v1",
 			authHeader: false,
 		});
-		expect(config.models?.map((model) => model.id)).toEqual(["luna"]);
+		expect(config.models?.map((model) => model.id)).toEqual(["light", "medium", "high"]);
 		expect(config).not.toHaveProperty("stream");
 	});
 

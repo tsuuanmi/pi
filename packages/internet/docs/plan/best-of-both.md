@@ -12,7 +12,7 @@ Status: **historical design record.** Authoritative wire capture is implemented 
 browser runtime; Fusion remains a proposal.
 
 > **Source:** current capture implementation is under
-> `vendor/runtime/src/adapters/chatgpt-web/transport/`; current provider orchestration is under
+> `vendor/runtime/src/providers/chatgpt-web/transport/`; current provider orchestration is under
 > `src/council/`. See [source-repositories.md](source-repositories.md).
 
 ---

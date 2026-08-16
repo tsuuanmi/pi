@@ -23,25 +23,37 @@ async function sourceFiles(directory: string): Promise<string[]> {
 }
 
 describe("runtime source boundary", () => {
-	it("keeps adapter imports out of core modules", async () => {
+	it("keeps browser and provider imports out of core modules", async () => {
 		const files = await sourceFiles(join(runtimeSource, "core"));
 		const sources = await Promise.all(files.map((file) => readFile(file, "utf8")));
-		for (const source of sources) expect(source).not.toMatch(/adapters\/chatgpt-web/);
+		for (const source of sources) {
+			expect(source).not.toMatch(/(?:from|import\s*\()\s*["'][^"']*(?:browser|providers\/chatgpt-web)/);
+		}
 	});
 
-	it("keeps provider protocol modules inside the ChatGPT adapter", async () => {
+	it("keeps providers out of the reusable browser runtime", async () => {
+		const files = await sourceFiles(join(runtimeSource, "browser"));
+		const sources = await Promise.all(files.map((file) => readFile(file, "utf8")));
+		for (const source of sources) {
+			expect(source).not.toMatch(/(?:from|import\s*\()\s*["'][^"']*providers\/chatgpt-web/);
+		}
+	});
+
+	it("keeps provider protocol modules inside the ChatGPT provider", async () => {
 		for (const removed of ["bridge.ts", "login-state.ts", "types.ts", "responses", "config.ts", "server.ts"]) {
 			expect(await exists(join(runtimeSource, removed))).toBe(false);
 		}
 		for (const current of [
 			"core/config.ts",
 			"core/server.ts",
-			"adapters/chatgpt-web/lifecycle/config.ts",
-			"adapters/chatgpt-web/server/routes.ts",
-			"adapters/chatgpt-web/protocol/types.ts",
-			"adapters/chatgpt-web/protocol/responses/bridge.ts",
-			"adapters/chatgpt-web/browser/login-state.ts",
-			"adapters/chatgpt-web/transport/wire-response.ts",
+			"browser/session.ts",
+			"browser/response-capture.ts",
+			"providers/chatgpt-web/lifecycle/config.ts",
+			"providers/chatgpt-web/server/routes.ts",
+			"providers/chatgpt-web/protocol/types.ts",
+			"providers/chatgpt-web/protocol/responses/bridge.ts",
+			"providers/chatgpt-web/browser/login-state.ts",
+			"providers/chatgpt-web/transport/wire-response.ts",
 		]) {
 			expect(await exists(join(runtimeSource, current))).toBe(true);
 		}

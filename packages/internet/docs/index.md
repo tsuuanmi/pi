@@ -69,6 +69,7 @@ bridging, and safe public web access.
 - [Implementation review](review/implementation-review.md)
 - [Durable conversation lifecycle and recovery](review/durable-conversations.md)
 - [Provider-neutral runtime boundary](review/daemon-boundary.md)
+- [Browser and provider boundary brainstorm](review/browser-provider-boundary.md)
 - [Former `codex-chatgpt-web` runtime review](review/codex-chatgpt-web-review.md)
 
 The brainstorm/review files preserve design history. Source and the mirrored references above are the

@@ -26,7 +26,11 @@ packages/internet/vendor/runtime/
 │   │   ├── process.ts
 │   │   ├── server.ts
 │   │   └── service.ts
-│   └── adapters/chatgpt-web/
+│   ├── browser/                       # provider-neutral browser runtime
+│   │   ├── session.ts
+│   │   ├── turn.ts
+│   │   └── response-capture.ts
+│   └── providers/chatgpt-web/
 │       ├── adapter.ts                 # adapter entrypoint
 │       ├── adapter-error.ts
 │       ├── browser/
@@ -44,19 +48,21 @@ packages/internet/vendor/runtime/
 └── LICENSE
 ```
 
-`src/cli.ts` composes the core and ChatGPT adapter. Core modules expose runtime-home, atomic-write,
-durable-command, process/service, bounded-body/event, and HTTP-hosting primitives. They never import
-the adapter. The adapter owns every ChatGPT URL, browser selector, connector, model, login,
-conversation, OpenAI Responses, and Codex-native concept.
+`src/cli.ts` composes the core, reusable browser runtime, and ChatGPT provider. Core modules expose
+runtime-home, atomic-write, durable-command, process/service, bounded-body/event, and HTTP-hosting
+primitives. Browser modules own Playwright session, turn, timeout, capture, and cleanup mechanics;
+they never import provider code. The provider owns every ChatGPT URL, browser selector, connector,
+model, login, conversation, OpenAI Responses, and Codex-native concept.
 
 ## Feature ownership
 
 | Area | Responsibility |
 | --- | --- |
 | `src/core/` | Neutral paths, process/service lifecycle, HTTP host, bounded I/O, runtime version |
-| `adapter.ts` | ChatGPT adapter entrypoint and turn construction |
-| `browser/` | Login, browser worker, filtered storage state, session, concurrency policy |
-| `conversation/` | Durable conversation journal, sync, canary, rolling checkpoints |
+| `src/browser/` | Browser session/context/page ownership, bounded turns, stages, response capture, cleanup |
+| `adapter.ts` | ChatGPT provider entrypoint and turn construction |
+| `browser/` under provider | ChatGPT login, selectors, filtered storage state, and provider worker |
+| `conversation/` | Durable conversation journal, sync, and canary |
 | `content/` | Prompt, markdown, image, token, and usage conversion |
 | `lifecycle/` | ChatGPT config, setup, doctor, connector identity, control |
 | `models/` | Model routes, model metadata, catalog projection |
@@ -68,7 +74,8 @@ conversation, OpenAI Responses, and Codex-native concept.
 
 Responses translation remains adapter-owned: schemas, continuation state, compaction, reasoning
 envelopes, errors, and SSE event names implement the OpenAI/Codex protocol consumed by this adapter.
-A future adapter may reuse the neutral host and lifecycle primitives without inheriting that protocol.
+A future provider may reuse the neutral host and browser runtime without inheriting that protocol or
+ChatGPT browser policy.
 
 ## Removed
 
@@ -80,8 +87,8 @@ A future adapter may reuse the neutral host and lifecycle primitives without inh
 - root-level provider types, Responses modules, login state, setup, diagnostics, and route server;
 - old launcher/environment names, dead process-line writer, and obsolete build scaffolding.
 
-There is one runtime launcher, one state/config schema, one ChatGPT adapter, and one authoritative
-implementation for each behavior.
+There is one runtime launcher, one state/config schema, one ChatGPT provider, and one authoritative
+implementation for each behavior. Browser mechanics are implemented once in `src/browser/`.
 
 ## Parent package updates
 
@@ -95,7 +102,7 @@ implementation for each behavior.
 
 ## Invariants
 
-- Core modules never import `adapters/chatgpt-web/`; only `cli.ts` composes the adapter.
+- Core modules never import `providers/chatgpt-web/`; only `cli.ts` composes the adapter.
 - Adapter code may depend inward on `core/` primitives.
 - The runtime binds only to `127.0.0.1`; authenticated control routes use the current account token.
 - Configuration accepts only the current explicit field set and rejects unsupported fields.

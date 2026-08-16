@@ -76,7 +76,7 @@ disables login prompting while preserving start of already authenticated account
 
 The browser adapter captures the authenticated conversation response from the authenticated wire
 protocol. If the payload is invalid or absent, the turn fails clearly; DOM extraction is not used as
-an answer fallback. Durable conversation replay, Luna rolling checkpoints, model capability gates,
+an answer fallback. Durable conversation replay, model capability gates,
 and Pi's built-in `openai-responses` SSE transport remain authoritative.
 
 ## Council

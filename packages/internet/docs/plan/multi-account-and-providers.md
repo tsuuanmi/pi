@@ -6,7 +6,7 @@ tradeoffs.
 
 > **Source:** the account = daemon-instance model is implemented by `src/accounts/registry.ts` and
 > `src/daemon/config.ts`; the vendored daemon configuration is under
-> `vendor/runtime/src/adapters/chatgpt-web/lifecycle/config.ts`. See [source-repositories.md](source-repositories.md).
+> `vendor/runtime/src/providers/chatgpt-web/lifecycle/config.ts`. See [source-repositories.md](source-repositories.md).
 
 - **Implemented:** ChatGPT Web via one account-scoped daemon per configured account.
 - **Implemented:** multiple ChatGPT accounts plus Anthropic and Gemini API providers.
@@ -19,7 +19,7 @@ Status: **historical design record.** See current source and `docs/architecture.
 
 ## 1. The core model: account = daemon instance
 
-The decisive fact (confirmed in `vendor/runtime/src/adapters/chatgpt-web/lifecycle/config.ts`): a
+The decisive fact (confirmed in `vendor/runtime/src/providers/chatgpt-web/lifecycle/config.ts`): a
 runtime instance is a **single account/session**. Its identity is its config dir, chosen by
 `PI_INTERNET_RUNTIME_HOME`, and
 it owns its own:

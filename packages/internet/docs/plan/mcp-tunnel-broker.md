@@ -22,13 +22,13 @@ file/tool access). It is grounded in the actual vendored source.
 
 ## 2. The turn broker
 
-Source: `src/adapters/chatgpt-web/turn/broker.ts`.
+Source: `src/providers/chatgpt-web/turn/broker.ts`.
 
 The turn broker is a **local Unix socket** (default `$PI_INTERNET_RUNTIME_HOME/runtime/turn-broker.sock`)
 that decouples the browser turn from the HTTP server. It lets a separate process (the MCP server)
 submit a turn and receive the result without going through the daemon's HTTP `/v1/responses` path.
 
-- `defaultBrokerEndpoint()` / `resolveBrokerEndpoint()` (in `src/adapters/chatgpt-web/lifecycle/config.ts`) compute the socket path.
+- `defaultBrokerEndpoint()` / `resolveBrokerEndpoint()` (in `src/providers/chatgpt-web/lifecycle/config.ts`) compute the socket path.
 - The broker is how the **MCP server** talks to the daemon: the MCP server connects to the broker
   socket, sends a turn, and gets the browser result.
 
@@ -39,7 +39,7 @@ lower-level path used by the MCP server so a tool-capable client can drive the s
 
 ## 3. The MCP server
 
-Source: `src/adapters/chatgpt-web/tools/mcp-server.ts` and `src/cli.ts`.
+Source: `src/providers/chatgpt-web/tools/mcp-server.ts` and `src/cli.ts`.
 
 The daemon ships an **MCP server** that exposes the ChatGPT Web browser turn as an MCP tool. It is
 launched via `pi-internet-runtime mcp --broker-socket <path>` (see `src/cli.ts`).
@@ -55,7 +55,7 @@ The MCP server is the bridge between the **MCP protocol** (client ↔ server) an
 
 ## 4. The tunnel
 
-Source: `src/adapters/chatgpt-web/transport/tunnel.ts` and `transport/tunnel-service.ts`.
+Source: `src/providers/chatgpt-web/transport/tunnel.ts` and `transport/tunnel-service.ts`.
 
 The tunnel is a **remote bridge** that connects a local daemon to a remote Codex runtime. It uses a
 downloaded `tunnel-client` binary (from a release asset, checksum-verified) and a **runtime key**.

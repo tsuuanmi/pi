@@ -4,8 +4,8 @@ import { Writable } from "node:stream";
 import { existsSync, rmSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { stdin, stdout } from "node:process";
-import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "./adapters/chatgpt-web/browser/login";
-import { cancelBrowserTurns } from "./adapters/chatgpt-web/lifecycle/control";
+import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "./providers/chatgpt-web/browser/login";
+import { cancelBrowserTurns } from "./providers/chatgpt-web/lifecycle/control";
 import {
   defaultBrokerEndpoint,
   getConfigDir,
@@ -14,15 +14,15 @@ import {
   loadConfigForSetup,
   resolveBrokerEndpoint,
   DEFAULT_CONNECTOR_NAME,
-} from "./adapters/chatgpt-web/lifecycle/config";
-import { formatDoctorReport, runDoctor } from "./adapters/chatgpt-web/lifecycle/doctor";
-import { runChatGptMcpServer } from "./adapters/chatgpt-web/tools/mcp-server";
+} from "./providers/chatgpt-web/lifecycle/config";
+import { formatDoctorReport, runDoctor } from "./providers/chatgpt-web/lifecycle/doctor";
+import { runChatGptMcpServer } from "./providers/chatgpt-web/tools/mcp-server";
 import { runCommand } from "./core/process";
-import { startServer } from "./adapters/chatgpt-web/server/routes";
+import { startServer } from "./providers/chatgpt-web/server/routes";
 import { assertServiceIdle, getServiceStatus, installService, restartService, startService, stopService, uninstallService } from "./core/service";
-import { existingFullSetupCredentials, setup, type SetupOptions } from "./adapters/chatgpt-web/lifecycle/setup";
-import { connectTunnel, installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "./adapters/chatgpt-web/transport/tunnel";
-import { getTunnelServiceStatus, restartTunnelService, startTunnelService, stopTunnelService, uninstallTunnelService } from "./adapters/chatgpt-web/transport/tunnel-service";
+import { existingFullSetupCredentials, setup, type SetupOptions } from "./providers/chatgpt-web/lifecycle/setup";
+import { connectTunnel, installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "./providers/chatgpt-web/transport/tunnel";
+import { getTunnelServiceStatus, restartTunnelService, startTunnelService, stopTunnelService, uninstallTunnelService } from "./providers/chatgpt-web/transport/tunnel-service";
 import { VERSION } from "./core/config";
 
 const HELP = `pi-internet-runtime ${VERSION}

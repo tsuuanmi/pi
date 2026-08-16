@@ -60,7 +60,7 @@ endpoints.
 
 ## ChatGPT models and files
 
-ChatGPT Web exposes capability-scoped Luna/Sol route models. Pi `@file` references are expanded only
+ChatGPT Web exposes canonical Sol route models, with Pro routes gated by account capability. Pi `@file` references are expanded only
 for regular workspace-local files, under bounded count and byte limits. API providers use their
 native image/text support and do not use the browser replay adapter.
 
@@ -100,7 +100,7 @@ Presets use 2/3/4 available internet models. Explicit selection uses unique `pro
 ```text
 internet_council {
   question: "Review this decision",
-  members: ["chatgpt-web/luna", "anthropic-api-research/claude-sonnet-5"],
+  members: ["chatgpt-web/high", "anthropic-api-research/claude-sonnet-5"],
   chair: "anthropic-api-research/claude-sonnet-5"
 }
 ```

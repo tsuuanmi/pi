@@ -48,10 +48,10 @@ smokes pass for light/high routes, and two-turn continuity preserves browser-ses
 
 ### R1. Fix model metadata to the daemon's single-immutable-effort routes — **Implemented**
 
-**Problem.** The original `src/providers/openai/models.ts` named the high and Luna routes "GPT-5.6
-Sol" and "GPT-5.6 Luna" with multi-level thinking maps. The vendored daemon catalog
+**Problem.** The original `src/providers/openai/models.ts` named the high route "GPT-5.6 Sol" with
+multi-level thinking maps. The vendored daemon catalog
 (`vendor/.../src/models/models.ts`) defines **one immutable effort per route**:
-`chatgpt-web/high` → `codexEffort/adapterEffort: "high"`, `chatgpt-web/luna` → low effort, plus an
+`chatgpt-web/high` → `codexEffort/adapterEffort: "high"`, plus an
 `extra-high` route. Sending a different reasoning effort would be rejected or silently mis-tuned on
 every inference. This is a real correctness bug, not a naming nit.
 
@@ -61,11 +61,12 @@ per effort).
 
 **Implemented design.**
 - `turn/model.ts` is the authoritative route catalog: provider-local ids `light`, `medium`, `high`,
-  `extra-high`, `pro`, and `luna`, each mapped to its canonical `chatgpt-web/<id>` daemon route,
+  `extra-high` and `pro`, each mapped to its canonical `chatgpt-web/<id>` daemon route,
   daemon display name, one immutable Pi reasoning level, and context window from the daemon catalog.
 - `models.ts` sets every thinking level to `null` except the route's single supported level, so Pi
   never sends an unsupported reasoning effort.
-- `provider.ts` builds models per account from cached `solAvailable`/`proAvailable` capabilities.
+- `provider.ts` builds models per account from cached `proAvailable` capability; every account is
+  required to expose the canonical Sol selector.
 - The daemon does not define a model output ceiling (its auto-compaction, browser-message, and
   composer limits have different meanings), so `maxTokens` uses a documented conservative `16_384`
   output ceiling rather than the previous speculative `90_000`/`128_000`.
@@ -111,8 +112,8 @@ so the daemon receives only the current message and cannot replay history. Withi
 daemon opened a fresh isolated conversation per turn, so continuity was not durable across browser turns.
 
 **Evidence.** `implementation-plan-conversation-continuity.md`; the vendored daemon
-`vendor/runtime/src/adapters/chatgpt-web/browser/worker.ts` (conversation creation and
-canonical URL continuation) and `vendor/runtime/src/adapters/chatgpt-web/content/prompt.ts`
+`vendor/runtime/src/providers/chatgpt-web/browser/worker.ts` (conversation creation and
+canonical URL continuation) and `vendor/runtime/src/providers/chatgpt-web/content/prompt.ts`
 (suffix prompt compilation); Prometheus
 `electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
 
@@ -195,9 +196,9 @@ contents. The daemon runs in `browser-only` mode, so the browser session has no 
 
 **Evidence.** [`daemon/harness`](../daemon/harness.md) and
 [`providers/openai/turn/files`](../providers/openai/turn/files.md); runtime
-`src/adapters/chatgpt-web/lifecycle/config.ts` (`RuntimeMode`, `localToolsEnabled`),
-`src/adapters/chatgpt-web/lifecycle/setup.ts` (`connectorSetupRequired`), and
-`src/adapters/chatgpt-web/turn/broker.ts`
+`src/providers/chatgpt-web/lifecycle/config.ts` (`RuntimeMode`, `localToolsEnabled`),
+`src/providers/chatgpt-web/lifecycle/setup.ts` (`connectorSetupRequired`), and
+`src/providers/chatgpt-web/turn/broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).
 

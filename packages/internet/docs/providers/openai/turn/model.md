@@ -7,13 +7,11 @@ Provider-local model definitions and their canonical daemon route mapping.
 ## Constants
 
 - `CHATGPT_WEB_PROVIDER` — `"chatgpt-web"`.
-- `CHATGPT_WEB_LUNA_MODEL_ROUTE` — the Luna route: provider-local id `luna`, daemon id
-  `chatgpt-web/luna`, reasoning `low`, no Pro requirement, context window `1_050_000`.
 - `CONSERVATIVE_MAX_OUTPUT_TOKENS` — `16_384`, used as `maxTokens` for every route.
 
 ## Types
 
-- `ChatGptWebModelId` — `"light" | "medium" | "high" | "extra-high" | "pro" | "luna"`.
+- `ChatGptWebModelId` — `"light" | "medium" | "high" | "extra-high" | "pro"`.
 - `ChatGptWebProviderModelId` — the corresponding `chatgpt-web/<id>` daemon route.
 - `ChatGptWebReasoningLevel` — `"low" | "medium" | "high" | "xhigh" | "ultra"`.
 - `ChatGptWebModelRoute` — provider-local id, daemon id, name, reasoning level, `requiresPro`,
@@ -21,7 +19,7 @@ Provider-local model definitions and their canonical daemon route mapping.
 
 ## `CHATGPT_WEB_MODEL_ROUTES`
 
-The standard (non-Luna) routes:
+The canonical Sol routes:
 
 | provider id | daemon id | name | reasoning | requiresPro | contextWindow |
 |---|---|---|---|---|---|
@@ -43,12 +41,3 @@ chatGptWebProviderModelId(model: string): ChatGptWebProviderModelId | undefined
 
 Resolves a provider-local id to its daemon route. It also accepts an already canonical daemon id so
 request adaptation remains idempotent.
-
-## `isLunaModel`
-
-```ts
-isLunaModel(model: string): boolean
-```
-
-Returns true for the provider-local `luna` id and canonical `chatgpt-web/luna` daemon route. Used to
-block separate compaction, because Luna uses rolling checkpoints.

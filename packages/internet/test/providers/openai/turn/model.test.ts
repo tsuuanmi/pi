@@ -1,9 +1,4 @@
-import {
-	CHATGPT_WEB_LUNA_MODEL_ROUTE,
-	CHATGPT_WEB_MODEL_ROUTES,
-	chatGptWebProviderModelId,
-	isLunaModel,
-} from "#internet/providers/openai/turn/model";
+import { CHATGPT_WEB_MODEL_ROUTES, chatGptWebProviderModelId } from "#internet/providers/openai/turn/model";
 
 describe("ChatGPT Web model resolution", () => {
 	it("publishes concise provider-local model identifiers", () => {
@@ -21,9 +16,6 @@ describe("ChatGPT Web model resolution", () => {
 			"chatgpt-web/extra-high",
 			"chatgpt-web/pro",
 		]);
-		expect(isLunaModel(CHATGPT_WEB_LUNA_MODEL_ROUTE.id)).toBe(true);
-		expect(isLunaModel(CHATGPT_WEB_LUNA_MODEL_ROUTE.providerId)).toBe(true);
-		expect(isLunaModel("gpt-5.6-luna")).toBe(false);
 	});
 
 	it("maps provider-local and canonical daemon model identifiers to one provider route", () => {

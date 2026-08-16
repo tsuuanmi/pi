@@ -4,13 +4,6 @@ import { registerCompactTools } from "#internet/tools/compact";
 import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet_compact", () => {
-	it("refuses Luna compaction", async () => {
-		const tool = captureTools(registerCompactTools).get("internet_compact");
-		await expect(
-			tool?.execute("call", { model: "luna", input: [{}] }, undefined, undefined, {} as never),
-		).rejects.toThrow("disabled for Luna");
-	});
-
 	it("returns replacement history through the canonical daemon model route", async () => {
 		const output = [{ type: "message", role: "user", content: [] }];
 		const compact = vi.fn(async () => ({ output }));

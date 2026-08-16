@@ -11,7 +11,7 @@ removed; the runtime source and build output are now Pi-owned.
 The current snapshot is a self-contained Bun runtime, but that is not the target ownership model.
 The target is a neutral runtime package under `packages/internet/vendor/runtime/`. Its `src/core/`
 contains provider-agnostic runtime code. Codex- and ChatGPT-specific behavior is organized by feature
-under `src/adapters/chatgpt-web/`, behind explicit adapter interfaces.
+under `src/providers/chatgpt-web/`, behind explicit adapter interfaces.
 
 The neutral runtime owns:
 
@@ -31,7 +31,7 @@ process isolation is an implementation boundary, not a provider identity.
 
 The snapshot separates several domains, but it still exposes an upstream-shaped runtime package:
 
-- `src/adapters/chatgpt-web/` contains provider behavior organized by browser, conversation, content,
+- `src/providers/chatgpt-web/` contains provider behavior organized by browser, conversation, content,
   lifecycle, models, protocol, tools, transport, and turn;
 - `src/core/` contains only reusable runtime primitives;
 - `cli.ts` is the sole composition root;
@@ -45,12 +45,12 @@ folder under the ChatGPT adapter, and core modules must not import provider-spec
 The following files are large because they coordinate multiple phases of an intentionally coupled
 runtime. They are the primary candidates for a future internal decomposition:
 
-- `src/adapters/chatgpt-web/browser/worker.ts`: browser lifecycle, page interaction, wire capture,
+- `src/providers/chatgpt-web/browser/worker.ts`: browser lifecycle, page interaction, wire capture,
   tool approval, and response recovery;
-- `src/adapters/chatgpt-web/protocol/responses/bridge.ts`: adapter events, Responses output, and continuation
+- `src/providers/chatgpt-web/protocol/responses/bridge.ts`: adapter events, Responses output, and continuation
   state;
-- `src/adapters/chatgpt-web/lifecycle/config.ts`: ChatGPT configuration, setup defaults, and validation;
-- `src/adapters/chatgpt-web/protocol/types.ts`: adapter protocol/domain types and tool helpers.
+- `src/providers/chatgpt-web/lifecycle/config.ts`: ChatGPT configuration, setup defaults, and validation;
+- `src/providers/chatgpt-web/protocol/types.ts`: adapter protocol/domain types and tool helpers.
 
 These are maintainability hotspots and extraction seams. The split produces one authoritative implementation behind the neutral runtime and ChatGPT adapter
 contracts, without preserving upstream package entry points.
@@ -73,7 +73,7 @@ requirement with focused regression coverage.
    alias and upstream snapshot metadata.
 2. Moved ChatGPT/Codex-specific configuration, setup, diagnostics, routes, Responses translation,
    types, browser, login, model, tunnel, passthrough, image, and search modules beneath
-   `vendor/runtime/src/adapters/chatgpt-web/`.
+   `vendor/runtime/src/providers/chatgpt-web/`.
 3. Removed upstream Codex route integration, journal migration, and route CLI commands.
 4. Renamed neutral runtime identity, launcher, environment variable, and account fallback paths.
 5. Updated parent build scripts, daemon launcher fixtures, tests, and documentation.

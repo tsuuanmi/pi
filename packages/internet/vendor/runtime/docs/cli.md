@@ -17,17 +17,17 @@ The module is consumed as a command-line entrypoint and has no named runtime exp
 
 ## Related source modules
 
-- `adapters/chatgpt-web/browser/login.ts`
-- `adapters/chatgpt-web/lifecycle/control.ts`
-- `adapters/chatgpt-web/lifecycle/config.ts`
-- `adapters/chatgpt-web/lifecycle/doctor.ts`
-- `adapters/chatgpt-web/tools/mcp-server.ts`
+- `providers/chatgpt-web/browser/login.ts`
+- `providers/chatgpt-web/lifecycle/control.ts`
+- `providers/chatgpt-web/lifecycle/config.ts`
+- `providers/chatgpt-web/lifecycle/doctor.ts`
+- `providers/chatgpt-web/tools/mcp-server.ts`
 - `core/process.ts`
-- `adapters/chatgpt-web/server/routes.ts`
+- `providers/chatgpt-web/server/routes.ts`
 - `core/service.ts`
-- `adapters/chatgpt-web/lifecycle/setup.ts`
-- `adapters/chatgpt-web/transport/tunnel.ts`
-- `adapters/chatgpt-web/transport/tunnel-service.ts`
+- `providers/chatgpt-web/lifecycle/setup.ts`
+- `providers/chatgpt-web/transport/tunnel.ts`
+- `providers/chatgpt-web/transport/tunnel-service.ts`
 - `core/config.ts`
 
 ## Source of truth

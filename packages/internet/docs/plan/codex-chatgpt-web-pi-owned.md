@@ -6,7 +6,7 @@ Status: **implemented; breaking migration complete**.
 
 The former `codex-chatgpt-web` source is now the neutral `packages/internet/vendor/runtime/`
 package. Its `src/core/` contains provider-agnostic runtime code, while Codex- and ChatGPT-specific
-behavior is organized by feature under `src/adapters/chatgpt-web/`. The existing daemon process boundary remains, but
+behavior is organized by feature under `src/providers/chatgpt-web/`. The existing daemon process boundary remains, but
 Pi owns the source, configuration, lifecycle, build, tests, and public contract.
 
 The migration is intentionally breaking. Existing `codex-chatgpt-web` state is not migrated.
@@ -21,7 +21,7 @@ new Pi account and daemon.
 | Account identity and paths | Parent Pi account registry and neutral runtime config contract |
 | Provider registration | `src/providers/openai/provider.ts` and model routes |
 | Generic daemon lifecycle | `vendor/runtime/src/core/` modules and daemon manager |
-| ChatGPT browser sessions and turns | `vendor/runtime/src/adapters/chatgpt-web/` |
+| ChatGPT browser sessions and turns | `vendor/runtime/src/providers/chatgpt-web/` |
 | OpenAI/Codex Responses translation | ChatGPT adapter `protocol/responses/` modules |
 | Generic HTTP hosting, events, process, and bounded body I/O | `vendor/runtime/src/core/` |
 | MCP/tool execution | ChatGPT adapter modules |
@@ -68,7 +68,7 @@ The implementation completed the planned breaking migration:
 1. The runtime directory is `vendor/runtime/` and its launcher is `pi-internet-runtime`.
 2. ChatGPT/Codex-specific configuration, setup, diagnostics, routes, Responses translation, types,
    browser, login, model, tunnel, native passthrough, image, and search files live under
-   `src/adapters/chatgpt-web/`.
+   `src/providers/chatgpt-web/`.
 3. `codex-integration.ts`, upstream route mutation, route CLI commands, and legacy journal handling
    were removed.
 4. Parent build scripts, package imports, daemon environment variables, launcher fixtures, tests,
@@ -79,6 +79,6 @@ The implementation completed the planned breaking migration:
 
 - No production import references the old `vendor/codex-chatgpt-web` path or `#internet-vendor/*`.
 - The neutral runtime package builds as `vendor/runtime` with no upstream package identity.
-- Provider-specific moved modules are confined to `vendor/runtime/src/adapters/chatgpt-web/`.
+- Provider-specific moved modules are confined to `vendor/runtime/src/providers/chatgpt-web/`.
 - Unsupported legacy state is not migrated implicitly.
 - The runtime typecheck/build, root typecheck, and full Internet package test suite pass.

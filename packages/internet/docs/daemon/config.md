@@ -23,16 +23,16 @@ rejected.
 The full owned config: release version, `mode` (`"browser-only"` or `"full"`), loopback host, the
 account's `port`, context window (`256_000`), app name, Chrome executable path, storage-state path,
 broker socket path, headed window, idle shutdown, the
-`solAvailable`/`proAvailable` capability flags, `autoApproveToolCalls: false`, control token, runtime
+the `proAvailable` capability flag, `autoApproveToolCalls: false`, control token, runtime
 command, acknowledgement timestamp, and (in full mode) tunnel settings.
 
 ## Capabilities
 
-- `DaemonCapabilities` — `{ solAvailable, proAvailable }`.
+- `DaemonCapabilities` — `{ proAvailable }`.
 - `readOwnedDaemonCapabilities(account)` — parses and validates the owned config and returns its
-  capability flags. Missing config (ENOENT) falls back to `{ solAvailable: true, proAvailable: false }`.
-- `syncOwnedDaemonCapabilities(account)` — reads the login marker's `solAvailable`/`proAvailable` and
-  rewrites the owned config when they differ.
+  capability flags. Missing config (ENOENT) falls back to `{ proAvailable: false }`.
+- `syncOwnedDaemonCapabilities(account)` — reads the login marker's `proAvailable` value and rewrites
+  the owned config when it differs.
 
 ## Paths
 
@@ -46,7 +46,7 @@ daemonLoginExists(account): Promise<boolean>
 ```
 
 True when both the browser storage-state file exists and the login marker is valid
-(`version === 1`, `authenticated === true`, and a string `verifiedAt`).
+(`version === 2`, `authenticated === true`, a string `verifiedAt`, and boolean `proAvailable`).
 
 ## `daemonConfigFingerprint`
 
