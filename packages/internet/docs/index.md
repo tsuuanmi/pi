@@ -45,7 +45,7 @@ bridging, and safe public web access.
 
 - Daemon [`config`](daemon/config.md), [`doctor`](daemon/doctor.md), [`harness`](daemon/harness.md),
   [`health`](daemon/health.md), [`manager`](daemon/manager.md), and [`runtime`](daemon/runtime.md)
-- Vendored runtime [`source reference`](../vendor/runtime/docs/index.md)
+- Private runtime [`source reference`](../runtime/docs/index.md)
 - Council [`service`](council/service.md)
 
 ### Tools and web

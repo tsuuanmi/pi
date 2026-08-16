@@ -29,10 +29,10 @@ downloaded at runtime. Runtime manifests and launcher containment/executable per
 validated before spawn.
 
 The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and a
-ChatGPT-Web adapter. Its source lives under `vendor/runtime/`; provider-neutral code is split between
-`vendor/runtime/src/core/` and the browser runtime under `vendor/runtime/src/browser/`.
+ChatGPT-Web adapter. Its source lives under `runtime/`; provider-neutral code is split between
+`runtime/src/core/` and the browser runtime under `runtime/src/browser/`.
 ChatGPT-specific browser code lives under `browser/chatgpt-web/`; non-browser provider code lives
-under `vendor/runtime/src/providers/chatgpt-web/`. See the [implemented layout](layout.md) for the
+under `runtime/src/providers/chatgpt-web/`. See the [implemented layout](layout.md) for the
 module maps.
 
 **Core (provider-agnostic):** runtime-home and durable-command handling, atomic writes, bounded HTTP
@@ -45,15 +45,15 @@ response-capture lifecycle, cancellation, and cleanup. Named subdirectories such
 
 **Provider layer (ChatGPT Web):** OpenAI Responses routes and projection, turn/event types, health
 and control payloads, idle shutdown, models, native backend passthrough, catalog, tunnel, and web
-search live under `vendor/runtime/src/providers/chatgpt-web/`. Browser automation, login, selectors,
-and completion tracking live under `vendor/runtime/src/browser/chatgpt-web/`. Hosting and lifecycle
-primitives remain under `vendor/runtime/src/core/`.
+search live under `runtime/src/providers/chatgpt-web/`. Browser automation, login, selectors,
+and completion tracking live under `runtime/src/browser/chatgpt-web/`. Hosting and lifecycle
+primitives remain under `runtime/src/core/`.
 
 ### Two provider boundaries
 
 1. **Package boundary** (`src/providers/`): `openai` (ChatGPT Web daemon), `anthropic` (native
    messages), and `google` (OpenAI-compatible) implement `InternetProvider` and register with Pi.
-2. **Runtime boundary** (`vendor/runtime/src/cli.ts`): the composition root loads the ChatGPT
+2. **Runtime boundary** (`runtime/src/cli.ts`): the composition root loads the ChatGPT
    adapter. The adapter depends on neutral runtime primitives; neutral runtime modules do not depend
    on the adapter.
 
@@ -158,7 +158,7 @@ What makes internet unique:
 1. **Pi-native provider registration** — neither codexweb nor Prometheus registers as a Pi provider.
 2. **Browser-optional** — only ChatGPT Web model routing needs the daemon's Chrome; search/fetch and
    Anthropic/Google API providers are browser-less.
-3. **Self-contained** — vendors the daemon and embeds Bun; no other repo at runtime.
+3. **Self-contained** — bundles the daemon and embeds Bun; no other repo at runtime.
 4. **Keyless, SSRF-safe web access** — `internet_search`/`internet_fetch` are not browser-driven and
    never forward daemon credentials.
 5. **Owned lifecycle** — the package owns login/start/stop/restart and health-gated auto-start.

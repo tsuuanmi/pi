@@ -2,7 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const runtimeSource = fileURLToPath(new URL("../../vendor/runtime/src/", import.meta.url));
+const runtimeSource = fileURLToPath(new URL("../../runtime/src/", import.meta.url));
 
 async function exists(path: string): Promise<boolean> {
 	return stat(path).then(

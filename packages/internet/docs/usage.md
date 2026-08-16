@@ -106,7 +106,7 @@ internet_harness {
 }
 ```
 
-Full mode uses the same durable ChatGPT conversation as browser-only mode. The vendored broker/MCP
+Full mode uses the same durable ChatGPT conversation as browser-only mode. The private broker/MCP
 tunnel exposes registered `codex_*` tools. Pi requests approval and denies unrecognized or mismatched
 bridges. Use `internet_harness { action: "disable" }` to return to read-only browser mode.
 

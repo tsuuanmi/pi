@@ -1,6 +1,6 @@
 # version
 
-Mirrors `vendor/runtime/src/core/config.ts`.
+Mirrors `runtime/src/core/config.ts`.
 
 ```ts
 export const VERSION = "0.1.0";

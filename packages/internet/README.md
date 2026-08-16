@@ -25,7 +25,7 @@ npm install @tsuuanmi/pi-internet
 ```
 
 The package manifest exposes `dist/extension.js` as a Pi extension. Source builds additionally
-require Bun 1.3.14 to compile the vendored daemon.
+require Bun 1.3.14 to compile the private daemon.
 
 ## Accounts
 
@@ -102,7 +102,7 @@ run once, and are capped at 4,096 output tokens; synthesis runs only after all m
 - Full mode: `internet_harness`
 - Settings/web: `internet_settings`, `internet_search`, `internet_fetch`
 
-Full mode enables the vendored broker/MCP tunnel for registered `codex_*` tools. Pi remains the
+Full mode enables the private broker/MCP tunnel for registered `codex_*` tools. Pi remains the
 approval boundary: tool calls default to deny and only the current account's valid local bridge can
 run.
 

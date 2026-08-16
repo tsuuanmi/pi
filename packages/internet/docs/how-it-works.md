@@ -2,7 +2,7 @@
 
 ## Build and package
 
-`npm run build` compiles package TypeScript, then the fixed vendored daemon snapshot into
+`npm run build` compiles package TypeScript, then the fixed private daemon snapshot into
 `dist/daemon/runtime`. The manifest records the build host's `linux`/`darwin` platform and
 `x64`/`arm64` architecture. Package CI repeats build, tests, and `npm pack --dry-run` on Ubuntu and
 macOS.
@@ -36,7 +36,7 @@ transport.
 
 ### Dependency boundary
 
-`vendor/runtime/src/cli.ts` is the composition root. It loads the ChatGPT adapter, which may import
+`runtime/src/cli.ts` is the composition root. It loads the ChatGPT adapter, which may import
 neutral runtime modules such as `server.ts`, `service.ts`, `config.ts`, `http-body.ts`, and
 `event-queue.ts`. Neutral modules never import `providers/chatgpt-web/`. Responses parsing and SSE
 projection stay with the adapter because they encode OpenAI/Codex protocol semantics rather than a

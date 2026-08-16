@@ -23,23 +23,23 @@ packages/internet/
 ├── test/                    # mirrors changed src areas
 ├── docs/                    # mirrors src modules plus architecture, usage, and future-work docs
 ├── scripts/build-daemon.mjs
-└── vendor/runtime/
+└── runtime/
 ```
 
 `dist/daemon/runtime/` is generated, ignored build output. It contains the native launcher, schema-1
 host manifest, bundled application payload, runtime Bun executable, and license. It is copied from
-`vendor/runtime/` by `scripts/build-daemon.mjs`; source modules are never imported by the parent
+`runtime/` by `scripts/build-daemon.mjs`; source modules are never imported by the parent
 extension at runtime.
 
 ## Runtime boundary
 
-`vendor/runtime/` is a Pi-owned browser-backed inference runtime. Its `core/` directory contains
+`runtime/` is a Pi-owned browser-backed inference runtime. Its `core/` directory contains
 only provider-neutral process, configuration-path, service, HTTP-hosting, and bounded-I/O primitives.
 The ChatGPT Web provider is organized by feature and owns the OpenAI Responses protocol plus
-provider policy. All browser-facing code lives under `vendor/runtime/src/browser/`; reusable
+provider policy. All browser-facing code lives under `runtime/src/browser/`; reusable
 mechanics are direct modules and ChatGPT browser behavior has its own subdirectory.
 
-### Core (`vendor/runtime/src/core/`)
+### Core (`runtime/src/core/`)
 
 ```text
 config.ts       # runtime home, atomic writes, durable command validation
@@ -50,7 +50,7 @@ server.ts       # provider-neutral Bun HTTP host
 service.ts      # daemon process and drain lifecycle
 ```
 
-### Browser runtime (`vendor/runtime/src/browser/`)
+### Browser runtime (`runtime/src/browser/`)
 
 ```text
 session.ts                  # browser/context/page ownership, leases, and cleanup
@@ -59,7 +59,7 @@ turn.ts                     # turn admission, maintenance, deadlines, and cancel
 chatgpt-web/                # ChatGPT login, selectors, interactions, completion, and worker
 ```
 
-### ChatGPT provider (`vendor/runtime/src/providers/chatgpt-web/`)
+### ChatGPT provider (`runtime/src/providers/chatgpt-web/`)
 
 ```text
 adapter.ts                  # adapter entrypoint

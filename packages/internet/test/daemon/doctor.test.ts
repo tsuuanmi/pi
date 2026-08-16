@@ -106,7 +106,7 @@ describe("runDaemonDoctor", () => {
 		});
 	});
 
-	it("scopes every vendored check and fails readiness for Pi errors", async () => {
+	it("scopes every runtime check and fails readiness for Pi errors", async () => {
 		const checks = [
 			["config", "pi"],
 			["chrome", "pi"],

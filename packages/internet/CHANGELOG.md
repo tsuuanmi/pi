@@ -13,7 +13,7 @@
   Chrome is now the only browser host, and obsolete configurations must be recreated.
 - Require canonical Sol ChatGPT Web accounts; Luna routes, rolling checkpoint state, and Luna-only
   persisted login/configuration metadata are removed and must be recreated.
-- Replace the `codex-chatgpt-web` runtime identity with the Pi-owned provider-neutral `vendor/runtime`
+- Replace the `codex-chatgpt-web` runtime identity with the Pi-owned provider-neutral `runtime`
   package; existing runtime state, journals, browser state, and old environment variables must be
   recreated.
 - Rename daemon health activity from `active_browser_turns` to provider-neutral
@@ -32,7 +32,7 @@
 
 - Bind every Pi session to one account-scoped, owner-private ChatGPT conversation with canonical suffix synchronization.
 - Own the neutral private Bun runtime inside the package and build its host-native launcher from
-  `vendor/runtime`, removing the upstream package identity and manually started-daemon dependency.
+  `runtime`, removing the upstream package identity and manually started-daemon dependency.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
   lifecycle management, graceful shutdown, and the `internet_daemon` tool.
 - Implement ChatGPT Web provider registration through Pi's native `openai-responses` transport,
@@ -46,17 +46,17 @@
 - Add account-scoped `internet_doctor` diagnostics backed by the bundled daemon's bounded,
   cancellable `doctor --json` command.
 - Add safe workspace-local `@file` expansion and the account-scoped `internet_harness` tool for
-  browser-only/Full local-tools configuration through the vendored broker/MCP runtime.
+  browser-only/Full local-tools configuration through the private broker/MCP runtime.
 - Add `docs/usage.md` — a practical guide for `@file`, `internet_search`/`internet_fetch`, lifecycle
   tools, and the approval-gated Full-harness `codex_*` local tools.
 
 ### Changed
 
-- Move all browser-facing runtime code under `vendor/runtime/src/browser/`, keep reusable mechanics
+- Move all browser-facing runtime code under `runtime/src/browser/`, keep reusable mechanics
   in direct modules, and split ChatGPT automation into cohesive provider-specific browser modules.
 - Make durable ChatGPT conversations universal across browser-only and Full modes; each later turn
   reopens the saved conversation and sends only the current suffix.
-- Pin all direct vendored runtime dependencies to exact lockfile versions.
+- Pin all direct runtime dependencies to exact lockfile versions.
 - Mark Internet as optional for root Pi bundling so standard builds can omit its platform-specific runtime unless the package is built first.
 - Register provider/tool control through `onHook(...)` and HUD refresh through the observation-only `turn_end` event.
 - Gate registered ChatGPT Web providers through `before_provider_request` while retaining Pi's
@@ -76,7 +76,7 @@
 - Use one durable ChatGPT conversation for browser-only and Full harness turns; reject attachments and ambiguous, replayed, or diverged turns before another browser submit.
 - Enforce the provider-neutral runtime boundary: configuration paths, process/service lifecycle,
   bounded I/O, and HTTP hosting remain in core; ChatGPT configuration, routes, Responses protocol,
-  login state, setup, and diagnostics live under `vendor/runtime/src/providers/chatgpt-web/`.
+  login state, setup, and diagnostics live under `runtime/src/providers/chatgpt-web/`.
 - Use `Pi Internet` as the fresh connector identity.
 
 ### Removed
