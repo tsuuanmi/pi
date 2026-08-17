@@ -4,6 +4,7 @@ import type { ProviderSpec } from "#ai/model/generator/sources";
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
 import { THINKING_LEVELS } from "#ai/protocol/options";
+import { formatProviderDisplayName } from "#ai/provider/built-ins";
 
 function contextWindow(model: CodexCatalogModel): number {
 	const value = model.max_context_window ?? model.context_window;
@@ -51,6 +52,7 @@ export function fromCodex(
 			name: sourceModel.display_name ?? apiModel.name,
 			api: provider.api,
 			provider: provider.provider,
+			providerName: formatProviderDisplayName(provider.provider),
 			baseUrl: provider.baseUrl,
 			reasoning: (sourceModel.supported_reasoning_levels?.length ?? 0) > 0,
 			...(levelMap ? { thinkingLevelMap: levelMap } : {}),

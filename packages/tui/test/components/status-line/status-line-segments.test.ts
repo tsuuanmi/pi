@@ -21,7 +21,14 @@ before(() => {
 });
 
 function makeSession(overrides?: {
-	model?: Partial<{ id: string; name: string; provider: string; reasoning: boolean; contextWindow: number }>;
+	model?: Partial<{
+		id: string;
+		name: string;
+		provider: string;
+		providerName: string;
+		reasoning: boolean;
+		contextWindow: number;
+	}>;
 	thinkingLevel?: string;
 	cwd?: string;
 	sessionName?: string;
@@ -70,6 +77,7 @@ describe("model segment", () => {
 					id: "claude-x",
 					name: "Claude X",
 					provider: "anthropic",
+					providerName: "Anthropic",
 					reasoning: false,
 					contextWindow: 200_000,
 				},
@@ -113,10 +121,17 @@ describe("model segment", () => {
 		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
 	});
 
-	it("shows the (provider) prefix when more than one provider is available", () => {
+	it("shows the supplied provider name when more than one provider is available", () => {
 		const ctx = makeCtx({
 			session: makeSession({
-				model: { id: "m", name: "M", provider: "anthropic", reasoning: false, contextWindow: 200_000 },
+				model: {
+					id: "m",
+					name: "M",
+					provider: "anthropic",
+					providerName: "Anthropic",
+					reasoning: false,
+					contextWindow: 200_000,
+				},
 			}),
 			availableProviderCount: 2,
 			options: { model: { showProviderPrefix: true } },
@@ -135,10 +150,17 @@ describe("model segment", () => {
 		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
 	});
 
-	it("humanizes unknown provider ids", () => {
+	it("renders a custom provider name supplied by the host", () => {
 		const ctx = makeCtx({
 			session: makeSession({
-				model: { id: "m", name: "M", provider: "example-provider", reasoning: false, contextWindow: 200_000 },
+				model: {
+					id: "m",
+					name: "M",
+					provider: "example-provider",
+					providerName: "Example Provider",
+					reasoning: false,
+					contextWindow: 200_000,
+				},
 			}),
 			availableProviderCount: 2,
 			options: { model: { showProviderPrefix: true } },

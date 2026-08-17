@@ -77,6 +77,7 @@ export interface StatusLineModelState {
 	id?: string;
 	name?: string;
 	provider?: string;
+	providerName?: string;
 	contextWindow?: number;
 	reasoning?: boolean;
 }

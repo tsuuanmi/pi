@@ -37,6 +37,7 @@ function createSession(options: {
 	modelId?: string;
 	modelName?: string;
 	provider?: string;
+	providerName?: string;
 	reasoning?: boolean;
 	thinkingLevel?: string;
 	contextWindow?: number;
@@ -51,6 +52,7 @@ function createSession(options: {
 				id: options.modelId ?? "test-model",
 				name: options.modelName ?? "Test Model",
 				provider: options.provider ?? "test",
+				providerName: options.providerName,
 				contextWindow: options.contextWindow ?? 200_000,
 				reasoning: options.reasoning ?? false,
 			},
@@ -126,6 +128,7 @@ describe("StatusLineComponent width handling", () => {
 			sessionName: "",
 			modelName: "模".repeat(30),
 			provider: "공급자",
+			providerName: "공급자",
 			reasoning: true,
 			thinkingLevel: "high",
 			usage: { input: 12_345, output: 6_789 },
@@ -163,6 +166,7 @@ describe("StatusLineComponent width handling", () => {
 			sessionName: "",
 			modelName: "DeepSeek V4 Flash 0731",
 			provider: "ollama-cloud",
+			providerName: "Ollama Cloud",
 			reasoning: true,
 			thinkingLevel: "high",
 			usage: { input: 3_000, output: 400 },
@@ -188,14 +192,24 @@ describe("StatusLineComponent width handling", () => {
 
 describe("StatusLineComponent provider-prefix width", () => {
 	it("shows the (provider) prefix on a wide terminal", () => {
-		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
+		const session = createSession({
+			sessionName: "",
+			modelName: "Claude",
+			provider: "anthropic",
+			providerName: "Anthropic",
+		});
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(120).join("\n"));
 		assert.match(rail, new RegExp(escapeRegExp("(Anthropic) Claude")));
 	});
 
 	it("keeps the environment row on a narrow terminal", () => {
-		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
+		const session = createSession({
+			sessionName: "",
+			modelName: "Claude",
+			provider: "anthropic",
+			providerName: "Anthropic",
+		});
 		const footer = makeComponent(session, 2);
 		const lines = footer.render(20);
 		const text = stripAnsi(lines.join("\n"));

@@ -5,6 +5,7 @@ export const DEFAULT_MODEL = {
 	name: "unknown",
 	api: "unknown",
 	provider: "unknown",
+	providerName: "unknown",
 	baseUrl: "",
 	reasoning: false,
 	input: [],

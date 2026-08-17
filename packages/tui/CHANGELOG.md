@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **boundaries**: Removed TUI's runtime dependency on `@tsuuanmi/pi-ai`; provider display names are supplied by the host model.
 - **status-line**: `StatusLineDataProvider` now supplies repository snapshots; TUI no longer executes or polls Git.
 - **lifecycle**: Added `override` modifiers to `dispose()` and `render()` overrides to satisfy `noImplicitOverride`.
 - **tsconfig**: Bumped `target` and `lib` from `ES2022` to `ES2024` so the Unicode property-escape regexes in `src/utilities/text.ts` (which use the `/v` flag) type-check cleanly.

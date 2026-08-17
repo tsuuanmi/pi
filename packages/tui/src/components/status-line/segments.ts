@@ -1,5 +1,4 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { formatProviderDisplayName } from "@tsuuanmi/pi-ai";
 import { getContextUsageLevel, getContextUsageThemeColor } from "#tui/components/status-line/context-levels";
 import type {
 	RenderedSegment,
@@ -90,8 +89,8 @@ const modelSegment: StatusLineSegment = {
 		// Prepend a readable provider name when more than one provider is
 		// available and the option is enabled.
 		let prefix = "";
-		if (ctx.availableProviderCount > 1 && opts.showProviderPrefix !== false && state.model) {
-			prefix = `(${formatProviderDisplayName(state.model.provider ?? "")}) `;
+		if (ctx.availableProviderCount > 1 && opts.showProviderPrefix !== false && state.model?.providerName) {
+			prefix = `(${state.model.providerName}) `;
 		}
 
 		let content = `${prefix}${modelName}`;

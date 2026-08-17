@@ -1,5 +1,6 @@
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
+import { formatProviderDisplayName } from "#ai/provider/built-ins";
 
 function propertyKey(key: string): string {
 	return /^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key);
@@ -33,6 +34,7 @@ export const MODELS = {
 			output += `\t\t\tname: ${JSON.stringify(model.name)},\n`;
 			output += `\t\t\tapi: ${JSON.stringify(model.api)},\n`;
 			output += `\t\t\tprovider: ${JSON.stringify(model.provider)},\n`;
+			output += `\t\t\tproviderName: ${JSON.stringify(formatProviderDisplayName(model.provider))},\n`;
 			output += `\t\t\tbaseUrl: ${JSON.stringify(model.baseUrl)},\n`;
 			if (model.compat) {
 				output += `\t\t\tcompat: {\n`;

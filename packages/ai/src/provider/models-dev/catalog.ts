@@ -2,6 +2,7 @@ import { inputFromModalities, thinkingMap } from "#ai/model/generator/normalize"
 import type { ModelsDevModel } from "#ai/model/generator/schemas";
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
+import { formatProviderDisplayName } from "#ai/provider/built-ins";
 
 export interface ProviderSource {
 	models: Record<string, ModelsDevModel>;
@@ -33,6 +34,7 @@ export function fromModelsDev(source: ProviderSource): Model<Api>[] {
 			name: sourceModel.name ?? id,
 			api: source.api,
 			provider: source.provider,
+			providerName: formatProviderDisplayName(source.provider),
 			baseUrl: source.baseUrl,
 			reasoning: sourceModel.reasoning === true,
 			...(levelMap ? { thinkingLevelMap: levelMap } : {}),

@@ -43,6 +43,8 @@ export interface Model<TApi extends Api = Api> {
 	name: string;
 	api: TApi;
 	provider: ProviderId;
+	/** Human-readable provider label for user-facing interfaces. */
+	providerName?: string;
 	baseUrl: string;
 	reasoning: boolean;
 	thinkingLevelMap?: ThinkingLevelMap;
