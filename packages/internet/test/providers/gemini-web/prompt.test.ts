@@ -41,14 +41,26 @@ describe("Gemini Web prompt compilation", () => {
 	});
 
 	it.each([
-		[{ context: { messages: [], tools: [{ name: "search" }] } }, "tools or tool choice"],
-		[{ options: { toolChoice: "auto" } }, "tools or tool choice"],
 		[{ responseFormat: { type: "json_schema" } }, "structured output"],
 		[{ opaquePayload: { bytes: "fixture" } }, "opaque request payloads"],
 		[{ context: { messages: [], files: [{ name: "fixture.txt" }] } }, "images or files"],
-		[{ options: { reasoning: "high" } }, "reasoning controls"],
 	])("rejects unsupported browser payloads before browser acquisition", (overrides, message) => {
 		expect(() => validateGeminiWebRequest(request(overrides))).toThrow(message);
+	});
+
+	it("ignores tool declarations while preserving the text-only prompt", () => {
+		expect(() =>
+			validateGeminiWebRequest(
+				request({
+					context: { messages: [{ role: "user", content: "Hello" }], tools: [{ name: "search" }] },
+					options: { toolChoice: "auto" },
+				}),
+			),
+		).not.toThrow();
+	});
+
+	it("accepts the supported reasoning option", () => {
+		expect(() => validateGeminiWebRequest(request({ options: { reasoning: "high" } }))).not.toThrow();
 	});
 
 	it("rejects image content even when it is embedded in a message", () => {

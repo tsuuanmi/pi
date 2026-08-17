@@ -33,8 +33,8 @@ async function account(): Promise<GeminiWebInternetAccount> {
 			capabilities: {
 				version: 1,
 				provider: "gemini-web",
-				labels: { flash: "3.6 Flash", thinking: "3.6 Thinking", pro: "Pro" },
-				available: ["flash", "thinking"],
+				labels: { flash: "3.7 Flash", thinking: "Extended thinking", pro: "3.1 Pro" },
+				available: ["flash", "thinking", "pro"],
 			},
 		}),
 	);
@@ -50,7 +50,9 @@ describe("Gemini Web provider registration", () => {
 			baseUrl: "http://127.0.0.1:18043/v1",
 			authHeader: false,
 		});
-		expect(config.models?.map((model) => model.id)).toEqual(["flash", "thinking"]);
+		expect(config.models?.map((model) => model.id)).toEqual(["flash", "pro"]);
+		expect(config.models?.every((model) => model.reasoning)).toBe(true);
+		expect(config.models?.map((model) => model.thinkingLevelMap?.high)).toEqual(["high", "high"]);
 		expect(geminiWebProviderName({ id: "default" })).toBe("gemini-web");
 	});
 

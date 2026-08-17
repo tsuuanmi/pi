@@ -53,7 +53,7 @@ export async function readGeminiAuthSnapshot(page: Page): Promise<GeminiAuthSnap
   const anchor = page.locator("sidenav-mavatar-footer a").first();
   const signIn = page.locator(GEMINI_SIGN_IN_BUTTON_SELECTOR).first();
   const [signOutHref, signInVisible] = await Promise.all([
-    anchor.getAttribute("href"),
+    anchor.getAttribute("href", { timeout: 2_000 }).catch(() => null),
     signIn.isVisible().catch(() => false),
   ]);
   return { signOutHref: signOutHref ?? undefined, signInVisible };

@@ -6,7 +6,11 @@ import type { GeminiWebRuntimeConfig } from "#runtime/core/config";
 import type { RuntimeServerFactory } from "#runtime/core/provider";
 import type { GeminiWebBrowserConfig } from "#runtime/browser/gemini-web/config";
 import type { GeminiWebProviderConfig } from "#runtime/providers/gemini-web/config";
-import { GEMINI_WEB_HOME_URL, GEMINI_WEB_MODEL_PREFIX } from "#runtime/providers/gemini-web/models";
+import {
+  GEMINI_WEB_HOME_URL,
+  GEMINI_WEB_MODEL_PREFIX,
+  GEMINI_WEB_PUBLIC_MODEL_IDS,
+} from "#runtime/providers/gemini-web/models";
 import { startGeminiWebServer } from "#runtime/providers/gemini-web/server";
 
 export function geminiWebBrowserConfig(config: GeminiWebRuntimeConfig): GeminiWebBrowserConfig {
@@ -27,7 +31,9 @@ function geminiWebProviderConfig(
   config: GeminiWebRuntimeConfig,
   marker: VerifiedGeminiCapabilityMarker = readVerifiedGeminiCapabilityMarker(config.capabilitiesPath),
 ): GeminiWebProviderConfig {
-  const models = marker.capabilities.available.map(id => `${GEMINI_WEB_MODEL_PREFIX}${id}`);
+  const models = GEMINI_WEB_PUBLIC_MODEL_IDS
+    .filter(id => marker.capabilities.available.includes(id))
+    .map(id => `${GEMINI_WEB_MODEL_PREFIX}${id}`);
   if (models.length === 0) throw new Error("Gemini Web has no verified account models");
   return {
     adapter: "gemini-web",

@@ -140,7 +140,7 @@ export async function daemonLoginExists(account: BrowserInternetAccount): Promis
 			? marker.version === 1 &&
 					marker.provider === "gemini-web" &&
 					typeof marker.authenticatedAt === "string" &&
-					marker.signOutHref === "https://accounts.google.com/SignOutOptions" &&
+					isGeminiSignOutHref(marker.signOutHref) &&
 					isRecord(marker.capabilities)
 			: marker.version === 2 &&
 					marker.authenticated === true &&
@@ -162,13 +162,18 @@ export async function readOwnedDaemonCapabilities(account: BrowserInternetAccoun
 				throw new Error(`Invalid Gemini Web capabilities: ${daemonLoginMarkerPath(account)}`);
 			}
 			const labels = capabilities.labels as Record<string, unknown>;
-			const models = capabilities.available.map((id) => {
+			const available = capabilities.available.map((id) => {
 				if (id !== "flash" && id !== "thinking" && id !== "pro")
 					throw new Error(`Invalid Gemini Web model: ${String(id)}`);
-				const label = labels[id];
-				if (typeof label !== "string" || !label.trim()) throw new Error(`Invalid Gemini Web model label: ${id}`);
-				return { id, label, description: `Gemini Web ${label}` };
+				return id;
 			});
+			const models = available
+				.filter((id) => id !== "thinking")
+				.map((id) => {
+					const label = labels[id];
+					if (typeof label !== "string" || !label.trim()) throw new Error(`Invalid Gemini Web model label: ${id}`);
+					return { id, label, description: `Gemini Web ${label}` };
+				});
 			return { proAvailable: false, models };
 		}
 		if (config.adapter !== "chatgpt-web")
@@ -397,6 +402,16 @@ function assertSupportedFields(value: Record<string, unknown>, fields: ReadonlyS
 	const unsupported = Object.keys(value).filter((field) => !fields.has(field));
 	if (unsupported.length > 0) {
 		throw new Error(`${label} contains unsupported fields: ${unsupported.join(", ")}. Remove it and rerun setup.`);
+	}
+}
+
+function isGeminiSignOutHref(value: unknown): boolean {
+	if (typeof value !== "string") return false;
+	try {
+		const url = new URL(value);
+		return `${url.origin}${url.pathname}` === "https://accounts.google.com/SignOutOptions";
+	} catch {
+		return false;
 	}
 }
 

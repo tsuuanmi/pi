@@ -20,6 +20,25 @@ describe("Gemini Web request parsing", () => {
 		expect(parsed.context.messages).toHaveLength(1);
 	});
 
+	it("ignores Pi tool declarations and tool choice", () => {
+		const input = request({ pi_caller: { session_id: "pi-session-fixture" } });
+		input.tools = [{ type: "function", name: "search" }];
+		input.tool_choice = "auto";
+		expect(parseGeminiWebRequest(input).context.messages).toHaveLength(1);
+	});
+
+	it("maps the single enabled reasoning option to the browser request", () => {
+		const input = request({ pi_caller: { session_id: "pi-session-fixture" } });
+		input.reasoning = { effort: "high" };
+		expect(parseGeminiWebRequest(input).options.reasoning).toBe("high");
+	});
+
+	it("keeps the base model selected when reasoning is off", () => {
+		const input = request({ pi_caller: { session_id: "pi-session-fixture" } });
+		input.reasoning = { effort: "none" };
+		expect(parseGeminiWebRequest(input).options.reasoning).toBeUndefined();
+	});
+
 	it("rejects requests without a Pi session before browser acquisition", () => {
 		expect(() => parseGeminiWebRequest(request())).toThrow("Pi session identity");
 	});

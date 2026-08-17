@@ -6,17 +6,27 @@ function marker(available: GeminiWebCapabilityMarker["available"]): GeminiWebCap
 		version: 1,
 		provider: "gemini-web",
 		verifiedAt: "2026-08-17T00:00:00.000Z",
-		labels: { flash: "3.6 Flash", thinking: "3.6 Thinking", pro: "3.1 Pro" },
+		labels: { flash: "3.7 Flash", thinking: "Extended thinking", pro: "3.1 Pro" },
 		available,
 	};
 }
 
 describe("Gemini model routes", () => {
-	it("resolves stable provider model IDs with account-visible labels", () => {
-		expect(resolveGeminiWebModelRoute("gemini-web/thinking", marker(["flash", "thinking", "pro"]))).toMatchObject({
-			capability: "thinking",
-			label: "3.6 Thinking",
+	it("resolves the two public model IDs with account-visible labels", () => {
+		expect(resolveGeminiWebModelRoute("gemini-web/flash", marker(["flash", "thinking", "pro"]))).toMatchObject({
+			capability: "flash",
+			label: "3.7 Flash",
 		});
+		expect(resolveGeminiWebModelRoute("gemini-web/pro", marker(["flash", "thinking", "pro"]))).toMatchObject({
+			capability: "pro",
+			label: "3.1 Pro",
+		});
+	});
+
+	it("keeps Extended thinking internal instead of exposing it as a model", () => {
+		expect(() => resolveGeminiWebModelRoute("gemini-web/thinking", marker(["flash", "thinking", "pro"]))).toThrow(
+			"not supported",
+		);
 	});
 
 	it("rejects unavailable account capabilities", () => {

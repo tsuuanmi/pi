@@ -31,8 +31,9 @@ Export the variables and reload Pi after account changes.
 internet_daemon { action: "login", account: "default" }
 ```
 
-Complete sign-in in the daemon-owned headed Chrome window. For an existing Playwright storage-state
-export, use an absolute path:
+Complete sign-in in the daemon-owned normal Chrome window. Gemini uses the same lifecycle as ChatGPT:
+a dedicated Chrome profile handles sign-in, then Pi reopens that profile to capture and verify its
+storage state. For an existing Playwright storage-state export, use an absolute path:
 
 ```text
 internet_daemon {
@@ -64,7 +65,8 @@ endpoints.
 ChatGPT Web exposes canonical Sol route models, with Pro routes gated by account capability. Pi `@file` references are expanded only
 for regular workspace-local files, under bounded count and byte limits. API providers use their
 native image/text support and do not use the browser replay adapter. Gemini Web discovers the
-account-visible Flash, Thinking, and Pro modes during verified login and currently accepts text only.
+account-visible Flash, Extended thinking, and Pro modes during verified login and currently accepts text only.
+Pi exposes Flash and Pro as models; enabling their single reasoning option selects Extended thinking.
 
 ## Durable conversations
 

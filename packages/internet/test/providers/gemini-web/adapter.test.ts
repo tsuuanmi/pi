@@ -13,7 +13,7 @@ function config(stateDir: string): GeminiWebProviderConfig {
 		adapter: "gemini-web",
 		baseUrl: GEMINI_WEB_HOME_URL,
 		defaultModel: "gemini-web/flash",
-		models: ["gemini-web/flash", "gemini-web/thinking", "gemini-web/pro"],
+		models: ["gemini-web/flash", "gemini-web/pro"],
 		capabilityMarker: {
 			version: 1,
 			provider: "gemini-web",
@@ -23,7 +23,7 @@ function config(stateDir: string): GeminiWebProviderConfig {
 				version: 1,
 				provider: "gemini-web",
 				verifiedAt: "2026-08-17T00:00:00.000Z",
-				labels: { flash: "3.6 Flash", thinking: "3.6 Thinking", pro: "3.1 Pro" },
+				labels: { flash: "3.7 Flash", thinking: "Extended thinking", pro: "3.1 Pro" },
 				available: ["flash", "thinking", "pro"],
 			},
 		},
@@ -50,11 +50,13 @@ describe("Gemini Web adapter", () => {
 		const stateDir = mkdtempSync(join(tmpdir(), "gemini-web-adapter-"));
 		const run = vi.fn(
 			async (request: {
+				model: { label: string };
 				onTextDelta: (text: string) => void;
 				resolveConversationUrl?: () => string | undefined;
 				recordConversationUrl?: (conversationUrl: string) => void;
 			}) => {
 				expect(request.resolveConversationUrl?.()).toBeUndefined();
+				expect(request.model.label).toBe("3.7 Flash");
 				request.onTextDelta("Hello");
 				request.onTextDelta(" Gemini");
 				const conversationUrl = "https://gemini.google.com/app/abc123";
@@ -80,6 +82,21 @@ describe("Gemini Web adapter", () => {
 		]);
 		expect(events.some((event) => typeof event === "object" && event !== null && "usage" in event)).toBe(false);
 		expect(record).toHaveBeenCalledWith("pi-session-fixture", "https://gemini.google.com/app/abc123");
+	});
+
+	it("selects Extended thinking when reasoning is enabled on a base model", async () => {
+		const stateDir = mkdtempSync(join(tmpdir(), "gemini-web-adapter-"));
+		const run = vi.fn(async (request: { model: { label: string } }) => {
+			expect(request.model.label).toBe("Extended thinking");
+			return { text: "Reasoned answer", conversationUrl: "https://gemini.google.com/app/reasoning" };
+		});
+		const driver = { run, close: vi.fn() } as unknown as GeminiWebTurnDriver;
+		const policy = { resolve: vi.fn(() => undefined), record: vi.fn() } as unknown as GeminiNativeConversationPolicy;
+		const adapter = new GeminiWebAdapter(config(stateDir), { driver, conversationPolicy: policy });
+
+		await adapter.runTurn(parsed({ options: { reasoning: "high" } }), { headers: new Headers() }, () => {});
+
+		expect(run).toHaveBeenCalledOnce();
 	});
 
 	it("fails closed when a continuation has no session mapping", async () => {
@@ -114,11 +131,11 @@ describe("Gemini Web adapter", () => {
 
 		await expect(
 			adapter.runTurn(
-				parsed({ context: { messages: [], tools: [{ name: "search" }] } }),
+				parsed({ context: { messages: [], files: [{ name: "fixture.txt" }] } }),
 				{ headers: new Headers() },
 				() => {},
 			),
-		).rejects.toThrow("tools or tool choice");
+		).rejects.toThrow("images or files");
 		expect(run).not.toHaveBeenCalled();
 	});
 });

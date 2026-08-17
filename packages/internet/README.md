@@ -74,7 +74,7 @@ internet_daemon {
 The daemon applies the provider-specific origin allowlist, verifies authenticated account evidence
 in its owned browser, and only then persists the state. Invalid imports fail without replacing the
 stored login. Gemini Web retains only `google.com`, `accounts.google.com`, and `gemini.google.com`
-cookies plus Gemini origin storage, and records the account-visible Flash, Thinking, and Pro modes.
+cookies plus Gemini origin storage, and records the account-visible Flash, Extended thinking, and Pro modes.
 
 Authenticated enabled daemons auto-start by default. `internet_settings { autoLogin: false }`
 disables login prompting while preserving start of already authenticated accounts.
@@ -87,9 +87,11 @@ an answer fallback. Durable conversation replay, model capability gates,
 and Pi's built-in `openai-responses` SSE transport remain authoritative.
 
 Gemini Web uses the verified rendered `model-response` surface as its sole response source. It
-streams stable completed lines, flushes the final text after completion, supports cancellation via
-the native stop control, and quarantines a page if already-emitted DOM text changes. Tools, files,
-images, structured output, and reasoning controls are rejected before browser acquisition.
+buffers in-progress DOM rewrites and emits text after completion and stability, supports cancellation
+via the native stop control, and replaces failed pages. Pi tool declarations
+are ignored because Gemini Web cannot call them; tool-result history, files, images, and structured output
+are rejected before browser acquisition. Gemini Web exposes Flash and Pro as
+models; the single supported reasoning option selects the account-visible Extended thinking mode for either model.
 
 ## Council
 

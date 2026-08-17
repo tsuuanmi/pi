@@ -57,6 +57,10 @@
 
 ### Changed
 
+- Expose Gemini Web Flash and Pro as the two public models and map their single reasoning option to
+  the account-visible Extended thinking mode.
+- Launch Gemini Web sign-in through a normal dedicated Chrome process before verifying the saved
+  session, matching ChatGPT Web login behavior and avoiding automation-only sign-in rejection.
 - Move all browser-facing runtime code under `runtime/src/browser/`, keep reusable mechanics
   in direct modules, and split ChatGPT and Gemini automation into cohesive provider-specific modules.
 - Move normalized protocol and Responses streaming contracts into runtime core while retaining
@@ -102,6 +106,10 @@
 
 ### Fixed
 
+- Buffer Gemini Web response DOM text until completion so normal in-progress rewrites do not
+  duplicate turn-2 output or quarantine the page.
+- Ignore Pi's automatically attached tool declarations for Gemini Web text turns instead of
+  rejecting otherwise valid prompts with HTTP 400.
 - Harden browser lifecycle handling with one shared context, serialized page leases, active-page
   protection, launch-safe shutdown, timeout quarantine, and abort-aware response capture.
 - Capture every ChatGPT conversation response and select the latest message only after the browser turn completes, avoiding both premature intermediate results and brittle final-Markdown detection.

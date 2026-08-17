@@ -3,7 +3,7 @@ import { chromium, type LaunchOptions } from "playwright-core";
 import { BrowserSession } from "#runtime/browser/session";
 import { BrowserTurnRunner, runBrowserStage } from "#runtime/browser/turn";
 import type { GeminiWebBrowserConfig } from "#runtime/browser/gemini-web/config";
-import { waitForGeminiPageDomCompletion, type GeminiDomDivergenceError } from "#runtime/browser/gemini-web/streaming";
+import { waitForGeminiPageDomCompletion } from "#runtime/browser/gemini-web/streaming";
 import {
   fillGeminiComposer,
   prepareGeminiConversationSurface,
@@ -27,7 +27,6 @@ export interface GeminiBrowserTurnRequest {
   traceId: string;
   signal?: AbortSignal;
   onTextDelta: (delta: string) => void | Promise<void>;
-  onQuarantine?: (error: GeminiDomDivergenceError) => void | Promise<void>;
 }
 
 export interface GeminiBrowserTurnResult {
@@ -123,7 +122,6 @@ export class GeminiWebTurnDriver {
           signal: captureSignal,
           timeoutMs: this.#turnTimeoutMs,
           emitTextDelta: request.onTextDelta,
-          onQuarantine: request.onQuarantine,
           minimumResponseCount,
         });
       });

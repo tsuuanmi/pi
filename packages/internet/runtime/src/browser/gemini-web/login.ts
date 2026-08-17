@@ -1,10 +1,12 @@
-import { readFileSync, rmSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { chromium, type LaunchOptions, type Page } from "playwright-core";
 
 import { BrowserSession } from "#runtime/browser/session";
 import {
   assertGeminiPageAuthenticated,
+  browserLoginStateExists,
   geminiLoginVerificationMarkerPath,
   inspectGeminiAuthEvidence,
   readGeminiAuthSnapshot,
@@ -131,33 +133,57 @@ export async function loginToGemini(
   config: GeminiWebBrowserConfig,
   options: { timeoutMs?: number } = {},
 ): Promise<VerifiedGeminiCapabilityMarker> {
+  if (!existsSync(config.chromeExecutablePath)) {
+    throw new Error(`Google Chrome was not found at ${config.chromeExecutablePath}. Pass --chrome with its executable path.`);
+  }
   const profileDir = join(dirname(config.storageStatePath), "login-profile");
-  rmSync(profileDir, { recursive: true, force: true });
+  mkdirSync(profileDir, { recursive: true, mode: 0o700 });
+  process.stdout.write(
+    "A normal Chrome window is open. Sign in to Gemini, then quit this dedicated Chrome instance completely.\n",
+  );
+  const loginBrowser = spawn(config.chromeExecutablePath, [
+    `--user-data-dir=${profileDir}`,
+    "--new-window",
+    "--disable-background-mode",
+    "--no-first-run",
+    "--no-default-browser-check",
+    `--window-position=${config.browserWindowPositionX ?? 0},${config.browserWindowPositionY ?? 0}`,
+    `--window-size=${config.browserWindowWidth ?? 700},${config.browserWindowHeight ?? 500}`,
+    "https://gemini.google.com/app",
+  ], { env: process.env, stdio: "ignore" });
+  const loginExit = await new Promise<number>((resolveExit, rejectExit) => {
+    loginBrowser.once("error", rejectExit);
+    loginBrowser.once("exit", (code, signal) => {
+      if (signal) rejectExit(new Error(`Normal Chrome login window exited from signal ${signal}`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (loginExit !== 0) throw new Error(`Normal Chrome login window exited with status ${loginExit}`);
+
   const context = await chromium.launchPersistentContext(profileDir, {
     executablePath: config.chromeExecutablePath,
     headless: false,
-    viewport: {
-      width: config.browserWindowWidth ?? 700,
-      height: config.browserWindowHeight ?? 500,
-    },
-    args: [
-      `--window-position=${config.browserWindowPositionX ?? 0},${config.browserWindowPositionY ?? 0}`,
-      `--window-size=${config.browserWindowWidth ?? 700},${config.browserWindowHeight ?? 500}`,
-    ],
+    ignoreDefaultArgs: ["--password-store=basic", "--use-mock-keychain"],
+    args: ["--no-first-run", "--no-default-browser-check"],
   });
+  const markerPath = config.capabilityMarkerPath ?? geminiLoginVerificationMarkerPath(config.storageStatePath);
   try {
     const page = context.pages()[0] ?? await context.newPage();
-    await page.goto("https://gemini.google.com/app", { waitUntil: "domcontentloaded" });
-    const evidence = await waitForSignIn(page, options.timeoutMs ?? 5 * 60_000);
+    await page.goto("https://gemini.google.com/app", {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
+    const evidence = await waitForSignIn(page, options.timeoutMs ?? 60_000);
     const storageState = sanitizeGeminiStorageState(await context.storageState());
     const labels = await detectGeminiModelLabels(page);
     const capabilities = createGeminiCapabilityMarker(discoveredCapabilities(labels));
-    const markerPath = config.capabilityMarkerPath ?? geminiLoginVerificationMarkerPath(config.storageStatePath);
-    writeVerifiedGeminiCapabilityMarker(markerPath, evidence, capabilities);
     writePrivateJson(config.storageStatePath, storageState);
+    writeVerifiedGeminiCapabilityMarker(markerPath, evidence, capabilities);
     return readVerifiedGeminiCapabilityMarker(markerPath);
   } finally {
     await context.close();
-    rmSync(profileDir, { recursive: true, force: true });
+    if (browserLoginStateExists(config.storageStatePath, markerPath)) {
+      rmSync(profileDir, { recursive: true, force: true });
+    }
   }
 }

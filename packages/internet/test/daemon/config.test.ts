@@ -170,17 +170,19 @@ describe("owned daemon config", () => {
 				version: 1,
 				provider: "gemini-web",
 				authenticatedAt: new Date().toISOString(),
-				signOutHref: "https://accounts.google.com/SignOutOptions",
+				signOutHref: "https://accounts.google.com/SignOutOptions?continue=https://gemini.google.com",
 				capabilities: {
 					version: 1,
 					provider: "gemini-web",
-					labels: { flash: "3.6 Flash", thinking: "Thinking", pro: "Pro" },
-					available: ["flash"],
+					labels: { flash: "3.7 Flash", thinking: "Extended thinking", pro: "3.1 Pro" },
+					available: ["flash", "thinking", "pro"],
 				},
 			}),
 		);
 		await expect(daemonLoginExists(target)).resolves.toBe(true);
-		await expect(readOwnedDaemonCapabilities(target)).resolves.toMatchObject({ models: [{ id: "flash" }] });
+		await expect(readOwnedDaemonCapabilities(target)).resolves.toMatchObject({
+			models: [{ id: "flash" }, { id: "pro" }],
+		});
 	});
 
 	it("recognizes only the verified durable login format", async () => {

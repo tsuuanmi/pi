@@ -54,23 +54,25 @@ function inputMessage(item: unknown, timestamp: number, systemPrompt: string[]):
   throw new Error(`Gemini Web does not support message role: ${role}`);
 }
 
+function parseReasoning(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!isRecord(value)) throw new Error("Gemini Web reasoning must be an object");
+  if (value.effort === undefined || value.effort === null) return undefined;
+  const effort = requiredString(value.effort, "a reasoning effort");
+  return effort === "none" || effort === "off" ? undefined : effort;
+}
+
 export function parseGeminiWebRequest(value: unknown): ParsedRequest {
   if (!isRecord(value)) throw new Error("Gemini Web request body must be an object");
   const modelId = requiredString(value.model, "a model");
   if (!modelId.startsWith("gemini-web/")) throw new Error(`Invalid Gemini Web model: ${modelId}`);
   if (!Array.isArray(value.input)) throw new Error("Gemini Web request requires an input array");
-  if (Array.isArray(value.tools) && value.tools.length > 0) throw new Error("Gemini Web does not support tools");
-  if (value.tool_choice !== undefined && value.tool_choice !== null && value.tool_choice !== "none") {
-    throw new Error("Gemini Web does not support tool choice");
-  }
-  if (value.reasoning !== undefined && value.reasoning !== null) {
-    throw new Error("Gemini Web does not support reasoning controls");
-  }
   if (value.response_format !== undefined || (isRecord(value.text) && value.text.format !== undefined)) {
     throw new Error("Gemini Web does not support structured output");
   }
   if (value.encrypted_content !== undefined) throw new Error("Gemini Web does not support opaque request payloads");
 
+  const reasoning = parseReasoning(value.reasoning);
   const systemPrompt = typeof value.instructions === "string" && value.instructions.trim()
     ? [value.instructions]
     : [];
@@ -89,7 +91,7 @@ export function parseGeminiWebRequest(value: unknown): ParsedRequest {
     previousResponseId: typeof value.previous_response_id === "string" ? value.previous_response_id : undefined,
     context: { ...(systemPrompt.length > 0 ? { systemPrompt } : {}), messages },
     stream: value.stream === true,
-    options: {},
+    options: reasoning ? { reasoning } : {},
     sessionId,
   };
 }

@@ -1,6 +1,5 @@
 import {
   GEMINI_WEB_CAPABILITY_LABELS,
-  GEMINI_WEB_MODEL_IDS,
   type GeminiWebCapabilityMarker,
   type GeminiWebModelId,
 } from "#runtime/browser/gemini-web/capabilities";
@@ -16,7 +15,9 @@ interface GeminiWebModelRoute {
   inputModalities: readonly ["text"];
 }
 
-const GEMINI_WEB_MODEL_ROUTES: readonly GeminiWebModelRoute[] = GEMINI_WEB_MODEL_IDS.map(capability => ({
+export const GEMINI_WEB_PUBLIC_MODEL_IDS = ["flash", "pro"] as const satisfies readonly GeminiWebModelId[];
+
+const GEMINI_WEB_MODEL_ROUTES: readonly GeminiWebModelRoute[] = GEMINI_WEB_PUBLIC_MODEL_IDS.map(capability => ({
   id: `${GEMINI_WEB_MODEL_PREFIX}${capability}`,
   capability,
   label: GEMINI_WEB_CAPABILITY_LABELS[capability],

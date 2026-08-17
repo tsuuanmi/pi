@@ -1,8 +1,4 @@
-import {
-	GeminiCompletionQuarantinedError,
-	type GeminiResponseDomSnapshot,
-	waitForGeminiDomCompletion,
-} from "#runtime/browser/gemini-web/streaming";
+import { type GeminiResponseDomSnapshot, waitForGeminiDomCompletion } from "#runtime/browser/gemini-web/streaming";
 
 function sequence(values: readonly GeminiResponseDomSnapshot[]): () => Promise<GeminiResponseDomSnapshot> {
 	let index = 0;
@@ -10,7 +6,7 @@ function sequence(values: readonly GeminiResponseDomSnapshot[]): () => Promise<G
 }
 
 describe("Gemini DOM completion", () => {
-	it("emits a stable prefix exactly once while rendered text grows", async () => {
+	it("buffers rendered text and emits it once after completion", async () => {
 		const deltas: string[] = [];
 		const result = await waitForGeminiDomCompletion({
 			read: sequence([
@@ -29,25 +25,26 @@ describe("Gemini DOM completion", () => {
 			timeoutMs: 100,
 		});
 		expect(result.text).toBe("Hello\nWorld");
-		expect(deltas).toEqual(["Hello\n", "World"]);
+		expect(deltas).toEqual(["Hello\nWorld"]);
 	});
 
-	it("quarantines an irreconcilable DOM rewrite", async () => {
-		const quarantine = vi.fn();
-		await expect(
-			waitForGeminiDomCompletion({
-				read: sequence([
-					{ currentText: "Hello\nA", currentHtml: "Hello\nA", running: true, responsePresent: true },
-					{ currentText: "Hello\nA", currentHtml: "Hello\nA", running: true, responsePresent: true },
-					{ currentText: "Hullo\nA", currentHtml: "Hullo\nA", running: false, responsePresent: true },
-				]),
-				onQuarantine: quarantine,
-				pollMs: 1,
-				stableMs: 3,
-				timeoutMs: 100,
-			}),
-		).rejects.toBeInstanceOf(GeminiCompletionQuarantinedError);
-		expect(quarantine).toHaveBeenCalledOnce();
+	it("accepts an in-progress DOM rewrite before final emission", async () => {
+		const deltas: string[] = [];
+		const result = await waitForGeminiDomCompletion({
+			read: sequence([
+				{ currentText: "Hello\nA", currentHtml: "Hello\nA", running: true, responsePresent: true },
+				{ currentText: "Hello\nA", currentHtml: "Hello\nA", running: true, responsePresent: true },
+				{ currentText: "Hullo\nA", currentHtml: "Hullo\nA", running: false, responsePresent: true },
+			]),
+			emitTextDelta: (delta) => {
+				deltas.push(delta);
+			},
+			pollMs: 1,
+			stableMs: 3,
+			timeoutMs: 100,
+		});
+		expect(result.text).toBe("Hullo\nA");
+		expect(deltas).toEqual(["Hullo\nA"]);
 	});
 
 	it("does not complete while the stop control is present", async () => {

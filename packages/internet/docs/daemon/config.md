@@ -20,9 +20,10 @@ Unknown or cross-provider fields are rejected.
 ## Capabilities and login
 
 `daemonLoginMarkerPath(account)` selects the provider marker path. ChatGPT retains its version-2
-storage verification marker. Gemini requires a version-1 marker with the exact Google
-`SignOutOptions` authenticated anchor and nested labels/availability for Flash, Thinking, and Pro.
-`readOwnedDaemonCapabilities()` exposes only models present in that verified Gemini marker.
+storage verification marker. Gemini requires a version-1 marker with the trusted Google
+`SignOutOptions` authenticated anchor and nested labels/availability for Flash, Extended thinking,
+and Pro. `readOwnedDaemonCapabilities()` exposes verified Flash and Pro as models; Extended thinking
+remains an internal reasoning mode.
 
 `daemonLoginExists()` requires both private browser storage and the matching valid provider marker.
 `syncOwnedDaemonCapabilities()` updates ChatGPT's config flag; Gemini capabilities remain marker-owned.

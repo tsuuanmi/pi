@@ -41,6 +41,7 @@ function labelMatches(item: string, expected: string): boolean {
 export function modelIdForGeminiLabel(label: string): GeminiWebModelId | undefined {
   const normalized = normalizedLabel(label);
   if (/\bthinking\b/i.test(normalized)) return "thinking";
+  if (/\bflash(?:[\s-]+lite)\b/i.test(normalized)) return undefined;
   if (/\bflash\b/i.test(normalized)) return "flash";
   if (/\bpro\b/i.test(normalized)) return "pro";
   return undefined;
@@ -104,7 +105,7 @@ export function discoverGeminiCapabilities(
 ): readonly GeminiWebDiscoveredCapability[] {
   const labels = marker?.labels ?? GEMINI_WEB_CAPABILITY_LABELS;
   return GEMINI_WEB_MODEL_IDS.map(id => {
-    const matching = items.find(item => labelMatches(item.label, labels[id]));
+    const matching = items.find(item => modelIdForGeminiLabel(item.label) === id && labelMatches(item.label, labels[id]));
     return {
       id,
       label: matching ? normalizeGeminiModelLabel(matching.label) : labels[id],

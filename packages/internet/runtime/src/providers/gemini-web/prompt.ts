@@ -52,13 +52,6 @@ function validateUnsupportedRequestFields(parsed: ParsedRequest): void {
   const request = record(parsed);
   const options = record(parsed.options);
   const context = record(parsed.context);
-  rejectIfPresent(context, ["tools", "toolChoice", "tool_choice", "functions"], "Gemini Web does not support tools or tool choice");
-  rejectIfPresent(options, ["tools", "toolChoice", "tool_choice", "functions"], "Gemini Web does not support tools or tool choice");
-  rejectIfPresent(
-    request,
-    ["tools", "toolChoice", "tool_choice", "functions"],
-    "Gemini Web does not support tools or tool choice",
-  );
   rejectIfPresent(
     request,
     ["responseFormat", "response_format", "structuredOutput", "structured_output", "jsonSchema"],
@@ -78,16 +71,6 @@ function validateUnsupportedRequestFields(parsed: ParsedRequest): void {
     context,
     ["files", "attachments", "images", "inputFiles"],
     "Gemini Web accepts browser-only text and does not support images or files",
-  );
-  rejectIfPresent(
-    options,
-    ["reasoning", "reasoningEffort", "reasoning_effort", "thinkingLevel", "thinking_level"],
-    "Gemini Web does not support request reasoning controls; select flash, thinking, or pro as the model",
-  );
-  rejectIfPresent(
-    request,
-    ["reasoning", "reasoningEffort", "reasoning_effort", "thinkingLevel", "thinking_level"],
-    "Gemini Web does not support request reasoning controls; select flash, thinking, or pro as the model",
   );
 }
 

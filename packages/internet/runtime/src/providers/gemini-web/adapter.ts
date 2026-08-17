@@ -56,7 +56,13 @@ export class GeminiWebAdapter implements RuntimeProviderAdapter<ParsedRequest> {
     // Validate and compile before the driver can acquire a browser page.
     const prompt = compileGeminiWebPrompt(parsed);
     const continuationPrompt = compileGeminiWebContinuationPrompt(parsed);
-    const model = resolveGeminiWebModelRoute(parsed.modelId, this.#marker);
+    const route = resolveGeminiWebModelRoute(parsed.modelId, this.#marker);
+    const reasoningEnabled = parsed.options.reasoning !== undefined && parsed.options.reasoning !== "none";
+    const capability = reasoningEnabled ? "thinking" : route.capability;
+    if (!this.#marker.available.includes(capability)) {
+      throw new Error(`Gemini Web capability is not available: ${this.#marker.labels[capability]}`);
+    }
+    const model = { ...route, label: this.#marker.labels[capability] };
     const sessionId = piSessionId(parsed);
     await this.#driver.run({
       prompt: prompt.text,
