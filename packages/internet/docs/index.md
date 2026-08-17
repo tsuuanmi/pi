@@ -1,6 +1,6 @@
 # Internet Documentation
 
-`@tsuuanmi/pi-internet` provides package-owned ChatGPT Web browser inference on Linux/macOS,
+`@tsuuanmi/pi-internet` provides package-owned ChatGPT Web and Gemini Web browser inference on Linux/macOS,
 Anthropic and Gemini API account providers, bounded council orchestration, Full-mode local-tool
 bridging, and safe public web access.
 
@@ -33,18 +33,19 @@ bridging, and safe public web access.
   [`provider`](providers/anthropic/provider.md)
 - Google [`index`](providers/google/index.md), [`models`](providers/google/models.md), and
   [`provider`](providers/google/provider.md)
+- Gemini Web [`index`](providers/gemini-web/index.md), [`models`](providers/gemini-web/models.md), and
+  [`provider`](providers/gemini-web/provider.md)
 - ChatGPT Web [`index`](providers/openai/index.md), [`models`](providers/openai/models.md), and
   [`provider`](providers/openai/provider.md)
-- ChatGPT daemon [`auth`](providers/openai/daemon/auth.md),
-  [`client`](providers/openai/daemon/client.md), [`routes`](providers/openai/daemon/routes.md), and
-  [`status`](providers/openai/daemon/status.md)
 - ChatGPT turn [`files`](providers/openai/turn/files.md), [`model`](providers/openai/turn/model.md), and
   [`request`](providers/openai/turn/request.md)
 
 ### Runtime and orchestration
 
-- Daemon [`config`](daemon/config.md), [`doctor`](daemon/doctor.md), [`harness`](daemon/harness.md),
-  [`health`](daemon/health.md), [`manager`](daemon/manager.md), and [`runtime`](daemon/runtime.md)
+- Daemon [`auth`](daemon/auth.md), [`client`](daemon/client.md), [`config`](daemon/config.md),
+  [`doctor`](daemon/doctor.md), [`harness`](daemon/harness.md), [`health`](daemon/health.md),
+  [`manager`](daemon/manager.md), [`routes`](daemon/routes.md), [`runtime`](daemon/runtime.md), and
+  [`status`](daemon/status.md)
 - Private runtime [`source reference`](../runtime/docs/index.md)
 - Council [`service`](council/service.md)
 

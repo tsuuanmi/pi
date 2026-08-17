@@ -77,6 +77,10 @@ export class BrowserTurnRunner<T> {
     }
   }
 
+  get activeCount(): number {
+    return this.active.size;
+  }
+
   run(key: string, action: () => Promise<T>): Promise<T> {
     if (this.closing) return Promise.reject(new Error(`${this.options.label} browser runner is closing`));
     if (this.maintenancePending > 0) {

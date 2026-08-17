@@ -29,6 +29,9 @@
 - Use authenticated ChatGPT conversation wire payloads as the sole response source; invalid or
   missing wire payloads fail the turn instead of using DOM extraction.
 - Add Anthropic and Gemini API account providers using environment-referenced credentials.
+- Add an isolated Gemini Web browser provider with verified Google/Gemini login state, account-visible
+  model discovery, DOM text streaming, cancellation, diagnostics, and an immutable one-to-one
+  Pi-session-to-native-Gemini-chat mapping.
 - Add account removal, provider-specific validation, and automatic browser-port allocation.
 - Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
 
@@ -55,7 +58,9 @@
 ### Changed
 
 - Move all browser-facing runtime code under `runtime/src/browser/`, keep reusable mechanics
-  in direct modules, and split ChatGPT automation into cohesive provider-specific browser modules.
+  in direct modules, and split ChatGPT and Gemini automation into cohesive provider-specific modules.
+- Move normalized protocol and Responses streaming contracts into runtime core while retaining
+  ChatGPT-only replay, compaction, search, and opaque request state under its provider namespace.
 - Make durable ChatGPT conversations universal across browser-only and Full modes; each later turn
   reopens the saved conversation and sends only the current suffix.
 - Pin all direct runtime dependencies to exact lockfile versions.

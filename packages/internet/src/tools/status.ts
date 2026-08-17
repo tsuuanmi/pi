@@ -1,16 +1,16 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/providers/openai/daemon/client";
+import { DaemonClient } from "#internet/daemon/client";
 
 export function registerStatusTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
 		name: "internet_status",
 		label: "Internet Status",
-		description: "Show ChatGPT Web daemon health and active turn counts.",
+		description: "Show browser-provider daemon health and active turn counts.",
 		parameters: Type.Object({ account: Type.Optional(Type.String({ minLength: 1 })) }),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().getOpenAi(params.account);
+			const account = await new AccountRegistry().getBrowser(params.account);
 			const client = await DaemonClient.forAccount(account);
 			const health = await client.health(signal);
 			return {

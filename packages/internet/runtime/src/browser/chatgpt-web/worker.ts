@@ -27,7 +27,7 @@ import {
   resolveChatGptWebModelMode,
   type ChatGptWebCapabilities,
 } from "#runtime/providers/chatgpt-web/models/model";
-import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ChatGptWebProviderConfig as ProviderConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
 
 const workers = new Map<string, ChatGptBrowserWorker>();
 const CHATGPT_SMOKE_TEXT = "Reply with exactly: CODEX WEB GPT READY";

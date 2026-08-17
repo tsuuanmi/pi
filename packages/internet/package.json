@@ -1,7 +1,7 @@
 {
 	"name": "@tsuuanmi/pi-internet",
 	"version": "0.1.0",
-	"description": "Cross-platform Pi internet extension for isolated ChatGPT Web, API providers, and model councils.",
+	"description": "Cross-platform Pi internet extension for isolated ChatGPT Web, Gemini Web, API providers, and model councils.",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",

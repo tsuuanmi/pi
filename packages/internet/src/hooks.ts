@@ -1,11 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi/extensions";
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
-import type { OpenAiInternetAccount } from "#internet/core/types";
+import type { BrowserInternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
-import { providerName } from "#internet/providers/openai/provider";
 import { expandLocalFileReferences } from "#internet/providers/openai/turn/files";
-import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/providers/openai/turn/request";
+import { adaptInternetRequest, internetProviderName } from "#internet/providers/registry";
 import type { InternetSettingsService } from "#internet/settings";
 
 const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_patch"]);
@@ -13,11 +12,11 @@ const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_pat
 export function registerInternetHooks(
 	host: Pick<ExtensionAPI, "on" | "onHook">,
 	manager: OwnedDaemonManager,
-	accounts: OpenAiInternetAccount[],
+	accounts: BrowserInternetAccount[],
 	settings: InternetSettingsService,
 ): void {
 	const providerAccounts = new Map(
-		accounts.filter((account) => account.enabled).map((account) => [providerName(account), account.id]),
+		accounts.filter((account) => account.enabled).map((account) => [internetProviderName(account), account.id]),
 	);
 
 	host.onHook("tool_call", async (hook, context) => {
@@ -44,37 +43,40 @@ export function registerInternetHooks(
 	});
 
 	host.onHook("before_provider_request", async (hook, context) => {
-		const accountId = context.model ? providerAccounts.get(context.model.provider) : undefined;
-		if (!accountId) return hook.payload;
+		const providerName = context.model?.provider;
+		const accountId = providerName ? providerAccounts.get(providerName) : undefined;
+		if (!accountId || !providerName) return hook.payload;
+		const account = accounts.find((candidate) => candidate.id === accountId);
 		try {
-			const account = accounts.find((candidate) => candidate.id === accountId);
 			const loginExists = account ? await daemonLoginExists(account) : false;
 			if (!loginExists && !(await settings.get()).autoLogin) {
 				if (context.hasUI) {
 					context.ui.notify(
-						"Automatic ChatGPT login is disabled. Run internet_daemon with action login, then retry.",
+						"Automatic browser login is disabled. Run internet_daemon with action login, then retry.",
 						"warning",
 					);
 				}
-				return rejectedChatGptWebRequest();
+				return { model: `${providerName}/__request-rejected__`, input: [], stream: true, store: false };
 			}
 			if (!loginExists && context.hasUI) {
 				context.ui.notify(
-					"Opening an isolated Chrome profile for ChatGPT login. Complete sign-in to continue.",
+					"Opening an isolated Chrome profile for browser-provider login. Complete sign-in to continue.",
 					"info",
 				);
 			}
 			await manager.ensureReady(accountId);
-			const payload = await expandLocalFileReferences(hook.payload, context.cwd);
-			return adaptChatGptWebRequest(payload, {
+			const identity = {
 				cwd: context.cwd,
 				sessionId: context.sessionManager.getSessionId(),
 				turnId: latestUserEntryId(context.sessionManager.getBranch()),
-			});
+			};
+			const prepared =
+				account?.provider === "openai" ? await expandLocalFileReferences(hook.payload, context.cwd) : hook.payload;
+			return adaptInternetRequest(account?.provider ?? "openai", prepared, identity);
 		} catch {
 			if (context.hasUI)
-				context.ui.notify("ChatGPT Web request preparation failed; the request was blocked.", "error");
-			return rejectedChatGptWebRequest();
+				context.ui.notify("Internet browser request preparation failed; the request was blocked.", "error");
+			return { model: `${providerName}/__request-rejected__`, input: [], stream: true, store: false };
 		}
 	});
 

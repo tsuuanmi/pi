@@ -9,14 +9,16 @@ Private, atomic routing metadata for browser and API accounts. The authoritative
 
 `getAccountRegistryPath()` resolves to `$PI_AGENT_DIR/internet/accounts.json`, or
 `~/.pi/agent/internet/accounts.json`. When the file is absent, `list()` returns one enabled
-`openai` account named `default` at `127.0.0.1:17841`. ChatGPT Web conversations are durable per Pi session.
+`openai` account named `default` at `127.0.0.1:17841`. Browser conversations are durable per Pi
+session under provider-private state.
 
 ## `AccountRegistry`
 
 - `list()` reads and validates all accounts.
 - `listProvider(provider)` returns accounts narrowed to one provider.
-- `getOpenAi(id?)` returns only a ChatGPT Web account and rejects API accounts.
-- `add(input)` appends an account after validation. ChatGPT Web accounts receive the first unused
+- `getBrowser(id?)` returns only a ChatGPT Web or Gemini Web account.
+- `getOpenAi(id?)` and `getGeminiWeb(id?)` enforce a concrete browser provider.
+- `add(input)` appends an account after validation. Browser accounts receive the first unused
   loopback port from `17841` when no port is supplied.
 - `remove(id)` removes routing metadata without deleting private account data.
 - `setEnabled(id, enabled)` changes account availability.

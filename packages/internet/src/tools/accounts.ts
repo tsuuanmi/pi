@@ -16,8 +16,8 @@ interface AddAccountParams {
 
 function accountInput(params: AddAccountParams): InternetAccountInput {
 	const common = { id: params.id, displayName: params.displayName, enabled: params.enabled };
-	if (params.provider === "openai") {
-		if (params.apiKeyEnv) throw new Error("apiKeyEnv is not valid for a ChatGPT Web account.");
+	if (params.provider === "openai" || params.provider === "gemini-web") {
+		if (params.apiKeyEnv) throw new Error("apiKeyEnv is not valid for a browser account.");
 		return {
 			...common,
 			provider: params.provider,
@@ -37,7 +37,7 @@ export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">):
 	host.registerTool({
 		name: "internet_accounts",
 		label: "Internet Accounts",
-		description: "List configured ChatGPT Web, Anthropic API, and Gemini API accounts.",
+		description: "List configured ChatGPT Web, Gemini Web, Anthropic API, and Gemini API accounts.",
 		parameters: Type.Object({}),
 		async execute() {
 			const accounts = await new AccountRegistry().list();
@@ -51,7 +51,12 @@ export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">):
 		description: "Add an isolated browser or API account. Reload Pi after changing accounts.",
 		parameters: Type.Object({
 			id: Type.String({ minLength: 1 }),
-			provider: Type.Union([Type.Literal("openai"), Type.Literal("anthropic"), Type.Literal("google")]),
+			provider: Type.Union([
+				Type.Literal("openai"),
+				Type.Literal("gemini-web"),
+				Type.Literal("anthropic"),
+				Type.Literal("google"),
+			]),
 			displayName: Type.Optional(Type.String({ minLength: 1 })),
 			configDir: Type.Optional(Type.String({ minLength: 1 })),
 			host: Type.Optional(Type.String({ minLength: 1 })),

@@ -9,7 +9,7 @@ export function registerSettingsTool(
 	host.registerTool({
 		name: "internet_settings",
 		label: "Internet Settings",
-		description: "Inspect or update ChatGPT Web package settings.",
+		description: "Inspect or update browser-provider package settings.",
 		parameters: Type.Object({ autoLogin: Type.Optional(Type.Boolean()) }),
 		async execute(_id, params) {
 			const result =

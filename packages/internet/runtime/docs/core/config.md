@@ -4,7 +4,8 @@ Mirrors `src/core/config.ts`.
 
 ## Role
 
-Defines runtime version/configuration, secure atomic file writes, executable discovery, and durable command validation.
+Defines the strict ChatGPT Web/Gemini Web runtime configuration union, secure atomic file writes,
+executable discovery, and durable command validation.
 
 ## Public surface
 
@@ -23,7 +24,11 @@ Defines runtime version/configuration, secure atomic file writes, executable dis
 
 ## Behavior and invariants
 
-- These provider-neutral primitives are used by the runtime entrypoint and adapter host; they do not contain ChatGPT-specific protocol logic.
+- `loadRuntimeConfig()` dispatches by the explicit `adapter` discriminator. Gemini accepts only
+  browser-only loopback fields and rejects tunnel, broker, MCP, and ChatGPT capability fields.
+- `parseGeminiWebRuntimeConfig()` validates required strings, absolute private paths, browser window
+  settings, control token, runtime command, context limit, and port before returning the union member.
+- These provider-neutral primitives are used by the runtime entrypoint and adapter host; they do not contain provider-specific protocol logic.
 - Failures are explicit and synchronous/asynchronous according to the underlying operation, so callers can surface them at the CLI or HTTP boundary.
 - Paths, process commands, and service state are treated as security-sensitive inputs and are validated before they are persisted or launched.
 

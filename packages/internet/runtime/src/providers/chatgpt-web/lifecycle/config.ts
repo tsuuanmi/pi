@@ -11,7 +11,6 @@ import {
   VERSION,
 } from "#runtime/core/config";
 import { conversationRuntimeDigest } from "#runtime/providers/chatgpt-web/conversation/journal";
-import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
 
 /** Default connector identity used by the ChatGPT Web adapter. */
 export const DEFAULT_CONNECTOR_NAME = "Pi Internet";
@@ -37,7 +36,41 @@ export interface TunnelConfig {
   alias: string;
 }
 
+export interface ChatGptWebProviderConfig {
+  adapter: "chatgpt-web";
+  mode?: RuntimeMode;
+  baseUrl: string;
+  defaultModel?: string;
+  models?: string[];
+  liveModels?: boolean;
+  contextWindow?: number;
+  modelContextWindows?: Record<string, number>;
+  modelInputModalities?: Record<string, string[]>;
+  modelReasoningEfforts?: Record<string, string[]>;
+  modelDefaultReasoningEfforts?: Record<string, string>;
+  noReasoningModels?: string[];
+  chatgptWeb?: {
+    appName?: string;
+    storageStatePath?: string;
+    chromeExecutablePath?: string;
+    brokerSocketPath?: string;
+    threadEnvironmentStatePath?: string;
+    conversationStateDir?: string;
+    conversationRuntimeDigest?: string;
+    turnTimeoutMs?: number;
+    headed?: boolean;
+    browserWindowWidth?: number;
+    browserWindowHeight?: number;
+    browserWindowPositionX?: number;
+    browserWindowPositionY?: number;
+    localToolsEnabled?: boolean;
+    proAvailable?: boolean;
+    autoApproveToolCalls?: boolean;
+  };
+}
+
 export interface AppConfig {
+  adapter: "chatgpt-web";
   releaseVersion: string;
   mode: RuntimeMode;
   host: "127.0.0.1";
@@ -63,6 +96,7 @@ export interface AppConfig {
 }
 
 const APP_CONFIG_FIELDS = new Set([
+  "adapter",
   "releaseVersion",
   "mode",
   "host",
@@ -112,6 +146,7 @@ export function resolveBrokerEndpoint(value: string): string {
 export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
   const home = getConfigDir();
   return {
+    adapter: "chatgpt-web",
     releaseVersion: VERSION,
     mode,
     host: "127.0.0.1",
@@ -162,6 +197,7 @@ function parseConfig(value: unknown, path: string): AppConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid configuration object in ${path}`);
   const parsed = value as Partial<AppConfig> & Record<string, unknown>;
   assertSupportedFields(parsed, APP_CONFIG_FIELDS, path);
+  if (parsed.adapter !== "chatgpt-web") throw new Error(`Configuration adapter must be chatgpt-web in ${path}`);
   if (typeof parsed.releaseVersion !== "string" || !parsed.releaseVersion.trim()) throw new Error(`Missing releaseVersion in ${path}`);
   if (parsed.mode !== "browser-only" && parsed.mode !== "full") throw new Error(`Invalid runtime mode in ${path}`);
   if (parsed.host !== "127.0.0.1") throw new Error("The Responses proxy must bind to 127.0.0.1");
@@ -265,7 +301,7 @@ export function saveConfig(config: AppConfig): void {
   atomicWriteFile(getConfigPath(), `${JSON.stringify(config, null, 2)}\n`);
 }
 
-export function providerConfig(config: AppConfig): ProviderConfig {
+export function providerConfig(config: AppConfig): ChatGptWebProviderConfig {
   const model = "gpt-5.6-sol";
   const models = [model];
   const efforts = ["low", "medium", "high", "xhigh", ...(config.proAvailable ? ["max"] : [])];

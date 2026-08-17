@@ -17,11 +17,13 @@ describe("AccountRegistry", () => {
 		const target = await registry();
 		await target.add({ id: "work", provider: "openai", port: 18001 });
 		await target.add({ id: "research", provider: "anthropic", apiKeyEnv: "ANTHROPIC_RESEARCH_KEY" });
+		await target.add({ id: "gemini", provider: "gemini-web", port: 18002 });
 		const accounts = await target.list();
 		expect(accounts).toMatchObject([
 			{ id: "default", provider: "openai" },
 			{ id: "work", provider: "openai", port: 18001 },
 			{ id: "research", provider: "anthropic", apiKeyEnv: "ANTHROPIC_RESEARCH_KEY" },
+			{ id: "gemini", provider: "gemini-web", port: 18002 },
 		]);
 		expect(JSON.parse(await readFile(target.path, "utf8"))).not.toHaveProperty("schemaVersion");
 		expect((await stat(target.path)).mode & 0o777).toBe(0o600);
@@ -42,5 +44,10 @@ describe("AccountRegistry", () => {
 		await expect(next.add({ id: "collision", provider: "openai", port: 17841 })).rejects.toThrow(
 			"Duplicate daemon endpoint",
 		);
+		await expect(
+			next.add({ id: "gemini", provider: "gemini-web", configDir: "/tmp/gemini", host: "127.0.0.1", port: 18041 }),
+		).resolves.toMatchObject({
+			provider: "gemini-web",
+		});
 	});
 });

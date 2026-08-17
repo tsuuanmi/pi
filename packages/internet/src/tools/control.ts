@@ -1,13 +1,13 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/providers/openai/daemon/client";
+import { DaemonClient } from "#internet/daemon/client";
 
 export function registerControlTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
 		name: "internet_control",
 		label: "Internet Control",
-		description: "Drain, resume, shut down, or cancel browser turns on the local ChatGPT Web daemon.",
+		description: "Drain, resume, shut down, or cancel browser turns on the local browser-provider daemon.",
 		parameters: Type.Object({
 			account: Type.Optional(Type.String({ minLength: 1 })),
 			action: Type.Union([
@@ -18,7 +18,7 @@ export function registerControlTools(host: Pick<ExtensionAPI, "registerTool">): 
 			]),
 		}),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().getOpenAi(params.account);
+			const account = await new AccountRegistry().getBrowser(params.account);
 			const client = await DaemonClient.forAccount(account);
 			const result = await client.control(params.action, signal);
 			return {

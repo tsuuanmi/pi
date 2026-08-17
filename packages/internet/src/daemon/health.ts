@@ -1,4 +1,4 @@
-import type { DaemonClient } from "#internet/providers/openai/daemon/client";
+import type { DaemonClient } from "#internet/daemon/client";
 
 export interface WaitForHealthOptions {
 	timeoutMs?: number;
@@ -26,5 +26,5 @@ export async function waitForDaemonHealth(
 			await delay(intervalMs);
 		}
 	}
-	throw new Error("ChatGPT Web daemon did not become healthy before the startup timeout.", { cause: lastError });
+	throw new Error("Browser daemon did not become healthy before the startup timeout.", { cause: lastError });
 }

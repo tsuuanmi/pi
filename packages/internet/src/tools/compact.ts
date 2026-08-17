@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/providers/openai/daemon/client";
+import { DaemonClient } from "#internet/daemon/client";
 import { chatGptWebProviderModelId } from "#internet/providers/openai/turn/model";
 
 export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): void {

@@ -29,9 +29,10 @@ import {
 } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
 import { parseRequest } from "#runtime/providers/chatgpt-web/protocol/responses/parser";
 import { expandPreviousResponseInput, flushResponseState, rememberResponseState } from "#runtime/providers/chatgpt-web/protocol/responses/state";
-import { namespacedToolName, type AdapterEvent, type ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
-import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
-import type { ProviderAdapter } from "#runtime/providers/chatgpt-web/turn/adapter";
+import { namespacedToolName, type AdapterEvent } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ChatGptWebProviderConfig as ProviderConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import type { RuntimeProviderAdapter as ProviderAdapter } from "#runtime/core/provider";
 import { stopTunnel } from "#runtime/providers/chatgpt-web/transport/tunnel";
 import { startHttpServer } from "#runtime/core/server";
 import { VERSION } from "#runtime/core/config";
@@ -150,9 +151,9 @@ export class HttpTurnCounter {
   }
 }
 
-type ChatGptWebAdapterFactory = (provider: ProviderConfig) => ProviderAdapter;
+type ChatGptWebAdapterFactory = (provider: ProviderConfig) => ProviderAdapter<ChatGptWebParsedRequest>;
 
-export function routeChatGptWebRequest(parsed: ParsedRequest, config: AppConfig): ChatGptWebModelRoute {
+export function routeChatGptWebRequest(parsed: ChatGptWebParsedRequest, config: AppConfig): ChatGptWebModelRoute {
   const route = requireChatGptWebModelRoute(parsed.modelId, config);
   parsed.modelId = route.backendModel;
   parsed.options.reasoning = route.adapterEffort;
@@ -197,7 +198,7 @@ export async function nativeSearchRequest(
   }
 }
 
-function toolBridgeMaps(parsed: ParsedRequest): {
+function toolBridgeMaps(parsed: ChatGptWebParsedRequest): {
   toolNsMap: Map<string, { namespace: string; name: string }>;
   freeformToolNames: Set<string>;
   toolSearchToolNames: Set<string>;
@@ -243,7 +244,7 @@ export async function responseRequest(
     ? (raw as { previous_response_id?: unknown }).previous_response_id
     : undefined;
   const expanded = expandPreviousResponseInput(raw);
-  let parsed: ParsedRequest;
+  let parsed: ChatGptWebParsedRequest;
   let route: ChatGptWebModelRoute;
   try {
     parsed = parseRequest(expanded);

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import type { AdapterEvent, ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { AdapterEvent } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import type { BrokerToolRequest } from "#runtime/providers/chatgpt-web/turn/broker";
 import {
   extractChatGptCompactionSourceRevision,
@@ -125,7 +126,7 @@ export type ChatGptTurnRuntime =
   | (ChatGptTurnRuntimeBase & { mode: "tools"; token: Promise<string> })
   | (ChatGptTurnRuntimeBase & { mode: "read-only" });
 
-function executionKey(parsed: ParsedRequest, payload: unknown): string {
+function executionKey(parsed: ChatGptWebParsedRequest, payload: unknown): string {
   return createHash("sha256").update(JSON.stringify({
     modelId: parsed.modelId,
     reasoning: parsed.options.reasoning,
@@ -133,7 +134,7 @@ function executionKey(parsed: ParsedRequest, payload: unknown): string {
   })).digest("hex");
 }
 
-function compactionInputRevision(parsed: ParsedRequest): unknown[] {
+function compactionInputRevision(parsed: ChatGptWebParsedRequest): unknown[] {
   const body = parsed._rawBody;
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new Error("ChatGPT web compaction requires the complete native Codex request body");
@@ -145,7 +146,7 @@ function compactionInputRevision(parsed: ParsedRequest): unknown[] {
   return input;
 }
 
-export function chatGptTurnExecutionKey(parsed: ParsedRequest): string {
+export function chatGptTurnExecutionKey(parsed: ChatGptWebParsedRequest): string {
   const identity = extractChatGptTurnIdentity(parsed);
   if (!identity.turnId) throw new Error("ChatGPT web requires native Codex turn_id metadata for browser-session replay");
   return executionKey(parsed, {
@@ -159,7 +160,7 @@ export function chatGptTurnExecutionKey(parsed: ParsedRequest): string {
 }
 
 /** Locate the browser response that a native mid-turn compaction replaces. */
-export function chatGptCompactionSourceExecutionKey(parsed: ParsedRequest): string {
+export function chatGptCompactionSourceExecutionKey(parsed: ChatGptWebParsedRequest): string {
   const identity = extractChatGptTurnIdentity(parsed);
   if (!identity.turnId) throw new Error("ChatGPT web requires native Codex turn_id metadata for browser-session replay");
   const source = extractChatGptCompactionSourceRevision(parsed);

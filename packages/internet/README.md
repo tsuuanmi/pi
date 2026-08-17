@@ -1,15 +1,16 @@
 # @tsuuanmi/pi-internet
 
-Cross-platform Pi internet extension for an isolated ChatGPT Web browser runtime, Anthropic and
-Gemini API accounts, bounded multi-model councils, and public web search/fetch.
+Cross-platform Pi internet extension for isolated ChatGPT Web and Gemini Web browser runtimes,
+Anthropic and Gemini API accounts, bounded multi-model councils, and public web search/fetch.
 
 ## Runtime model
 
 - The browser-backed provider uses Pi's neutral private runtime compiled as a self-contained Bun
   executable for the build host (`linux` or `darwin`, `x64` or `arm64`). Google Chrome is the only
   host browser dependency.
-- Each ChatGPT account owns a private config directory, browser storage state, loopback port, daemon,
-  and optional Full-mode tool tunnel.
+- Each browser account owns a private config directory, browser storage state, loopback port, and
+  daemon. ChatGPT Web can additionally use the optional Full-mode tool tunnel; Gemini Web is
+  browser-only and text-only.
 - Anthropic and Google accounts use Pi's native transports. Their registry entries store only an
   API-key environment-variable name.
 - Council execution uses `@tsuuanmi/pi-orchestrator`; members run independently without tools and a
@@ -36,6 +37,9 @@ Use `internet_account_add` with:
 
 - `provider: "openai"` for ChatGPT Web. `configDir` and `port` are optional; omitted ports are
   allocated from `17841`. Each Pi session uses one durable ChatGPT conversation.
+- `provider: "gemini-web"` for Gemini Web. `configDir` and `port` are optional. Each Pi session ID
+  maps one-to-one to one durable native Gemini chat ID; the runtime refuses to rebind that session
+  to a different Gemini chat.
 - `provider: "anthropic"` and `apiKeyEnv: "ANTHROPIC_API_KEY"` for Anthropic.
 - `provider: "google"` and `apiKeyEnv: "GEMINI_API_KEY"` for Gemini.
 
@@ -44,11 +48,12 @@ Set those environment variables before loading Pi. Provider names are stable:
 - `chatgpt-web` / `chatgpt-web-<account>`
 - `anthropic-api` / `anthropic-api-<account>`
 - `gemini-api` / `gemini-api-<account>`
+- `gemini-web` / `gemini-web-<account>`
 
 Account add/remove/enable changes require a Pi reload because providers are composed at extension
 startup. `internet_account_remove` removes routing metadata only; it does not destroy private data.
 
-## ChatGPT login and lifecycle
+## Browser login and lifecycle
 
 ```text
 internet_daemon { action: "login" }
@@ -66,18 +71,25 @@ internet_daemon {
 }
 ```
 
-The daemon filters the import to ChatGPT/OpenAI origins, verifies it in its owned browser, and only
-then persists it. Invalid imports fail without replacing stored login state.
+The daemon applies the provider-specific origin allowlist, verifies authenticated account evidence
+in its owned browser, and only then persists the state. Invalid imports fail without replacing the
+stored login. Gemini Web retains only `google.com`, `accounts.google.com`, and `gemini.google.com`
+cookies plus Gemini origin storage, and records the account-visible Flash, Thinking, and Pro modes.
 
 Authenticated enabled daemons auto-start by default. `internet_settings { autoLogin: false }`
 disables login prompting while preserving start of already authenticated accounts.
 
-## ChatGPT response capture
+## Browser response capture
 
 The browser adapter captures the authenticated conversation response from the authenticated wire
 protocol. If the payload is invalid or absent, the turn fails clearly; DOM extraction is not used as
 an answer fallback. Durable conversation replay, model capability gates,
 and Pi's built-in `openai-responses` SSE transport remain authoritative.
+
+Gemini Web uses the verified rendered `model-response` surface as its sole response source. It
+streams stable completed lines, flushes the final text after completion, supports cancellation via
+the native stop control, and quarantines a page if already-emitted DOM text changes. Tools, files,
+images, structured output, and reasoning controls are rejected before browser acquisition.
 
 ## Council
 

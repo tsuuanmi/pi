@@ -15,7 +15,7 @@ operations per account, and exposes login/start/stop/restart/status/auto-start.
 
 ## `OwnedDaemonManager`
 
-Constructor takes only normalized ChatGPT Web accounts and optional overrides. API accounts never
+Constructor takes only normalized ChatGPT Web and Gemini Web accounts and optional overrides. API accounts never
 cross the daemon lifecycle boundary. It builds an id→account map and defaults runtime resolution to
 `resolveDaemonRuntime` and process spawn to Node `spawn`.
 

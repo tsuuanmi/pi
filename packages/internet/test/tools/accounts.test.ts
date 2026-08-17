@@ -27,7 +27,15 @@ describe("internet account tools", () => {
 				undefined,
 				{} as never,
 			);
-			expect(result?.details).toMatchObject({ id: "work", port: 18001 });
+			expect(result?.details).toMatchObject({ id: "work", provider: "openai", port: 18001 });
+			const gemini = await tool?.execute(
+				"call",
+				{ id: "gemini", provider: "gemini-web", configDir: "/tmp/gemini", port: 18002 },
+				undefined,
+				undefined,
+				{} as never,
+			);
+			expect(gemini?.details).toMatchObject({ id: "gemini", provider: "gemini-web", port: 18002 });
 		} finally {
 			if (previous === undefined) delete process.env.PI_AGENT_DIR;
 			else process.env.PI_AGENT_DIR = previous;

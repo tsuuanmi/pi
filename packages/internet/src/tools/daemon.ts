@@ -7,7 +7,7 @@ export function registerDaemonTool(host: Pick<ExtensionAPI, "registerTool">, man
 	host.registerTool({
 		name: "internet_daemon",
 		label: "Internet Daemon",
-		description: "Log in, start, stop, restart, or inspect the package-owned ChatGPT Web daemon.",
+		description: "Log in, start, stop, restart, or inspect a package-owned browser-provider daemon.",
 		parameters: Type.Object({
 			account: Type.Optional(Type.String({ minLength: 1 })),
 			action: Type.Union([
@@ -20,7 +20,7 @@ export function registerDaemonTool(host: Pick<ExtensionAPI, "registerTool">, man
 			storageStatePath: Type.Optional(Type.String({ minLength: 1 })),
 		}),
 		async execute(_id, params) {
-			const account = await new AccountRegistry().getOpenAi(params.account);
+			const account = await new AccountRegistry().getBrowser(params.account);
 			if (params.storageStatePath && params.action !== "login") {
 				throw new Error("storageStatePath is only valid for the login action.");
 			}

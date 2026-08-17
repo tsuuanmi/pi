@@ -3,7 +3,7 @@
 Mirrors `src/extension.ts`, the package composition root.
 
 1. Read normalized accounts from `AccountRegistry`.
-2. Narrow ChatGPT Web accounts and construct `OwnedDaemonManager`.
+2. Narrow ChatGPT Web and Gemini Web accounts and construct `OwnedDaemonManager`.
 3. Construct `InternetSettingsStore` and `CouncilService`.
 4. Register all enabled providers through `registerInternetProviders`.
 5. Register tools with explicit manager/settings/council dependencies.

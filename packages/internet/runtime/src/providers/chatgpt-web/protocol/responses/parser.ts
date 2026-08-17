@@ -3,14 +3,14 @@ import type {
   ContentPart,
   Context,
   Message,
-  ParsedRequest,
   RequestOptions,
   TextContent,
   ThinkingContent,
   Tool,
   ToolCall,
-} from "#runtime/providers/chatgpt-web/protocol/types";
-import { namespacedToolName } from "#runtime/providers/chatgpt-web/protocol/types";
+} from "#runtime/core/protocol/types";
+import { namespacedToolName } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import { responsesRequestSchema } from "#runtime/providers/chatgpt-web/protocol/responses/schema";
 import { compactionItemToText } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
 import { previousResponseReplayPrefixLength } from "#runtime/providers/chatgpt-web/protocol/responses/state";
@@ -232,7 +232,7 @@ function findToolById(messages: Message[], callId: string): { name: string; name
 
 const REASONING_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh", "max"]);
 
-export function parseRequest(body: unknown): ParsedRequest {
+export function parseRequest(body: unknown): ChatGptWebParsedRequest {
   const replayedInputPrefixLength = previousResponseReplayPrefixLength(body);
   const parsed = responsesRequestSchema.safeParse(body);
   if (!parsed.success) {

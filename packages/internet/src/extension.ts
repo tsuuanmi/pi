@@ -1,10 +1,10 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { isOpenAiAccount } from "#internet/core/types";
+import { isBrowserAccount } from "#internet/core/types";
 import { CouncilService } from "#internet/council/service";
 import { OwnedDaemonManager } from "#internet/daemon/manager";
+import { readDaemonStatus } from "#internet/daemon/status";
 import { registerInternetHooks } from "#internet/hooks";
-import { readDaemonStatus } from "#internet/providers/openai/daemon/status";
 import { registerInternetProviders } from "#internet/providers/registry";
 import { InternetSettingsStore } from "#internet/settings";
 import { registerInternetTools } from "#internet/tools/register";
@@ -12,7 +12,7 @@ import { registerInternetTools } from "#internet/tools/register";
 export default async function internetExtension(host: ExtensionAPI): Promise<void> {
 	const registry = new AccountRegistry();
 	const accounts = await registry.list();
-	const browserAccounts = accounts.filter(isOpenAiAccount);
+	const browserAccounts = accounts.filter(isBrowserAccount);
 	const manager = new OwnedDaemonManager(browserAccounts, { registry });
 	const settings = new InternetSettingsStore();
 	await registerInternetProviders(host, accounts);

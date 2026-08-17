@@ -27,8 +27,14 @@ describe("runtime source boundary", () => {
 		const files = await sourceFiles(join(runtimeSource, "core"));
 		const sources = await Promise.all(files.map((file) => readFile(file, "utf8")));
 		for (const source of sources) {
-			expect(source).not.toMatch(/(?:from|import\s*\()\s*["'][^"']*(?:browser|providers\/chatgpt-web)/);
+			expect(source).not.toMatch(/(?:from|import\s*\()\s*["'][^"']*(?:browser|providers\/)/);
 		}
+	});
+
+	it("keeps Gemini browser modules independent from provider modules", async () => {
+		const files = await sourceFiles(join(runtimeSource, "browser", "gemini-web"));
+		const sources = await Promise.all(files.map((file) => readFile(file, "utf8")));
+		for (const source of sources) expect(source).not.toMatch(/providers\/gemini-web/);
 	});
 
 	it("keeps provider details out of reusable browser modules", async () => {
@@ -61,8 +67,9 @@ describe("runtime source boundary", () => {
 			"browser/response-capture.ts",
 			"providers/chatgpt-web/lifecycle/config.ts",
 			"providers/chatgpt-web/server/routes.ts",
-			"providers/chatgpt-web/protocol/types.ts",
+			"core/protocol/types.ts",
 			"providers/chatgpt-web/protocol/responses/bridge.ts",
+			"providers/chatgpt-web/protocol/types.ts",
 			"browser/chatgpt-web/login-state.ts",
 			"browser/chatgpt-web/worker.ts",
 			"browser/chatgpt-web/wire-capture.ts",

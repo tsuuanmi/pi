@@ -10,12 +10,12 @@ Registers the extension's control hooks and event observer. The module owns the 
 registerInternetHooks(
   host: Pick<ExtensionAPI, "on" | "onHook">,
   manager: OwnedDaemonManager,
-  accounts: OpenAiInternetAccount[],
+  accounts: BrowserInternetAccount[],
   settings: InternetSettingsService,
 ): void
 ```
 
-Builds a map from enabled ChatGPT Web account provider names (`providerName(account)`) to account IDs, then
+Builds a map from enabled ChatGPT Web and Gemini Web provider names to account IDs, then
 registers two hooks with `onHook(...)` and one observation with `on(...)`.
 
 ### `tool_call` hook — interactive approval gate
@@ -32,8 +32,8 @@ Otherwise the user is asked to approve; an unapproved call returns
 
 ### `before_provider_request` hook — readiness and adaptation
 
-Runs only for requests whose `context.model.provider` is a registered ChatGPT Web provider. On other
-providers, including Anthropic and Google API accounts, the original payload is returned untouched.
+Runs only for requests whose `context.model.provider` belongs to a registered browser account. On
+Anthropic and Google API accounts, the original payload is returned untouched.
 
 For a matching provider:
 
@@ -42,9 +42,11 @@ For a matching provider:
    `rejectedChatGptWebRequest()` — the request is blocked without launching a browser.
 3. If login is missing and `autoLogin` is true, notify that a login Chrome profile is opening.
 4. `manager.ensureReady(accountId)` — ensures login and a healthy owned daemon.
-5. `expandLocalFileReferences(payload, cwd)` — inline bounded workspace-local `@file` references.
-6. `adaptChatGptWebRequest(payload, { cwd, sessionId, turnId })` — add the daemon's canonical
-   identity/environment fields. `turnId` is the latest user entry in the current branch.
+5. For ChatGPT Web, `expandLocalFileReferences(payload, cwd)` inlines bounded workspace-local
+   `@file` references and the ChatGPT adapter adds its canonical environment metadata.
+6. For Gemini Web, the adapter adds only the Pi `sessionId` and `turnId`, namespaces the selected
+   model, and leaves files/tools for the runtime to reject. The Pi session ID is the durable
+   one-to-one key for the native Gemini chat.
 
 Any thrown error is caught: notify (when UI exists) and return `rejectedChatGptWebRequest()`, so the
 original unadapted payload is never forwarded. See

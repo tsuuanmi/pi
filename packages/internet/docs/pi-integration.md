@@ -4,9 +4,10 @@ Internet uses public Pi extension APIs only.
 
 ## Providers
 
-`registerInternetProviders()` composes three providers:
+`registerInternetProviders()` composes four providers:
 
 - ChatGPT Web: Pi's built-in `openai-responses` transport targets the per-account loopback daemon.
+- Gemini Web: the same Pi transport targets a distinct text-only per-account loopback daemon.
 - Anthropic: `anthropic-messages` targets the native Anthropic API.
 - Google: `openai-completions` targets Google's documented compatibility endpoint.
 
@@ -14,9 +15,9 @@ Account-derived provider names are stable and are also the allowlist for council
 
 ## Hooks and events
 
-- `before_provider_request` recognizes only ChatGPT Web provider names, ensures the matching daemon
-  is authenticated/healthy, and adds daemon request identity/environment metadata. API providers
-  bypass daemon hooks.
+- `before_provider_request` recognizes ChatGPT Web and Gemini Web provider names, ensures the matching
+  daemon is authenticated/healthy, and adds provider-specific request identity metadata. ChatGPT
+  alone receives environment/file expansion. API providers bypass daemon hooks.
 - `tool_call` recognizes the brokered `codex_*` tools and applies account bridge validation plus Pi
   approval.
 - `turn_end` refreshes HUD status without mutating lifecycle state.

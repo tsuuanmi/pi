@@ -8,10 +8,10 @@ export function registerDoctorTool(host: Pick<ExtensionAPI, "registerTool">): vo
 	host.registerTool({
 		name: "internet_doctor",
 		label: "Internet Doctor",
-		description: "Run ChatGPT Web daemon diagnostics and return structured check results.",
+		description: "Run browser-provider daemon diagnostics and return structured check results.",
 		parameters: Type.Object({ account: Type.Optional(Type.String({ minLength: 1 })) }),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().getOpenAi(params.account);
+			const account = await new AccountRegistry().getBrowser(params.account);
 			const report = await runDaemonDoctor(account, { signal });
 			return {
 				content: [{ type: "text", text: formatDoctorReport(report) }],

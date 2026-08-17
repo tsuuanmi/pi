@@ -6,17 +6,18 @@ proposals are kept exclusively in [Future work](future-work.md).
 ## Boundaries
 
 Pi owns provider registration, request transport, model selection, tool approval, session model
-services, and HUD/tool presentation. Internet owns account routing, the ChatGPT Web process/browser
-boundary, API provider composition, public-web safety, and bounded council orchestration.
+services, and HUD/tool presentation. Internet owns account routing, the ChatGPT Web and Gemini Web
+process/browser boundaries, API provider composition, public-web safety, and bounded council orchestration.
 
 ```text
 Pi extension host
   ├─ AccountRegistry (versioned account metadata)
   ├─ provider registry
-  │    ├─ openai -> per-account loopback Responses daemon
+  │    ├─ openai -> per-account ChatGPT Web Responses daemon
+  │    ├─ gemini-web -> per-account Gemini Web Responses daemon
   │    ├─ anthropic -> native anthropic-messages provider
-  │    └─ google -> Google OpenAI-compatible provider
-  ├─ OwnedDaemonManager (ChatGPT Web accounts only)
+  │    └─ google -> Google OpenAI-compatible API provider
+  ├─ OwnedDaemonManager (browser accounts only)
   ├─ CouncilService -> @tsuuanmi/pi-orchestrator
   └─ tools / hooks / HUD
 ```
@@ -28,11 +29,11 @@ Linux or macOS (`x64`/`arm64`). The host provides Google Chrome; no Playwright b
 downloaded at runtime. Runtime manifests and launcher containment/executable permissions are
 validated before spawn.
 
-The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and a
-ChatGPT-Web adapter. Its source lives under `runtime/`; provider-neutral code is split between
+The private daemon is a **browser-backed inference daemon** with a provider-agnostic core and
+ChatGPT Web and Gemini Web adapters. Its source lives under `runtime/`; provider-neutral code is split between
 `runtime/src/core/` and the browser runtime under `runtime/src/browser/`.
-ChatGPT-specific browser code lives under `browser/chatgpt-web/`; non-browser provider code lives
-under `runtime/src/providers/chatgpt-web/`. See the [implemented layout](layout.md) for the
+Provider-specific browser code lives under `browser/chatgpt-web/` and `browser/gemini-web/`;
+adapters live under the matching `runtime/src/providers/` directories. See the [implemented layout](layout.md) for the
 module maps.
 
 **Core (provider-agnostic):** runtime-home and durable-command handling, atomic writes, bounded HTTP
@@ -51,14 +52,12 @@ primitives remain under `runtime/src/core/`.
 
 ### Two provider boundaries
 
-1. **Package boundary** (`src/providers/`): `openai` (ChatGPT Web daemon), `anthropic` (native
-   messages), and `google` (OpenAI-compatible) implement `InternetProvider` and register with Pi.
-2. **Runtime boundary** (`runtime/src/cli.ts`): the composition root loads the ChatGPT
-   adapter. The adapter depends on neutral runtime primitives; neutral runtime modules do not depend
-   on the adapter.
-
-The package boundary is multi-provider. The isolated browser runtime currently has one adapter, so
-it uses direct composition instead of a speculative registry.
+1. **Package boundary** (`src/providers/`): `openai` (ChatGPT Web daemon), `gemini-web` (Gemini
+   Web daemon), `anthropic` (native messages), and `google` (Gemini API through the OpenAI-compatible
+   endpoint) implement `InternetProvider` and register with Pi.
+2. **Runtime boundary** (`runtime/src/cli.ts`): the composition root registers concrete browser
+   adapters in the core provider factory. Adapters depend on neutral runtime primitives; neutral
+   runtime modules do not import concrete adapters.
 
 ### Request flow through the runtime
 
@@ -78,8 +77,8 @@ protocol and browser-turn semantics. This keeps OpenAI/Codex wire concepts out o
 and gives a future adapter an explicit inward-only dependency on the core.
 
 Each browser account owns one config directory, storage state, verification marker, loopback port,
-serialized lifecycle queue, and optional Full-mode tunnel. The manager accepts only narrowed
-`OpenAiInternetAccount` values, so API accounts cannot cross the process boundary.
+and serialized lifecycle queue. Only ChatGPT Web can own a Full-mode tunnel. The manager accepts
+only narrowed `BrowserInternetAccount` values, so API accounts cannot cross the process boundary.
 
 Browser turns use authenticated wire response capture as the authoritative answer source. The
 adapter fails clearly when no valid conversation payload is available; it does not fall back to
@@ -88,7 +87,8 @@ checkpoints, browser health, and Full-mode broker operation.
 
 ### Durable conversation lifecycle
 
-Each Pi session maps to one stable ChatGPT conversation. The private conversation journal persists
+Each Pi session maps to one stable provider-native conversation. For ChatGPT Web, the private
+conversation journal persists
 the canonical conversation id/URL and the last acknowledged history checkpoint; the browser is an
 ephemeral access mechanism, not the durable identity. Idle shutdown closes only the browser process
 and tab, never the conversation or the session-to-conversation mapping. A later turn restarts the
@@ -103,6 +103,11 @@ conversation ids fail closed.
 retaining original source indexes.
 - Consecutive assistant phases (commentary, reasoning-only, final answer) are acknowledged as one
 browser response.
+
+For Gemini Web, the Pi session ID is the sole durable key for a native `/app/<chat-id>` URL. The
+first successful turn writes that mapping atomically; every later turn in the same Pi session opens
+the same Gemini chat. A missing mapping on a continuation request fails closed, and a changed Gemini
+chat ID is rejected rather than rebinding or forking the Pi session.
 
 **Implemented boundary.** The invariants above are live behavior. The following is **proposed, not
 implemented**: a completed browser response that Pi did not persist requires explicit
@@ -129,8 +134,9 @@ per response, and a ten-minute run limit.
 
 - Daemons bind only to `127.0.0.1`; browser endpoints must be unique.
 - Account/config/settings/auth files are private and atomically written.
-- Imported storage state must be a bounded regular file, is filtered to ChatGPT/OpenAI domains, and
-  is persisted only after browser verification.
+- Imported storage state must be a bounded regular file and is persisted only after browser
+  verification. ChatGPT and Gemini use separate domain allowlists; Gemini retains only
+  `google.com`, `accounts.google.com`, and `gemini.google.com` cookies and Gemini origin storage.
 - API secret values are not stored in account metadata or tool output.
 - Public fetch rejects credentials, fragments, non-HTTP schemes, unsafe ports, and private/reserved
   DNS results, including redirect revalidation.
@@ -156,8 +162,8 @@ composition is what makes it unique.
 What makes internet unique:
 
 1. **Pi-native provider registration** — neither codexweb nor Prometheus registers as a Pi provider.
-2. **Browser-optional** — only ChatGPT Web model routing needs the daemon's Chrome; search/fetch and
-   Anthropic/Google API providers are browser-less.
+2. **Browser-optional** — ChatGPT Web and Gemini Web routing need the daemon's Chrome; search/fetch
+   and Anthropic/Google API providers are browser-less.
 3. **Self-contained** — bundles the daemon and embeds Bun; no other repo at runtime.
 4. **Keyless, SSRF-safe web access** — `internet_search`/`internet_fetch` are not browser-driven and
    never forward daemon credentials.
@@ -186,6 +192,8 @@ implemented and production scope:
   for others; enabling/disabling unrelated accounts does not rename a provider.
 - **Owned daemon lifecycle.** Package-owned private config, isolated Chrome login, health-gated
   auto-start, serialized lifecycle, graceful shutdown, and the `internet_daemon` tool.
+- **Gemini Web browser provider.** Account-scoped model discovery, sanitized Google/Gemini login
+  state, stable DOM text streaming, cancellation, and an immutable one-to-one Pi-session-to-Gemini-chat mapping.
 
 Remaining roadmap: **Fusion** (`internet_ask_all`), a later, larger bet on top of the implemented
 multi-provider seam. See [Future work](future-work.md).

@@ -20,5 +20,5 @@ waitForDaemonHealth(client: Pick<DaemonClient, "health">, options?): Promise<voi
 ```
 
 Polls `client.health()` every `intervalMs` until it succeeds or the `timeoutMs` deadline is reached.
-On timeout it throws `"ChatGPT Web daemon did not become healthy before the startup timeout."` with
+On timeout it throws `"Browser daemon did not become healthy before the startup timeout."` with
 the last error as cause.

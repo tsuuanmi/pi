@@ -9,11 +9,22 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - `core/` contains the HTTP host, process/service lifecycle, configuration, and event primitives.
 - `browser/` owns reusable browser mechanics and browser-backed provider implementations.
 - `browser/chatgpt-web/` owns ChatGPT selectors, login, interaction, completion, and diagnostics.
+- `browser/gemini-web/` owns Gemini authentication, login state, interactions, DOM streaming, and turns.
 - `providers/chatgpt-web/protocol/` translates OpenAI Responses requests and events.
 - `providers/chatgpt-web/turn/` coordinates trusted task metadata, sessions, and tool brokering.
 - `providers/chatgpt-web/conversation/` protects durable continuation and replay semantics.
 - `providers/chatgpt-web/transport/` handles native forwarding, tunnel management, and wire capture.
 - `providers/chatgpt-web/lifecycle/` owns setup, diagnostics, and administrative control.
+- `providers/gemini-web/` owns text-only request policy, account-visible models, lifecycle, HTTP routes,
+  and the one-to-one Pi-session-to-native-chat mapping.
+
+## Design reviews
+
+- [`reviews/gemini-web-support-review.md`](reviews/gemini-web-support-review.md) — architecture and discovery review for browser-backed Gemini Web support.
+
+## Implementation plans
+
+- [`plan/gemini-web-support.md`](plan/gemini-web-support.md) — phased implementation plan, shared-logic extraction map, provider integration, testing, and acceptance criteria.
 
 ## Source-mirrored reference
 
@@ -52,11 +63,22 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - [`providers/chatgpt-web/transport/tunnel-service.ts`](providers/chatgpt-web/transport/tunnel-service.md)
 - [`providers/chatgpt-web/transport/tunnel.ts`](providers/chatgpt-web/transport/tunnel.md)
 - [`providers/chatgpt-web/transport/wire-response.ts`](providers/chatgpt-web/transport/wire-response.md)
-- [`providers/chatgpt-web/turn/adapter.ts`](providers/chatgpt-web/turn/adapter.md)
 - [`providers/chatgpt-web/turn/broker.ts`](providers/chatgpt-web/turn/broker.md)
 - [`providers/chatgpt-web/turn/environment.ts`](providers/chatgpt-web/turn/environment.md)
 - [`providers/chatgpt-web/turn/execution.ts`](providers/chatgpt-web/turn/execution.md)
 - [`providers/chatgpt-web/turn/thread-environment.ts`](providers/chatgpt-web/turn/thread-environment.md)
+
+### `providers/gemini-web/`
+
+- [`providers/gemini-web/adapter.ts`](providers/gemini-web/adapter.md)
+- [`providers/gemini-web/config.ts`](providers/gemini-web/config.md)
+- [`providers/gemini-web/conversation/policy.ts`](providers/gemini-web/conversation/policy.md)
+- [`providers/gemini-web/factory.ts`](providers/gemini-web/factory.md)
+- [`providers/gemini-web/lifecycle/doctor.ts`](providers/gemini-web/lifecycle/doctor.md)
+- [`providers/gemini-web/models.ts`](providers/gemini-web/models.md)
+- [`providers/gemini-web/prompt.ts`](providers/gemini-web/prompt.md)
+- [`providers/gemini-web/request.ts`](providers/gemini-web/request.md)
+- [`providers/gemini-web/server.ts`](providers/gemini-web/server.md)
 
 ### `browser/`
 
@@ -72,6 +94,16 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - [`browser/chatgpt-web/turn-driver.ts`](browser/chatgpt-web/turn-driver.md)
 - [`browser/chatgpt-web/wire-capture.ts`](browser/chatgpt-web/wire-capture.md)
 - [`browser/chatgpt-web/worker.ts`](browser/chatgpt-web/worker.md)
+- [`browser/gemini-web/auth.ts`](browser/gemini-web/auth.md)
+- [`browser/gemini-web/capabilities.ts`](browser/gemini-web/capabilities.md)
+- [`browser/gemini-web/completion.ts`](browser/gemini-web/completion.md)
+- [`browser/gemini-web/config.ts`](browser/gemini-web/config.md)
+- [`browser/gemini-web/interactions.ts`](browser/gemini-web/interactions.md)
+- [`browser/gemini-web/login-state.ts`](browser/gemini-web/login-state.md)
+- [`browser/gemini-web/login.ts`](browser/gemini-web/login.md)
+- [`browser/gemini-web/session.ts`](browser/gemini-web/session.md)
+- [`browser/gemini-web/streaming.ts`](browser/gemini-web/streaming.md)
+- [`browser/gemini-web/turn-driver.ts`](browser/gemini-web/turn-driver.md)
 
 ### `core/`
 
@@ -79,6 +111,9 @@ relationships. The TypeScript source remains authoritative for exact implementat
 - [`core/event-queue.ts`](core/event-queue.md)
 - [`core/http-body.ts`](core/http-body.md)
 - [`core/process.ts`](core/process.md)
+- [`core/protocol/types.ts`](core/protocol/types.md)
+- [`core/provider.ts`](core/provider.md)
+- [`core/responses/bridge.ts`](core/responses/bridge.md)
 - [`core/server.ts`](core/server.md)
 - [`core/service.ts`](core/service.md)
 

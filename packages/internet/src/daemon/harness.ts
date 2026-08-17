@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access, chmod, copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { OpenAiInternetAccount } from "#internet/core/types";
+import type { BrowserInternetAccount } from "#internet/core/types";
 
 export type HarnessConfig =
 	| { mode: "browser-only" }
@@ -14,11 +14,11 @@ export type HarnessConfig =
 
 const BROWSER_ONLY: HarnessConfig = { mode: "browser-only" };
 
-export function harnessConfigPath(account: OpenAiInternetAccount): string {
+export function harnessConfigPath(account: BrowserInternetAccount): string {
 	return join(account.configDir, "harness.json");
 }
 
-export async function readHarnessConfig(account: OpenAiInternetAccount): Promise<HarnessConfig> {
+export async function readHarnessConfig(account: BrowserInternetAccount): Promise<HarnessConfig> {
 	try {
 		const value = JSON.parse(await readFile(harnessConfigPath(account), "utf8")) as unknown;
 		return validateHarnessConfig(value);
@@ -29,9 +29,10 @@ export async function readHarnessConfig(account: OpenAiInternetAccount): Promise
 }
 
 export async function enableFullHarness(
-	account: OpenAiInternetAccount,
+	account: BrowserInternetAccount,
 	input: { tunnelClientPath: string; tunnelId: string; runtimeKeyFile: string },
 ): Promise<HarnessConfig> {
+	if (account.provider === "gemini-web") throw new Error("Gemini Web accounts cannot enable Full harness mode.");
 	const tunnelClientPath = resolve(input.tunnelClientPath);
 	const sourceKeyPath = resolve(input.runtimeKeyFile);
 	const tunnelId = input.tunnelId.trim();
@@ -58,7 +59,7 @@ export async function enableFullHarness(
 	}
 }
 
-export async function disableFullHarness(account: OpenAiInternetAccount): Promise<HarnessConfig> {
+export async function disableFullHarness(account: BrowserInternetAccount): Promise<HarnessConfig> {
 	const current = await readHarnessConfig(account);
 	await writePrivateJson(harnessConfigPath(account), BROWSER_ONLY);
 	if (current.mode === "full") await rm(current.runtimeKeyFile, { force: true });

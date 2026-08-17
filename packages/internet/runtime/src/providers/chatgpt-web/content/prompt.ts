@@ -1,4 +1,5 @@
-import type { AssistantContentPart, ContentPart, Message, ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { AssistantContentPart, ContentPart, Message } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import { isOnePixelPngDataUrl } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
 import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "#runtime/providers/chatgpt-web/models/model";
 
@@ -157,7 +158,7 @@ function messageEnvelope(
 }
 
 export function chatGptFullModeContextWarning(
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   capabilities: ChatGptWebCapabilities,
 ): string | undefined {
   const mode = resolveChatGptWebModelMode(parsed.modelId, parsed.options.reasoning, capabilities);
@@ -167,7 +168,7 @@ export function chatGptFullModeContextWarning(
 }
 
 export function compileChatGptWebPrompt(
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   capabilities: ChatGptWebCapabilities,
   turnToken?: string,
   options?: {

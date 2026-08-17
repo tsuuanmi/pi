@@ -1,14 +1,143 @@
-import { closeSync, chmodSync, existsSync, mkdirSync, openSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, chmodSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 
 export const VERSION = "0.1.0";
+
+interface BunRuntimeGlobal {
+  main?: string;
+  which(command: string): string | null;
+}
+
+function bunRuntime(): BunRuntimeGlobal | undefined {
+  return (globalThis as typeof globalThis & { Bun?: BunRuntimeGlobal }).Bun;
+}
 
 export interface RuntimeServiceConfig {
   host: "127.0.0.1";
   port: number;
   controlToken: string;
   runtimeCommand: string[];
+}
+
+export type RuntimeMode = "browser-only" | "full";
+
+export interface RuntimeConfigBase extends RuntimeServiceConfig {
+  releaseVersion: string;
+  contextWindow: number;
+  idleShutdownMs: number;
+}
+
+export interface RuntimeTunnelConfig {
+  binaryPath: string;
+  tunnelId: string;
+  runtimeKeyFile: string;
+  profileDir: string;
+  profileName: string;
+  alias: string;
+}
+
+export interface ChatGptWebRuntimeConfig extends RuntimeConfigBase {
+  adapter: "chatgpt-web";
+  mode: RuntimeMode;
+  appName: string;
+  chromeExecutablePath: string;
+  storageStatePath: string;
+  brokerSocketPath: string;
+  headed: boolean;
+  browserWindowWidth: number;
+  browserWindowHeight: number;
+  browserWindowPositionX: number;
+  browserWindowPositionY: number;
+  conversationStateDir: string;
+  proAvailable: boolean;
+  autoApproveToolCalls: boolean;
+  acknowledgedUnofficialAt?: string;
+  tunnel?: RuntimeTunnelConfig;
+}
+
+export interface GeminiWebRuntimeConfig extends RuntimeConfigBase {
+  adapter: "gemini-web";
+  mode: "browser-only";
+  appName: string;
+  chromeExecutablePath: string;
+  storageStatePath: string;
+  headed: boolean;
+  browserWindowWidth: number;
+  browserWindowHeight: number;
+  browserWindowPositionX: number;
+  browserWindowPositionY: number;
+  conversationStateDir: string;
+  capabilitiesPath: string;
+  acknowledgedUnofficialAt: string;
+}
+
+export type RuntimeConfig = ChatGptWebRuntimeConfig | GeminiWebRuntimeConfig;
+
+const GEMINI_CONFIG_FIELDS = new Set([
+  "adapter", "releaseVersion", "mode", "host", "port", "contextWindow", "appName", "chromeExecutablePath",
+  "storageStatePath", "headed", "browserWindowWidth", "browserWindowHeight", "browserWindowPositionX",
+  "browserWindowPositionY", "idleShutdownMs", "conversationStateDir", "capabilitiesPath", "controlToken",
+  "runtimeCommand", "acknowledgedUnofficialAt",
+]);
+
+export function parseGeminiWebRuntimeConfig(value: unknown, path = "Gemini Web config"): GeminiWebRuntimeConfig {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${path} must be an object`);
+  const parsed = value as Record<string, unknown>;
+  const unsupported = Object.keys(parsed).filter(field => !GEMINI_CONFIG_FIELDS.has(field));
+  if (unsupported.length > 0) throw new Error(`${path} contains unsupported fields: ${unsupported.join(", ")}`);
+  if (parsed.adapter !== "gemini-web") throw new Error(`${path} adapter must be gemini-web`);
+  if (parsed.mode !== "browser-only" || parsed.host !== "127.0.0.1") {
+    throw new Error("Gemini Web requires browser-only loopback mode");
+  }
+  const strings = [
+    "releaseVersion", "appName", "chromeExecutablePath", "storageStatePath", "conversationStateDir",
+    "capabilitiesPath", "controlToken", "acknowledgedUnofficialAt",
+  ] as const;
+  if (strings.some(field => typeof parsed[field] !== "string" || !(parsed[field] as string).trim())) {
+    throw new Error(`${path} is missing required strings`);
+  }
+  if (["chromeExecutablePath", "storageStatePath", "conversationStateDir", "capabilitiesPath"].some(
+    field => !isAbsolute(parsed[field] as string),
+  )) throw new Error(`${path} paths must be absolute`);
+  if (!Number.isSafeInteger(parsed.port) || (parsed.port as number) < 1 || (parsed.port as number) > 65_535) {
+    throw new Error(`${path} port is invalid`);
+  }
+  if (!Number.isSafeInteger(parsed.contextWindow) || (parsed.contextWindow as number) <= 0) {
+    throw new Error(`${path} context window is invalid`);
+  }
+  if (!Number.isInteger(parsed.idleShutdownMs) || (parsed.idleShutdownMs as number) < 0) {
+    throw new Error(`${path} idle timeout is invalid`);
+  }
+  if (parsed.headed !== true || ["browserWindowWidth", "browserWindowHeight"].some(
+    field => !Number.isInteger(parsed[field]) || (parsed[field] as number) < 300,
+  ) || ["browserWindowPositionX", "browserWindowPositionY"].some(field => !Number.isInteger(parsed[field]))) {
+    throw new Error(`${path} browser settings are invalid`);
+  }
+  if (!Array.isArray(parsed.runtimeCommand) || parsed.runtimeCommand.length === 0
+    || !parsed.runtimeCommand.every(part => typeof part === "string" && part.length > 0)) {
+    throw new Error(`${path} runtime command is invalid`);
+  }
+  if (!/^[A-Za-z0-9_-]{40,}$/.test(parsed.controlToken as string)) {
+    throw new Error(`${path} control token is invalid`);
+  }
+  return parsed as unknown as GeminiWebRuntimeConfig;
+}
+
+export function loadRuntimeConfig(): RuntimeConfig {
+  const path = getConfigPath();
+  if (!existsSync(path)) throw new Error(`Runtime configuration does not exist: ${path}`);
+  let value: unknown;
+  try {
+    value = JSON.parse(readFileSync(path, "utf8")) as unknown;
+  } catch (error) {
+    throw new Error(`Runtime configuration is not valid JSON: ${path}`, { cause: error });
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Runtime configuration must be an object: ${path}`);
+  const adapter = (value as Record<string, unknown>).adapter;
+  if (adapter === "gemini-web") return parseGeminiWebRuntimeConfig(value, path);
+  if (adapter === "chatgpt-web") return value as ChatGptWebRuntimeConfig;
+  throw new Error(`Runtime configuration adapter is unsupported: ${String(adapter)}`);
 }
 
 export function expandUserPath(value: string): string {
@@ -71,7 +200,7 @@ export function currentRuntimeCommand(): string[] {
   return runtimeCommandForProcess({
     launcher: process.env.PI_INTERNET_RUNTIME_LAUNCHER,
     executable: process.execPath,
-    entry: typeof Bun !== "undefined" ? Bun.main : process.argv[1],
+    entry: bunRuntime()?.main ?? process.argv[1],
     bunExecutable,
   });
 }
@@ -96,7 +225,7 @@ export function installedBunExecutable({
     process.env.PI_INTERNET_RUNTIME_BUN,
     ...candidates,
     ...pathCandidates,
-    typeof Bun !== "undefined" ? Bun.which("bun") : undefined,
+    bunRuntime()?.which("bun"),
     process.execPath,
   ];
   for (const candidate of discovered) {

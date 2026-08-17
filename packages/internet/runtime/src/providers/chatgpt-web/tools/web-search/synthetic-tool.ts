@@ -1,4 +1,4 @@
-import type { Tool } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { Tool } from "#runtime/core/protocol/types";
 
 /** The function name the chat model sees + the name the loop intercepts. */
 export const WEB_SEARCH_TOOL_NAME = "web_search";

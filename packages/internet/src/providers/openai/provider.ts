@@ -1,8 +1,8 @@
 import type { ExtensionAPI, ProviderConfig } from "@tsuuanmi/pi/extensions";
 import type { InternetAccount, OpenAiInternetAccount } from "#internet/core/types";
+import { daemonBaseUrl } from "#internet/daemon/auth";
 import { readOwnedDaemonCapabilities } from "#internet/daemon/config";
 import { accountProviderName } from "#internet/providers/names";
-import { daemonBaseUrl } from "#internet/providers/openai/daemon/auth";
 import { chatGptWebModels } from "#internet/providers/openai/models";
 import { CHATGPT_WEB_PROVIDER } from "#internet/providers/openai/turn/model";
 

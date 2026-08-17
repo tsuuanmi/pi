@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { expandUserPath } from "#runtime/core/config";
 import { defaultBrokerEndpoint, resolveBrokerEndpoint } from "#runtime/providers/chatgpt-web/lifecycle/config";
-import { namespacedToolName, type AdapterEvent, type ContentPart, type ParsedRequest, type ProviderConfig, type ToolResultMessage, type Usage } from "#runtime/providers/chatgpt-web/protocol/types";
-import type { ProviderAdapter } from "#runtime/providers/chatgpt-web/turn/adapter";
+import { namespacedToolName, type AdapterEvent, type ContentPart, type ToolResultMessage, type Usage } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { RuntimeProviderAdapter as ProviderAdapter } from "#runtime/core/provider";
+import type { ChatGptWebProviderConfig as ProviderConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import { parseDataUrl } from "#runtime/providers/chatgpt-web/content/image";
 import { ChatGptWebAdapterError } from "#runtime/providers/chatgpt-web/adapter-error";
 import type { BrowserConversationTurn } from "#runtime/browser/chatgpt-web/turn-driver";
@@ -133,7 +135,7 @@ function emitTextDeltas(deltas: string[], emit: (event: AdapterEvent) => void): 
 
 function emitFullModeContextWarning(
   provider: ProviderConfig,
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   capabilities: ChatGptWebCapabilities,
   emit: (event: AdapterEvent) => void,
 ): void {
@@ -150,12 +152,12 @@ function replayEvents(events: AdapterEvent[], emit: (event: AdapterEvent) => voi
 }
 
 interface DurableConversationPlan {
-  messages: ParsedRequest["context"]["messages"];
+  messages: ChatGptWebParsedRequest["context"]["messages"];
   conversation: BrowserConversationTurn;
 }
 
 function durableConversationPlan(
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   provider: ProviderConfig,
   threadId: string,
 ): DurableConversationPlan {
@@ -228,7 +230,7 @@ function durableConversationPlan(
   };
 }
 
-function currentToolResults(parsed: ParsedRequest, session: ChatGptTurnSession): ToolResultMessage[] {
+function currentToolResults(parsed: ChatGptWebParsedRequest, session: ChatGptTurnSession): ToolResultMessage[] {
   const byId = new Map<string, ToolResultMessage>();
   for (const message of parsed.context.messages) {
     if (message.role !== "toolResult" || !session.hasOutstanding(message.toolCallId)) continue;
@@ -238,7 +240,7 @@ function currentToolResults(parsed: ParsedRequest, session: ChatGptTurnSession):
   return [...byId.values()];
 }
 
-function validateBatchTools(parsed: ParsedRequest, requests: BrokerToolRequest[]): void {
+function validateBatchTools(parsed: ChatGptWebParsedRequest, requests: BrokerToolRequest[]): void {
   const available = new Set((parsed.context.tools ?? []).map(tool => namespacedToolName(tool.namespace, tool.name)));
   for (const request of requests) {
     if (!available.has(request.wireName)) {
@@ -247,7 +249,7 @@ function validateBatchTools(parsed: ParsedRequest, requests: BrokerToolRequest[]
   }
 }
 
-export function createChatGptWebAdapter(provider: ProviderConfig): ProviderAdapter {
+export function createChatGptWebAdapter(provider: ProviderConfig): ProviderAdapter<ChatGptWebParsedRequest> {
   const worker = ChatGptBrowserWorker.forProvider(provider);
   const broker = TurnBroker.forSocket(brokerSocketPath(provider));
   const timeoutMs = provider.chatgptWeb?.turnTimeoutMs;
@@ -264,10 +266,10 @@ export function createChatGptWebAdapter(provider: ProviderConfig): ProviderAdapt
       ? resolve(expandUserPath(provider.chatgptWeb.threadEnvironmentStatePath))
       : undefined,
   );
-  const currentUsageInput = (parsed: ParsedRequest): ParsedRequest => parsed;
+  const currentUsageInput = (parsed: ChatGptWebParsedRequest): ChatGptWebParsedRequest => parsed;
 
   const startRuntime = (
-    parsed: ParsedRequest,
+    parsed: ChatGptWebParsedRequest,
     environment: ReturnType<typeof extractChatGptTurnEnvironment> | undefined,
     traceId: string,
     turnCapabilities: ChatGptWebCapabilities,

@@ -1,4 +1,4 @@
-import type { AdapterEvent, MessagePhase, ProviderContinuationState, Usage } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { AdapterEvent, MessagePhase, ProviderContinuationState, Usage } from "#runtime/core/protocol/types";
 import { adapterFailureFromMessage, classifyError, type RuntimeErrorPayload } from "#runtime/providers/chatgpt-web/protocol/responses/errors";
 import { encodeCompactionSummary } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
 import { encodeReasoningEnvelope, type ReasoningEnvelope } from "#runtime/providers/chatgpt-web/protocol/responses/reasoning-envelope";

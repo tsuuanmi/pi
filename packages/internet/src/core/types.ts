@@ -1,5 +1,5 @@
-export type InternetProviderId = "openai" | "anthropic" | "google";
-export type InternetApiProviderId = Exclude<InternetProviderId, "openai">;
+export type InternetProviderId = "openai" | "anthropic" | "google" | "gemini-web";
+export type InternetApiProviderId = Exclude<InternetProviderId, "openai" | "gemini-web">;
 interface InternetAccountBase {
 	id: string;
 	provider: InternetProviderId;
@@ -13,6 +13,15 @@ export interface OpenAiInternetAccount extends InternetAccountBase {
 	host: string;
 	port: number;
 }
+
+export interface GeminiWebInternetAccount extends InternetAccountBase {
+	provider: "gemini-web";
+	configDir: string;
+	host: string;
+	port: number;
+}
+
+export type BrowserInternetAccount = OpenAiInternetAccount | GeminiWebInternetAccount;
 
 interface ApiInternetAccountBase extends InternetAccountBase {
 	provider: InternetApiProviderId;
@@ -28,7 +37,7 @@ export interface GoogleInternetAccount extends ApiInternetAccountBase {
 }
 
 export type ApiInternetAccount = AnthropicInternetAccount | GoogleInternetAccount;
-export type InternetAccount = OpenAiInternetAccount | ApiInternetAccount;
+export type InternetAccount = OpenAiInternetAccount | GeminiWebInternetAccount | ApiInternetAccount;
 
 interface InternetAccountInputBase {
 	id: string;
@@ -53,10 +62,18 @@ export interface GoogleInternetAccountInput extends InternetAccountInputBase {
 	apiKeyEnv: string;
 }
 
+export interface GeminiWebInternetAccountInput extends InternetAccountInputBase {
+	provider: "gemini-web";
+	configDir?: string;
+	host?: string;
+	port?: number;
+}
+
 export type InternetAccountInput =
 	| OpenAiInternetAccountInput
 	| AnthropicInternetAccountInput
-	| GoogleInternetAccountInput;
+	| GoogleInternetAccountInput
+	| GeminiWebInternetAccountInput;
 
 export interface InternetSettings {
 	autoLogin: boolean;
@@ -66,4 +83,12 @@ export type InternetControlAction = "drain" | "resume" | "shutdown" | "cancel-br
 
 export function isOpenAiAccount(account: InternetAccount): account is OpenAiInternetAccount {
 	return account.provider === "openai";
+}
+
+export function isGeminiWebAccount(account: InternetAccount): account is GeminiWebInternetAccount {
+	return account.provider === "gemini-web";
+}
+
+export function isBrowserAccount(account: InternetAccount): account is BrowserInternetAccount {
+	return isOpenAiAccount(account) || isGeminiWebAccount(account);
 }

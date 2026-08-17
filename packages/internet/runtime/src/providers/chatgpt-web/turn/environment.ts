@@ -1,6 +1,7 @@
 import { isAbsolute, relative, resolve } from "node:path";
 import { isReadableCompactionSummaryText, OPAQUE_COMPACTION_NOTE } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
-import type { ContentPart, ParsedRequest, Tool } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ContentPart, Tool } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 
 export type ChatGptSandboxPolicy =
   | { type: "dangerFullAccess" }
@@ -49,7 +50,7 @@ function pathIdentity(value: string): string {
   return process.platform === "win32" ? normalized.toLowerCase() : normalized;
 }
 
-function clientTurnMetadata(parsed: ParsedRequest): Record<string, unknown> | undefined {
+function clientTurnMetadata(parsed: ChatGptWebParsedRequest): Record<string, unknown> | undefined {
   const body = record(parsed._rawBody);
   const metadata = record(body?.client_metadata);
   const raw = metadata?.["x-codex-turn-metadata"];
@@ -89,7 +90,7 @@ function contextualUserMessage(value: Record<string, unknown>): boolean {
  * installs the replacement history, the immediate continuation starts a fresh browser response
  * under the same logical task revision.
  */
-export function extractChatGptTurnUserRevision(parsed: ParsedRequest): unknown {
+export function extractChatGptTurnUserRevision(parsed: ChatGptWebParsedRequest): unknown {
   const turnId = extractChatGptTurnIdentity(parsed).turnId;
   if (!turnId) throw new Error("ChatGPT web requires native Codex turn_id metadata for browser-session replay");
   const revision = latestChatGptTurnUserRevision(parsed);
@@ -100,7 +101,7 @@ export function extractChatGptTurnUserRevision(parsed: ParsedRequest): unknown {
   return revision.content;
 }
 
-function latestChatGptTurnUserRevision(parsed: ParsedRequest): ChatGptTurnUserRevision | undefined {
+function latestChatGptTurnUserRevision(parsed: ChatGptWebParsedRequest): ChatGptTurnUserRevision | undefined {
   const body = record(parsed._rawBody);
   const input = Array.isArray(body?.input) ? body.input : [];
   for (let index = input.length - 1; index >= 0; index -= 1) {
@@ -116,7 +117,7 @@ function latestChatGptTurnUserRevision(parsed: ParsedRequest): ChatGptTurnUserRe
 }
 
 /** The human instruction summarized by a remote compaction request belongs to an earlier turn. */
-export function extractChatGptCompactionSourceRevision(parsed: ParsedRequest): ChatGptTurnUserRevision {
+export function extractChatGptCompactionSourceRevision(parsed: ChatGptWebParsedRequest): ChatGptTurnUserRevision {
   if (!parsed._compactionRequest) throw new Error("ChatGPT web compaction source requires a compaction request");
   const revision = latestChatGptTurnUserRevision(parsed);
   if (!revision) throw new Error("ChatGPT web compaction requires a source user message");
@@ -294,7 +295,7 @@ function canonicalMetadataEnvironmentBeforeUser(
   return undefined;
 }
 
-function rawEnvironmentText(parsed: ParsedRequest): string | undefined {
+function rawEnvironmentText(parsed: ChatGptWebParsedRequest): string | undefined {
   const body = record(parsed._rawBody);
   const input = Array.isArray(body?.input) ? body.input : [];
   let activeUserIndex = -1;
@@ -327,7 +328,7 @@ function rawEnvironmentText(parsed: ParsedRequest): string | undefined {
   return undefined;
 }
 
-function trustedEnvironmentText(parsed: ParsedRequest): string {
+function trustedEnvironmentText(parsed: ChatGptWebParsedRequest): string {
   const raw = rawEnvironmentText(parsed);
   if (raw) return raw;
   const system = parsed.context.systemPrompt ?? [];
@@ -383,7 +384,7 @@ function matchesPath(root: string, path: string): boolean {
   return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 }
 
-export function extractChatGptTurnEnvironment(parsed: ParsedRequest): ChatGptTurnEnvironment {
+export function extractChatGptTurnEnvironment(parsed: ChatGptWebParsedRequest): ChatGptTurnEnvironment {
   const text = trustedEnvironmentText(parsed);
   const cwdMatches = environmentCwdMatches(text);
   const cwdCandidates = uniqueAbsolutePaths(cwdMatches, "cwd");
@@ -419,7 +420,7 @@ export function extractChatGptTurnEnvironment(parsed: ParsedRequest): ChatGptTur
   return { cwd, roots, writableRoots: [], sandboxPolicy: { type: "readOnly", networkAccess }, tools: parsed.context.tools ?? [] };
 }
 
-export function extractChatGptTurnIdentity(parsed: ParsedRequest): ChatGptTurnIdentity {
+export function extractChatGptTurnIdentity(parsed: ChatGptWebParsedRequest): ChatGptTurnIdentity {
   const body = record(parsed._rawBody);
   const metadata = clientTurnMetadata(parsed);
   return {

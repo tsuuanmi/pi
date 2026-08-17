@@ -10,37 +10,40 @@ macOS.
 ## Extension startup
 
 1. `AccountRegistry` reads schema-4 routing metadata or synthesizes the default ChatGPT account.
-2. The provider registry registers enabled ChatGPT Web, Anthropic, and Google providers.
-3. `OwnedDaemonManager` receives only ChatGPT Web accounts.
+2. The provider registry registers enabled ChatGPT Web, Gemini Web, Anthropic, and Google providers.
+3. `OwnedDaemonManager` receives enabled browser accounts.
 4. Tools, provider-scoped hooks, and HUD status are registered.
 5. Authenticated browser daemons auto-start when `autoLogin` is enabled.
 
 API credentials are `$ENV_VAR` references resolved by Pi. They never enter daemon state.
 
-## ChatGPT login
+## Browser login
 
 Interactive login launches the daemon-owned headed Chrome profile and records storage state only
 after verification. Optional storage-state import reads a bounded regular JSON file, removes every
-cookie/origin outside ChatGPT/OpenAI, validates the resulting session in owned Chrome, then writes it
-privately. Raw passwords and 2FA secrets are not accepted.
+cookie/origin outside the provider allowlist, validates the resulting session in owned Chrome, then
+writes it privately. Gemini retains only required Google/Gemini state. Raw passwords and 2FA secrets
+are not accepted.
 
-## ChatGPT inference
+## Browser inference
 
 Pi serializes a normal `openai-responses` request to the account's loopback daemon. The neutral
-runtime starts the bounded Bun HTTP host and owns process/service primitives. The ChatGPT Web
-adapter owns the Responses routes and projection, browser replay, prompt adaptation, turn identity,
-durable conversation binding. It captures the authenticated conversation
-response from the authenticated network payload; missing or invalid wire responses fail clearly and
-never fall back to DOM answer extraction. Pi decodes the returned Responses SSE through its built-in
-transport.
+runtime starts the bounded Bun HTTP host and owns process/service primitives. Each provider adapter
+owns request policy and browser execution. ChatGPT captures authenticated network payloads and never
+falls back to DOM extraction. Gemini Web is text-only, discovers account-visible models, and uses
+rendered Gemini response DOM as its sole authoritative output path. Pi decodes returned Responses
+SSE through its built-in transport.
+
+Every Gemini Pi session ID maps immutably to one native `/app/<chat-id>` conversation. Continuations
+reopen that chat; missing continuation state or attempted rebinding fails closed.
 
 ### Dependency boundary
 
-`runtime/src/cli.ts` is the composition root. It loads the ChatGPT adapter, which may import
-neutral runtime modules such as `server.ts`, `service.ts`, `config.ts`, `http-body.ts`, and
-`event-queue.ts`. Neutral modules never import `providers/chatgpt-web/`. Responses parsing and SSE
-projection stay with the adapter because they encode OpenAI/Codex protocol semantics rather than a
-provider-neutral runtime contract.
+`runtime/src/cli.ts` is the composition root. It registers the ChatGPT Web and Gemini Web factories,
+which may import neutral core and browser primitives. Core modules never import concrete providers.
+Gemini browser modules do not import provider modules. Shared normalized protocol types and the
+provider-neutral Responses bridge live under `core/`; ChatGPT-specific parser and projection behavior
+remains under its provider namespace.
 
 ### Request flow
 
@@ -54,9 +57,9 @@ HTTP POST /v1/responses
   -> HTTP 200 text/event-stream
 ```
 
-A future runtime adapter may reuse the core host and lifecycle primitives without inheriting
-ChatGPT, OpenAI Responses, browser-state, or connector semantics. See the
-[implemented layout](layout.md) for the module maps.
+Gemini uses the same core host with `providers/gemini-web/server.ts`, the Gemini adapter, and the
+core Responses bridge, without inheriting ChatGPT parser, browser-state, or connector semantics. See
+the [implemented layout](layout.md) for the module maps.
 
 ## Full mode
 

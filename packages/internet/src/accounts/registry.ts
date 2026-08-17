@@ -4,10 +4,12 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { InternetError } from "#internet/core/errors";
 import {
+	type BrowserInternetAccount,
+	type GeminiWebInternetAccount,
 	type InternetAccount,
 	type InternetAccountInput,
 	type InternetProviderId,
-	isOpenAiAccount,
+	isBrowserAccount,
 	type OpenAiInternetAccount,
 } from "#internet/core/types";
 
@@ -79,7 +81,7 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 	const input = record(value, "Account");
 	const provider = requiredString(input.provider, "Account provider");
 	const common = normalizeCommon(input);
-	if (provider === "openai") {
+	if (provider === "openai" || provider === "gemini-web") {
 		assertKnownKeys(
 			input,
 			["id", "provider", "displayName", "enabled", "configDir", "host", "port"],
@@ -112,7 +114,7 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 }
 
 function nextDaemonPort(accounts: InternetAccount[]): number {
-	const ports = new Set(accounts.filter(isOpenAiAccount).map((account) => account.port));
+	const ports = new Set(accounts.filter(isBrowserAccount).map((account) => account.port));
 	for (let port = defaultPort; port <= 65_535; port += 1) {
 		if (!ports.has(port)) return port;
 	}
@@ -125,7 +127,7 @@ function validateAccounts(accounts: InternetAccount[]): void {
 	for (const account of accounts) {
 		if (ids.has(account.id)) throw configError(`Duplicate account id: ${account.id}`);
 		ids.add(account.id);
-		if (!isOpenAiAccount(account)) continue;
+		if (!isBrowserAccount(account)) continue;
 		const endpoint = `${account.host}:${account.port}`;
 		if (endpoints.has(endpoint)) throw configError(`Duplicate daemon endpoint: ${endpoint}`);
 		endpoints.add(endpoint);
@@ -182,10 +184,32 @@ export class AccountRegistry {
 		return account;
 	}
 
+	async getGeminiWeb(id?: string): Promise<GeminiWebInternetAccount> {
+		const accounts = await this.listProvider("gemini-web");
+		const account = id
+			? accounts.find((candidate) => candidate.id === id)
+			: accounts.find((candidate) => candidate.enabled);
+		if (!account) {
+			throw configError(id ? `Unknown Gemini Web account: ${id}` : "No enabled Gemini Web account exists.");
+		}
+		return account;
+	}
+
+	async getBrowser(id?: string): Promise<BrowserInternetAccount> {
+		const accounts = (await this.list()).filter(isBrowserAccount);
+		const account = id
+			? accounts.find((candidate) => candidate.id === id)
+			: accounts.find((candidate) => candidate.enabled);
+		if (!account) throw configError(id ? `Unknown browser account: ${id}` : "No enabled browser account exists.");
+		return account;
+	}
+
 	async add(input: InternetAccountInput): Promise<InternetAccount> {
 		const accounts = await this.list();
 		const normalizedInput =
-			input.provider === "openai" && input.port === undefined ? { ...input, port: nextDaemonPort(accounts) } : input;
+			(input.provider === "openai" || input.provider === "gemini-web") && input.port === undefined
+				? { ...input, port: nextDaemonPort(accounts) }
+				: input;
 		const account = normalizeAccount(normalizedInput, this.path);
 		if (accounts.some((candidate) => candidate.id === account.id))
 			throw configError(`Account already exists: ${account.id}`);

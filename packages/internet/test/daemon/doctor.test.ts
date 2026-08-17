@@ -188,7 +188,7 @@ describe("runDaemonDoctor", () => {
 		).rejects.toMatchObject({
 			code: "daemon_doctor_failed",
 			retryable: false,
-			message: "ChatGPT Web doctor failed for account default: launcher failed",
+			message: "Browser doctor failed for account default: launcher failed",
 		});
 	});
 
@@ -200,7 +200,7 @@ describe("runDaemonDoctor", () => {
 				resolveRuntime: async () => runtime,
 				timeoutMs: 25,
 			}),
-		).rejects.toMatchObject({ message: "ChatGPT Web doctor timed out for account default after 25ms." });
+		).rejects.toMatchObject({ message: "Browser doctor timed out for account default after 25ms." });
 
 		const controller = new AbortController();
 		controller.abort();
@@ -210,7 +210,7 @@ describe("runDaemonDoctor", () => {
 				resolveRuntime: async () => runtime,
 				signal: controller.signal,
 			}),
-		).rejects.toMatchObject({ message: "ChatGPT Web doctor was cancelled for account default." });
+		).rejects.toMatchObject({ message: "Browser doctor was cancelled for account default." });
 	});
 
 	it("wraps runtime resolution failures", async () => {

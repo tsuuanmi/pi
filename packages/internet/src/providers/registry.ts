@@ -1,9 +1,25 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import type { InternetAccount, InternetProviderId } from "#internet/core/types";
 import { anthropicProviderName, registerAnthropicProviders } from "#internet/providers/anthropic/provider";
+import {
+	adaptGeminiWebRequest,
+	geminiWebProviderName,
+	registerGeminiWebProviders,
+} from "#internet/providers/gemini-web/provider";
 import { googleProviderName, registerGoogleProviders } from "#internet/providers/google/provider";
 import { providerName as openAiProviderName, registerOpenAiProviders } from "#internet/providers/openai/provider";
-import type { InternetProvider } from "#internet/providers/provider";
+import { adaptChatGptWebRequest } from "#internet/providers/openai/turn/request";
+import type { BrowserRequestIdentity, InternetProvider } from "#internet/providers/provider";
+
+export function adaptInternetRequest(
+	provider: InternetProviderId,
+	payload: unknown,
+	identity: BrowserRequestIdentity,
+): unknown {
+	const adapter = getInternetProvider(provider).requestAdapter;
+	if (!adapter) throw new Error(`No request adapter is registered for ${provider}.`);
+	return adapter(payload, identity);
+}
 
 const providers: Record<InternetProviderId, InternetProvider> = {
 	openai: {
@@ -12,6 +28,7 @@ const providers: Record<InternetProviderId, InternetProvider> = {
 			if (account.provider !== "openai") throw new Error(`Expected openai account, received ${account.provider}.`);
 			return openAiProviderName(account);
 		},
+		requestAdapter: adaptChatGptWebRequest,
 		registerProviders: registerOpenAiProviders,
 	},
 	anthropic: {
@@ -30,6 +47,16 @@ const providers: Record<InternetProviderId, InternetProvider> = {
 			return googleProviderName(account);
 		},
 		registerProviders: registerGoogleProviders,
+	},
+	"gemini-web": {
+		id: "gemini-web",
+		providerName(account) {
+			if (account.provider !== "gemini-web")
+				throw new Error(`Expected gemini-web account, received ${account.provider}.`);
+			return geminiWebProviderName(account);
+		},
+		requestAdapter: adaptGeminiWebRequest,
+		registerProviders: registerGeminiWebProviders,
 	},
 };
 

@@ -44,16 +44,16 @@ export async function resolveDaemonRuntime(options: ResolveDaemonRuntimeOptions 
 	const platform = options.platform ?? process.platform;
 	const arch = options.arch ?? process.arch;
 	if (platform !== "linux" && platform !== "darwin") {
-		throw new Error(`The bundled ChatGPT Web daemon supports Linux and macOS only, received ${platform}.`);
+		throw new Error(`The bundled browser daemon supports Linux and macOS only, received ${platform}.`);
 	}
 	if (arch !== "x64" && arch !== "arm64") {
-		throw new Error(`The bundled ChatGPT Web daemon does not support ${platform}-${arch}.`);
+		throw new Error(`The bundled browser daemon does not support ${platform}-${arch}.`);
 	}
 	const modulePath = fileURLToPath(options.moduleUrl ?? import.meta.url);
 	const root = resolve(dirname(modulePath), "runtime");
 	const manifest = parseRuntimeManifest(JSON.parse(await readFile(resolve(root, "manifest.json"), "utf8")));
 	if (manifest.platform !== platform || manifest.arch !== arch) {
-		throw new Error(`Bundled ChatGPT Web daemon does not support ${platform}-${arch}.`);
+		throw new Error(`Bundled browser daemon does not support ${platform}-${arch}.`);
 	}
 	const launcher = resolve(root, manifest.launcher);
 	const launcherRelative = relative(root, launcher);

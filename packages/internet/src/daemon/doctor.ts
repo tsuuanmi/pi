@@ -5,7 +5,7 @@ import {
 	type ExecFileOptionsWithStringEncoding,
 } from "node:child_process";
 import { InternetError } from "#internet/core/errors";
-import type { OpenAiInternetAccount } from "#internet/core/types";
+import type { BrowserInternetAccount } from "#internet/core/types";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
 
@@ -56,14 +56,14 @@ interface DoctorCommandResult {
 }
 
 export async function runDaemonDoctor(
-	account: OpenAiInternetAccount,
+	account: BrowserInternetAccount,
 	options: RunDaemonDoctorOptions = {},
 ): Promise<DoctorReport> {
 	let runtime: DaemonRuntime;
 	try {
 		runtime = await (options.resolveRuntime ?? resolveDaemonRuntime)();
 	} catch (error) {
-		throw doctorError(`Could not resolve the ChatGPT Web runtime for account ${account.id}.`, error);
+		throw doctorError(`Could not resolve the browser runtime for account ${account.id}.`, error);
 	}
 
 	const result = await executeDoctor(runtime, account, options);
@@ -75,7 +75,7 @@ export async function runDaemonDoctor(
 
 function executeDoctor(
 	runtime: DaemonRuntime,
-	account: OpenAiInternetAccount,
+	account: BrowserInternetAccount,
 	options: RunDaemonDoctorOptions,
 ): Promise<DoctorCommandResult> {
 	const execFile = options.execFile ?? defaultExecFile;
@@ -95,26 +95,25 @@ function executeDoctor(
 				(error, stdout, stderr) => resolve({ error, stdout, stderr }),
 			);
 		} catch (error) {
-			reject(doctorError(`Could not start ChatGPT Web doctor for account ${account.id}.`, error));
+			reject(doctorError(`Could not start Browser doctor for account ${account.id}.`, error));
 		}
 	});
 }
 
 function commandError(
-	account: OpenAiInternetAccount,
+	account: BrowserInternetAccount,
 	result: DoctorCommandResult,
 	options: RunDaemonDoctorOptions,
 ): InternetError {
 	const error = result.error;
-	if (options.signal?.aborted)
-		return doctorError(`ChatGPT Web doctor was cancelled for account ${account.id}.`, error);
+	if (options.signal?.aborted) return doctorError(`Browser doctor was cancelled for account ${account.id}.`, error);
 	if (error?.killed && error.code === null)
 		return doctorError(
-			`ChatGPT Web doctor timed out for account ${account.id} after ${options.timeoutMs ?? DOCTOR_TIMEOUT_MS}ms.`,
+			`Browser doctor timed out for account ${account.id} after ${options.timeoutMs ?? DOCTOR_TIMEOUT_MS}ms.`,
 			error,
 		);
 	const detail = result.stderr.trim() || error?.message;
-	return doctorError(`ChatGPT Web doctor failed for account ${account.id}${detail ? `: ${detail}` : "."}`, error);
+	return doctorError(`Browser doctor failed for account ${account.id}${detail ? `: ${detail}` : "."}`, error);
 }
 
 function parseDoctorReport(raw: string, accountId: string): DaemonDoctorReport {
@@ -122,10 +121,9 @@ function parseDoctorReport(raw: string, accountId: string): DaemonDoctorReport {
 	try {
 		value = JSON.parse(raw);
 	} catch (error) {
-		throw doctorError(`ChatGPT Web doctor returned invalid JSON for account ${accountId}.`, error);
+		throw doctorError(`Browser doctor returned invalid JSON for account ${accountId}.`, error);
 	}
-	if (!isDoctorReport(value))
-		throw doctorError(`ChatGPT Web doctor returned an invalid report for account ${accountId}.`);
+	if (!isDoctorReport(value)) throw doctorError(`Browser doctor returned an invalid report for account ${accountId}.`);
 	return value;
 }
 
@@ -148,9 +146,9 @@ function isDoctorCheck(value: unknown): value is DaemonDoctorCheck {
 function validateDoctorResult(report: DaemonDoctorReport, exitCode: number | string, accountId: string): void {
 	const checksOk = !report.checks.some((check) => check.status === "error");
 	if (report.ok !== checksOk)
-		throw doctorError(`ChatGPT Web doctor returned an inconsistent report for account ${accountId}.`);
+		throw doctorError(`Browser doctor returned an inconsistent report for account ${accountId}.`);
 	if ((exitCode === 0) !== report.ok)
-		throw doctorError(`ChatGPT Web doctor returned an inconsistent exit status for account ${accountId}.`);
+		throw doctorError(`Browser doctor returned an inconsistent exit status for account ${accountId}.`);
 }
 
 function adaptDoctorReport(report: DaemonDoctorReport): DoctorReport {
@@ -180,7 +178,7 @@ function doctorScope(id: string): DoctorCheck["scope"] {
 		case "connector":
 			return "upstream";
 		default:
-			throw doctorError(`ChatGPT Web doctor returned unknown check ${JSON.stringify(id)}.`);
+			throw doctorError(`Browser doctor returned unknown check ${JSON.stringify(id)}.`);
 	}
 }
 

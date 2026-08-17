@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { atomicWriteFile } from "#runtime/core/config";
-import type { ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import {
   extractChatGptTurnEnvironment,
   extractChatGptTurnIdentity,
@@ -121,7 +121,7 @@ export class ChatGptThreadEnvironmentStore {
     private readonly now: () => number = Date.now,
   ) {}
 
-  resolve(parsed: ParsedRequest): ChatGptTurnEnvironment {
+  resolve(parsed: ChatGptWebParsedRequest): ChatGptTurnEnvironment {
     const identity = extractChatGptTurnIdentity(parsed);
     try {
       const environment = extractChatGptTurnEnvironment(parsed);

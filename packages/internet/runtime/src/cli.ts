@@ -1,11 +1,22 @@
 #!/usr/bin/env bun
+import { randomBytes } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import { Writable } from "node:stream";
 import { existsSync, rmSync } from "node:fs";
-import { isAbsolute } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { stdin, stdout } from "node:process";
 import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "#runtime/browser/chatgpt-web/login";
-import { getConfigDir, getConfigPath } from "#runtime/core/config";
+import { importAndVerifyGeminiStorageState, loginToGemini } from "#runtime/browser/gemini-web/login";
+import {
+  atomicWriteFile,
+  currentRuntimeCommand,
+  getConfigDir,
+  getConfigPath,
+  loadRuntimeConfig,
+  type ChatGptWebRuntimeConfig,
+  type GeminiWebRuntimeConfig,
+  VERSION,
+} from "#runtime/core/config";
 import { cancelBrowserTurns } from "#runtime/providers/chatgpt-web/lifecycle/control";
 import {
   defaultBrokerEndpoint,
@@ -17,19 +28,30 @@ import {
 import { formatDoctorReport, runDoctor } from "#runtime/providers/chatgpt-web/lifecycle/doctor";
 import { runChatGptMcpServer } from "#runtime/providers/chatgpt-web/tools/mcp-server";
 import { runCommand } from "#runtime/core/process";
+import { registerRuntimeServer, runtimeServerFactory } from "#runtime/core/provider";
 import { startServer } from "#runtime/providers/chatgpt-web/server/routes";
+import {
+  geminiWebBrowserConfig,
+  geminiWebServerFactory,
+} from "#runtime/providers/gemini-web/factory";
+import { formatGeminiWebDoctorReport, runGeminiWebDoctor } from "#runtime/providers/gemini-web/lifecycle/doctor";
 import { assertServiceIdle, getServiceStatus, installService, restartService, startService, stopService, uninstallService } from "#runtime/core/service";
 import { existingFullSetupCredentials, setup, type SetupOptions } from "#runtime/providers/chatgpt-web/lifecycle/setup";
 import { connectTunnel, installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "#runtime/providers/chatgpt-web/transport/tunnel";
 import { getTunnelServiceStatus, restartTunnelService, startTunnelService, stopTunnelService, uninstallTunnelService } from "#runtime/providers/chatgpt-web/transport/tunnel-service";
-import { VERSION } from "#runtime/core/config";
+
+registerRuntimeServer<ChatGptWebRuntimeConfig>({
+  adapter: "chatgpt-web",
+  serve: (config, dependencies) => startServer(config as Parameters<typeof startServer>[0], dependencies),
+});
+registerRuntimeServer(geminiWebServerFactory);
 
 const HELP = `pi-internet-runtime ${VERSION}
 
-Focused ChatGPT web-backed models for the native Codex harness.
+Isolated ChatGPT Web and Gemini Web models for Pi.
 
 Usage:
-  pi-internet-runtime setup --browser-only [options]
+  pi-internet-runtime setup [--adapter chatgpt-web|gemini-web] --browser-only [options]
   pi-internet-runtime setup --full --tunnel-id ID --runtime-key-file PATH [options]
   pi-internet-runtime login [--import-storage-state PATH]
   pi-internet-runtime doctor [--json]
@@ -42,7 +64,8 @@ Usage:
   pi-internet-runtime uninstall --yes
 
 Setup options:
-  --browser-only               Account-eligible Web models, full context/images, no local tools or tunnel
+  --adapter ID                 Browser provider (default: chatgpt-web)
+  --browser-only               Account-eligible Web models without a tunnel; Gemini is text-only
   --full                       Account-eligible Web models with tools; Pro remains read-only
   --port NUMBER                Loopback Responses port (default: 17841)
   --chrome PATH                Google Chrome/Chromium executable used for account login
@@ -52,7 +75,7 @@ Setup options:
   --tunnel-id ID               Existing OpenAI tunnel id (full mode)
   --runtime-key-file PATH      File containing a Tunnels Read+Use runtime key
   --restart-service            Explicitly restart this project's daemon after an update
-  --login                      Refresh the stored ChatGPT login even if one exists
+  --login                      Refresh the stored browser login even if one exists
   --auto-approve-tool-calls    Opt in to per-call browser clicks on "Allow once" prompts
   --acknowledge-unofficial     Accept the one-time unofficial-browser-automation notice
 
@@ -118,17 +141,77 @@ function assertNoArgs(args: string[]): void {
 async function loginCommand(args: string[]): Promise<void> {
   const importStorageState = takeOption(args, "--import-storage-state");
   assertNoArgs(args);
-  const config = loadConfig();
+  const config = loadRuntimeConfig();
+  if (config.adapter === "gemini-web") {
+    const browser = geminiWebBrowserConfig(config);
+    if (importStorageState) {
+      if (!isAbsolute(importStorageState)) throw new Error("Imported browser storage state requires an absolute path");
+      const marker = await importAndVerifyGeminiStorageState(importStorageState, browser);
+      stdout.write(`Verified Gemini Web login with ${marker.capabilities.available.length} available model(s).\n`);
+    } else {
+      const marker = await loginToGemini(browser);
+      stdout.write(`Saved Gemini Web login with ${marker.capabilities.available.length} available model(s).\n`);
+    }
+    return;
+  }
+  const chatgptConfig = loadConfig();
   if (importStorageState && !isAbsolute(importStorageState)) {
     throw new Error("Imported browser storage state requires an absolute path");
   }
   const result = importStorageState
-    ? await importChatGptLogin(config, importStorageState)
-    : await loginToChatGpt(config);
+    ? await importChatGptLogin(chatgptConfig, importStorageState)
+    : await loginToChatGpt(chatgptConfig);
   stdout.write(`ChatGPT login stored at ${result.storageStatePath}\n`);
 }
 
 async function setupCommand(args: string[]): Promise<void> {
+  const adapter = takeOption(args, "--adapter") ?? "chatgpt-web";
+  if (adapter === "gemini-web") {
+    if (!takeFlag(args, "--browser-only") || takeFlag(args, "--full")) {
+      throw new Error("Gemini Web setup requires --browser-only and rejects --full.");
+    }
+    const port = Number(takeOption(args, "--port") ?? "17842");
+    const chromeExecutablePath = takeOption(args, "--chrome")
+      ?? (process.platform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : "/usr/bin/google-chrome");
+    const forceLogin = takeFlag(args, "--login");
+    let acknowledged = takeFlag(args, "--acknowledge-unofficial");
+    assertNoArgs(args);
+    if (!acknowledged) {
+      stdout.write("This unofficial provider automates a Gemini Web session and can break when the UI changes.\n");
+      acknowledged = await confirm("Continue and store this acknowledgement?");
+    }
+    if (!acknowledged) throw new Error("Setup cancelled: acknowledgement was not provided");
+    const configDir = getConfigDir();
+    const config = {
+      adapter: "gemini-web",
+      releaseVersion: VERSION,
+      mode: "browser-only",
+      host: "127.0.0.1",
+      port,
+      contextWindow: 32_000,
+      appName: "Pi Internet",
+      chromeExecutablePath,
+      storageStatePath: join(configDir, "browser", "storage-state.json"),
+      headed: true,
+      browserWindowWidth: 700,
+      browserWindowHeight: 500,
+      browserWindowPositionX: 0,
+      browserWindowPositionY: 0,
+      idleShutdownMs: 60_000,
+      conversationStateDir: join(configDir, "conversations"),
+      capabilitiesPath: join(configDir, "capabilities.json"),
+      controlToken: randomBytes(32).toString("base64url"),
+      runtimeCommand: currentRuntimeCommand(),
+      acknowledgedUnofficialAt: new Date().toISOString(),
+    } satisfies GeminiWebRuntimeConfig;
+    atomicWriteFile(getConfigPath(), `${JSON.stringify(config, null, 2)}\n`);
+    if (forceLogin) await loginToGemini(geminiWebBrowserConfig(config));
+    stdout.write("Gemini Web setup complete.\n");
+    return;
+  }
+  if (adapter !== "chatgpt-web") throw new Error(`Unsupported runtime adapter: ${adapter}`);
   const browserOnly = takeFlag(args, "--browser-only");
   const full = takeFlag(args, "--full");
   if (browserOnly === full) throw new Error("Choose exactly one setup mode: --browser-only or --full");
@@ -192,6 +275,13 @@ async function setupCommand(args: string[]): Promise<void> {
 async function doctorCommand(args: string[]): Promise<void> {
   const json = takeFlag(args, "--json");
   assertNoArgs(args);
+  const config = loadRuntimeConfig();
+  if (config.adapter === "gemini-web") {
+    const report = await runGeminiWebDoctor(geminiWebBrowserConfig(config));
+    stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : formatGeminiWebDoctorReport(report));
+    if (!report.ok) process.exitCode = 1;
+    return;
+  }
   const report = await runDoctor();
   stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : formatDoctorReport(report));
   if (!report.ok) process.exitCode = 1;
@@ -208,7 +298,7 @@ async function mcpCommand(args: string[]): Promise<void> {
 async function serviceCommand(args: string[]): Promise<void> {
   const action = args.shift() ?? "status";
   assertNoArgs(args);
-  const config = action === "status" ? undefined : loadConfig();
+  const config = action === "status" ? undefined : loadRuntimeConfig();
   if (action === "cancel-turns") {
     const cancelled = await cancelBrowserTurns(config!);
     stdout.write(`${JSON.stringify({ cancelledBrowserTurns: cancelled }, null, 2)}\n`);
@@ -291,7 +381,7 @@ async function uninstallCommand(args: string[]): Promise<void> {
   if (!yes && !await confirm("Stop services and remove this installation?")) {
     throw new Error("Uninstall cancelled");
   }
-  const config = existsSync(getConfigPath()) ? loadConfig() : undefined;
+  const config = existsSync(getConfigPath()) ? loadRuntimeConfig() : undefined;
   if (!config && process.platform === "darwin" && getServiceStatus().installed) {
     throw new Error("Service exists but configuration is missing; refusing an unverifiable uninstall");
   }
@@ -331,11 +421,13 @@ async function main(): Promise<void> {
     stdout.write("Playwright can launch the configured Chrome executable.\n");
   } else if (command === "serve") {
     assertNoArgs(args);
-    const config = loadConfig();
+    const runtimeConfig = loadRuntimeConfig();
     let resolveShutdown: () => void = () => {};
     const shutdown = new Promise<void>(resolve => { resolveShutdown = resolve; });
-    const server = startServer(config, { onShutdown: resolveShutdown });
-    stdout.write(`pi-internet-runtime ${VERSION} listening on http://${config.host}:${server.port}/v1 (${config.mode})\n`);
+    const server = runtimeConfig.adapter === "chatgpt-web"
+      ? startServer(loadConfig(), { onShutdown: resolveShutdown })
+      : runtimeServerFactory("gemini-web").serve(runtimeConfig, { onShutdown: resolveShutdown });
+    stdout.write(`pi-internet-runtime ${VERSION} listening on http://${runtimeConfig.host}:${server.port}/v1 (${runtimeConfig.mode})\n`);
     await shutdown;
   } else if (command === "mcp") await mcpCommand(args);
   else if (command === "service") await serviceCommand(args);

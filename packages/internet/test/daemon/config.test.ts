@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { OpenAiInternetAccount } from "#internet/core/types";
+import type { GeminiWebInternetAccount, OpenAiInternetAccount } from "#internet/core/types";
 import {
 	daemonLoginExists,
 	daemonLoginMarkerPath,
@@ -19,6 +19,18 @@ function account(configDir: string): OpenAiInternetAccount {
 		configDir,
 		host: "127.0.0.1",
 		port: 17841,
+		enabled: true,
+	};
+}
+
+function geminiAccount(configDir: string): GeminiWebInternetAccount {
+	return {
+		id: "gemini",
+		provider: "gemini-web",
+		displayName: "Gemini Web",
+		configDir,
+		host: "127.0.0.1",
+		port: 18042,
 		enabled: true,
 	};
 }
@@ -132,6 +144,43 @@ describe("owned daemon config", () => {
 		await expect(readOwnedDaemonCapabilities(target)).resolves.toEqual({
 			proAvailable: false,
 		});
+	});
+
+	it("keeps Gemini configuration browser-only and capability-scoped", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-gemini-config-"));
+		const target = geminiAccount(configDir);
+		const created = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "0.1.0",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		expect(created).toMatchObject({
+			adapter: "gemini-web",
+			mode: "browser-only",
+			appName: "Pi Internet",
+			contextWindow: 32_000,
+			capabilitiesPath: join(configDir, "capabilities.json"),
+		});
+		expect(created).not.toHaveProperty("brokerSocketPath");
+		expect(created).not.toHaveProperty("tunnel");
+		await mkdir(join(configDir, "browser"));
+		await writeFile(join(configDir, "browser", "storage-state.json"), "{}\n");
+		await writeFile(
+			daemonLoginMarkerPath(target),
+			JSON.stringify({
+				version: 1,
+				provider: "gemini-web",
+				authenticatedAt: new Date().toISOString(),
+				signOutHref: "https://accounts.google.com/SignOutOptions",
+				capabilities: {
+					version: 1,
+					provider: "gemini-web",
+					labels: { flash: "3.6 Flash", thinking: "Thinking", pro: "Pro" },
+					available: ["flash"],
+				},
+			}),
+		);
+		await expect(daemonLoginExists(target)).resolves.toBe(true);
+		await expect(readOwnedDaemonCapabilities(target)).resolves.toMatchObject({ models: [{ id: "flash" }] });
 	});
 
 	it("recognizes only the verified durable login format", async () => {

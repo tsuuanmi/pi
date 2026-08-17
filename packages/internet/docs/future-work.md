@@ -74,12 +74,6 @@ It fills the form, computes the current TOTP code, and captures the session. It 
 still risks Cloudflare challenges. Raw `account|password|2fa` automation, plaintext credential
 storage, and push/SSO automation are explicitly out of scope.
 
-## Second browser-backed provider / generic browser abstraction
-
-The current browser runtime has one adapter (ChatGPT Web) and uses direct composition. A generic
-browser abstraction should only be introduced when a second browser-backed provider demonstrates a
-genuine shared contract. API providers (Anthropic, Google) remain browserless.
-
 ## Model aliases and smart routing
 
 Optional ideas from the Prometheus comparison: model aliases and smart routing

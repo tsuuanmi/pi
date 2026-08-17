@@ -2,7 +2,8 @@ import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import type { AccountRegistry } from "#internet/accounts/registry";
-import type { OpenAiInternetAccount } from "#internet/core/types";
+import type { BrowserInternetAccount } from "#internet/core/types";
+import { DaemonClient } from "#internet/daemon/client";
 import {
 	daemonConfigFingerprint,
 	daemonLoginExists,
@@ -12,7 +13,6 @@ import {
 import { waitForDaemonHealth } from "#internet/daemon/health";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
-import { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 export type DaemonProcessState = "stopped" | "running" | "login-required";
 
@@ -37,7 +37,8 @@ export interface DaemonLoginOptions {
 }
 
 export class OwnedDaemonManager {
-	private readonly accounts: Map<string, OpenAiInternetAccount>;
+	private readonly accounts: Map<string, BrowserInternetAccount>;
+
 	private readonly resolveRuntime: () => Promise<DaemonRuntime>;
 	private readonly spawnProcess: typeof spawn;
 	private readonly waitForHealth: typeof waitForDaemonHealth;
@@ -47,7 +48,7 @@ export class OwnedDaemonManager {
 
 	private readonly registry: AccountRegistry | undefined;
 
-	constructor(accounts: OpenAiInternetAccount[], options: OwnedDaemonManagerOptions = {}) {
+	constructor(accounts: BrowserInternetAccount[], options: OwnedDaemonManagerOptions = {}) {
 		this.accounts = new Map(accounts.map((account) => [account.id, account]));
 		this.registry = options.registry;
 		const runtime = options.runtime;
@@ -135,19 +136,22 @@ export class OwnedDaemonManager {
 			}
 			await new Promise((resolve) => setTimeout(resolve, 100));
 		}
-		throw new Error("The stale ChatGPT Web daemon did not stop before restart.");
+		throw new Error("The stale browser daemon did not stop before restart.");
 	}
 
-	private account(id: string): OpenAiInternetAccount {
+	private account(id: string): BrowserInternetAccount {
 		const account = this.accounts.get(id);
 		if (!account) throw new Error(`Internet account not found: ${id}`);
 		return account;
 	}
 
 	/** Re-read the account from the registry so daemon config reflects live mode changes. */
-	private async refreshAccount(id: string): Promise<OpenAiInternetAccount> {
+	private async refreshAccount(id: string): Promise<BrowserInternetAccount> {
 		if (!this.registry) return this.account(id);
-		const account = await this.registry.getOpenAi(id);
+		const account =
+			this.account(id).provider === "gemini-web"
+				? await this.registry.getGeminiWeb(id)
+				: await this.registry.getOpenAi(id);
 		this.accounts.set(id, account);
 		return account;
 	}
@@ -163,7 +167,7 @@ export class OwnedDaemonManager {
 		return next;
 	}
 
-	private async loginAccount(account: OpenAiInternetAccount, options: DaemonLoginOptions = {}): Promise<void> {
+	private async loginAccount(account: BrowserInternetAccount, options: DaemonLoginOptions = {}): Promise<void> {
 		await this.stopAccount(account);
 		const runtime = await this.resolveRuntime();
 		await ensureOwnedDaemonConfig(account, {
@@ -183,17 +187,17 @@ export class OwnedDaemonManager {
 				else
 					reject(
 						new Error(
-							`ChatGPT Web login exited with ${signal ? `signal ${signal}` : `status ${code ?? "unknown"}`}.`,
+							`Browser login exited with ${signal ? `signal ${signal}` : `status ${code ?? "unknown"}`}.`,
 						),
 					);
 			});
 		});
 		if (!(await daemonLoginExists(account)))
-			throw new Error("ChatGPT Web login completed without verified authentication state.");
+			throw new Error("Browser login completed without verified authentication state.");
 		await syncOwnedDaemonCapabilities(account);
 	}
 
-	private async startAccount(account: OpenAiInternetAccount): Promise<void> {
+	private async startAccount(account: BrowserInternetAccount): Promise<void> {
 		const running = this.processes.get(account.id);
 		if (running && running.exitCode === null && !running.killed) return;
 		const runtime = await this.resolveRuntime();
@@ -243,7 +247,7 @@ export class OwnedDaemonManager {
 
 	private async runTunnelAction(
 		runtime: DaemonRuntime,
-		account: OpenAiInternetAccount,
+		account: BrowserInternetAccount,
 		action: "connect" | "disconnect",
 	): Promise<void> {
 		const child = this.spawnProcess(runtime.launcher, ["--home", account.configDir, "tunnel", action], {
@@ -264,7 +268,7 @@ export class OwnedDaemonManager {
 		});
 	}
 
-	private async stopAccount(account: OpenAiInternetAccount): Promise<void> {
+	private async stopAccount(account: BrowserInternetAccount): Promise<void> {
 		const child = this.processes.get(account.id);
 		const exited = child
 			? new Promise<void>((resolve) => {

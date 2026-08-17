@@ -2,76 +2,34 @@
 
 Mirrors `src/daemon/config.ts`.
 
-Package-owned daemon/browser configuration, login markers, capabilities, and secure atomic writes.
-This is the config the package writes for the bundled daemon; it is distinct from the daemon's own
-`config.json` read by [`providers/openai/daemon/auth.md`](../providers/openai/daemon/auth.md).
+Package-owned browser daemon configuration, login markers, capabilities, and private atomic writes.
 
-## Constants
+## Browser provider configs
 
-- `APP_NAME` — `"Codex Native2"`.
-- `BROWSER_IDLE_SHUTDOWN_MS` — `5 * 60 * 1000`.
-- `BROWSER_WINDOW_WIDTH` / `BROWSER_WINDOW_HEIGHT` — `900` / `700`.
+`OwnedDaemonConfig` is discriminated by `adapter`:
 
-## Platform defaults
+- `chatgpt-web` supports browser-only or Full mode, owns the turn broker/tunnel fields, and records
+  `proAvailable`.
+- `gemini-web` is browser-only, has no broker/tunnel/MCP fields, uses a conservative 32,000-token
+  context limit, and stores its verified capability marker at `<configDir>/capabilities.json`.
 
-`defaultChromeExecutable()` selects `/usr/bin/google-chrome` on Linux and
-`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` on macOS. Other platforms are
-rejected.
+Both own a loopback endpoint, isolated Chrome/storage paths, headed window settings, conversation
+state directory, idle shutdown, control token, bundled runtime command, and acknowledgement time.
+Unknown or cross-provider fields are rejected.
 
-## `OwnedDaemonConfig`
+## Capabilities and login
 
-The full owned config: release version, `mode` (`"browser-only"` or `"full"`), loopback host, the
-account's `port`, context window (`256_000`), app name, Chrome executable path, storage-state path,
-broker socket path, headed window, idle shutdown, the
-the `proAvailable` capability flag, `autoApproveToolCalls: false`, control token, runtime
-command, acknowledgement timestamp, and (in full mode) tunnel settings.
+`daemonLoginMarkerPath(account)` selects the provider marker path. ChatGPT retains its version-2
+storage verification marker. Gemini requires a version-1 marker with the exact Google
+`SignOutOptions` authenticated anchor and nested labels/availability for Flash, Thinking, and Pro.
+`readOwnedDaemonCapabilities()` exposes only models present in that verified Gemini marker.
 
-## Capabilities
+`daemonLoginExists()` requires both private browser storage and the matching valid provider marker.
+`syncOwnedDaemonCapabilities()` updates ChatGPT's config flag; Gemini capabilities remain marker-owned.
 
-- `DaemonCapabilities` — `{ proAvailable }`.
-- `readOwnedDaemonCapabilities(account)` — parses and validates the owned config and returns its
-  capability flags. Missing config (ENOENT) falls back to `{ proAvailable: false }`.
-- `syncOwnedDaemonCapabilities(account)` — reads the login marker's `proAvailable` value and rewrites
-  the owned config when it differs.
+## Security
 
-## Paths
-
-- `daemonConfigPath(account)` — `<configDir>/config.json`.
-- `daemonLoginMarkerPath(account)` — `<configDir>/browser/storage-state.json.verified.json`.
-
-## `daemonLoginExists`
-
-```ts
-daemonLoginExists(account): Promise<boolean>
-```
-
-True when both the browser storage-state file exists and the login marker is valid
-(`version === 2`, `authenticated === true`, a string `verifiedAt`, and boolean `proAvailable`).
-
-## `daemonConfigFingerprint`
-
-```ts
-daemonConfigFingerprint(config): string
-```
-
-Sha256 hex of the JSON-serialized config.
-
-## `ensureOwnedDaemonConfig`
-
-```ts
-ensureOwnedDaemonConfig(account, options?): Promise<OwnedDaemonConfig>
-```
-
-Reads the harness config and reuses an existing valid config if it still matches the harness mode
-and window/idle values. Otherwise it writes (atomically, `0700` dir / `0600` file) a new config
-derived from the account, harness, and options. Requires a `runtimeCommand` and `releaseVersion` for
-a fresh write. Chrome uses the platform default above. In full mode it embeds the tunnel
-client path, tunnel id, runtime-key file, and a `pi-internet-<account.id>` profile/alias.
-
-`validateOwnedConfig` enforces the canonical field set, required values, mode, loopback endpoint
-matching the account, safe browser/approval settings, runtime command, tunnel shape, and a control
-token matching `^[A-Za-z0-9_-]{40,}$`. Obsolete or unknown fields are rejected; configuration has
-no schema version or browser-host selector.
-
-`writePrivateJson` writes via temp file + rename and verifies the final permissions are exactly
-`0600`.
+`defaultChromeExecutable()` resolves supported system Chrome paths. `ensureOwnedDaemonConfig()`
+creates or validates the canonical provider config, enforces unique account loopback endpoints, and
+writes `0700` directories and `0600` files atomically. Control tokens must match
+`^[A-Za-z0-9_-]{40,}$`.

@@ -2,8 +2,8 @@
 
 ## Choose a provider
 
-The implicit browser account registers `chatgpt-web/*`. Additional account names append the account
-id. API accounts register `anthropic-api[-<id>]/*` or `gemini-api[-<id>]/*`.
+The implicit browser account registers `chatgpt-web/*`. Gemini Web accounts register
+`gemini-web[-<id>]/*`. API accounts register `anthropic-api[-<id>]/*` or `gemini-api[-<id>]/*`.
 
 Create API accounts with environment references, not secret values:
 
@@ -25,7 +25,7 @@ internet_account_add {
 
 Export the variables and reload Pi after account changes.
 
-## ChatGPT Web login
+## Browser-provider login
 
 ```text
 internet_daemon { action: "login", account: "default" }
@@ -42,8 +42,9 @@ internet_daemon {
 }
 ```
 
-Only ChatGPT/OpenAI state is copied, and the import is persisted only after browser verification.
-The source file is not modified.
+Only provider-allowlisted state is copied, and the import is persisted only after browser
+verification. Gemini imports retain only the required Google/Gemini cookie domains and Gemini origin
+storage. The source file is not modified.
 
 Use `internet_daemon` actions `status`, `start`, `stop`, and `restart` for lifecycle. Run
 `internet_doctor` for structured runtime/config/login/browser/daemon checks.
@@ -51,22 +52,24 @@ Use `internet_daemon` actions `status`, `start`, `stop`, and `restart` for lifec
 ## Accounts
 
 - `internet_accounts {}` lists routing metadata.
-- `internet_account_add` adds one `openai`, `anthropic`, or `google` account.
+- `internet_account_add` adds one `openai`, `gemini-web`, `anthropic`, or `google` account.
 - `internet_account_remove { id }` removes metadata without deleting private data.
 - `internet_account_set_enabled { id, enabled }` changes startup/provider availability.
 
-ChatGPT account ports are allocated from `17841` when omitted and must remain unique loopback
+Browser account ports are allocated from `17841` when omitted and must remain unique loopback
 endpoints.
 
-## ChatGPT models and files
+## Browser models and files
 
 ChatGPT Web exposes canonical Sol route models, with Pro routes gated by account capability. Pi `@file` references are expanded only
 for regular workspace-local files, under bounded count and byte limits. API providers use their
-native image/text support and do not use the browser replay adapter.
+native image/text support and do not use the browser replay adapter. Gemini Web discovers the
+account-visible Flash, Thinking, and Pro modes during verified login and currently accepts text only.
 
 ## Durable conversations
 
-Each Pi session binds to one canonical ChatGPT conversation after a live canary. The browser is an
+Each Pi session binds to one canonical provider-native conversation. For ChatGPT Web, this happens
+after a live canary. The browser is an
 access mechanism, not the durable identity: browser and daemon idle shutdown close only the
 ephemeral process and tab, never the conversation or the session-to-conversation mapping. The next
 ChatGPT turn restarts the browser, opens the saved canonical conversation URL, validates the
@@ -90,7 +93,17 @@ identity change marks the turn as failed instead of rebinding the session. Gener
 `<environment_context>` messages are excluded from the persistent history prefix, and consecutive
 assistant phases (commentary, reasoning-only, final answer) are acknowledged as one response.
 
-**Not implemented.** A completed browser response that Pi did not persist (for example, Pi was
+For Gemini Web, the mapping is direct and immutable:
+
+```text
+Pi session S -> account-private state -> Gemini /app/<chat-id> G
+```
+
+The first successful Gemini turn stores `S -> G`; every later turn in S reopens G and sends only the
+current user message. Missing state on a continuation or any attempt to change G fails closed.
+Response IDs are not conversation aliases, and no message-replay fallback is used.
+
+**ChatGPT limitation.** A completed browser response that Pi did not persist (for example, Pi was
 interrupted before writing the assistant response) is a known gap. The durable protocol needs an
 explicit client-acknowledgement/replay state so a retry replays the stored response instead of
 resubmitting; see [Future work](future-work.md).
@@ -141,5 +154,6 @@ addresses, DNS rebinding targets, and unsafe redirects.
 ## Settings and status
 
 `internet_settings {}` reads `autoLogin`; passing a boolean updates it atomically.
-`internet_status`, `internet_control`, and `internet_compact` are ChatGPT Web-only tools and reject
-API accounts at the account boundary.
+`internet_status`, `internet_control`, and lifecycle tools support ChatGPT Web and Gemini Web.
+`internet_compact`, `internet_conversation`, and `internet_harness` are ChatGPT Web-only. API
+accounts never enter daemon tools.

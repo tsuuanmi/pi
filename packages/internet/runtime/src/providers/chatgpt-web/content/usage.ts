@@ -1,4 +1,5 @@
-import type { ParsedRequest, Usage } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { Usage } from "#runtime/core/protocol/types";
+import type { ChatGptWebParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import { estimateCompiledChatGptWebInputTokens, estimateTokens } from "#runtime/providers/chatgpt-web/content/tokens";
 import { compileChatGptWebPrompt } from "#runtime/providers/chatgpt-web/content/prompt";
 import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "#runtime/providers/chatgpt-web/models/model";
@@ -26,7 +27,7 @@ function conservativeTextTokens(text: string, modelId: string): number {
 }
 
 export function estimateChatGptWebInputTokens(
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   capabilities: ChatGptWebCapabilities,
 ): number {
   const mode = resolveChatGptWebModelMode(parsed.modelId, parsed.options.reasoning, capabilities);
@@ -55,7 +56,7 @@ function roundEvidenceText(evidence: ChatGptWebRoundEvidence): string {
 }
 
 export function estimateChatGptWebUsage(
-  parsed: ParsedRequest,
+  parsed: ChatGptWebParsedRequest,
   evidence: ChatGptWebRoundEvidence,
   capabilities: ChatGptWebCapabilities,
 ): Usage {
